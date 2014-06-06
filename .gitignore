@@ -1,0 +1,6 @@
+Makefile
+*.pro.user
+*.components
+*.so
+moc_*.cpp
+*.o
