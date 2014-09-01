@@ -1,8 +1,8 @@
 uri = LuneOS.Components
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 
-QML_FILES = $$system(ls *.qml)
-JS_FILES = $$system(ls *.js)
+QML_FILES =
+JS_FILES =
 QMLDIR_FILE = qmldir
 
 OTHER_FILES += $$QML_FILES $$JS_FILES $$QMLDIR_FILE
