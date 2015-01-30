@@ -1,5 +1,5 @@
 TEMPLATE = lib
-TARGET = ../LunaOSComponents
+TARGET = ../LuneOSComponents
 
 QT += core-private qml qml-private quick quick-private
 CONFIG += qt plugin
