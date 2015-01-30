@@ -1,0 +1,2 @@
+module LuneOS.Application
+plugin LuneOSApplication
