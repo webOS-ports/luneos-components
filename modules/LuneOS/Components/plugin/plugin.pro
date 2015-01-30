@@ -1,8 +1,3 @@
-unix {
-	CONFIG += link_pkgconfig
-	PKGCONFIG += luna-service2
-}
-
 TEMPLATE = lib
 TARGET = ../LunaOSComponents
 
