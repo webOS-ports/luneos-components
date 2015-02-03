@@ -46,7 +46,8 @@ ApplicationWindow::ApplicationWindow() :
     mWindowId(0),
     mParentWindowId(0),
     mKeepAlive(false),
-    mInitialized(false)
+    mInitialized(false),
+    mLoadingAnimationDisabled(false)
 {
     installEventFilter(this);
 
@@ -66,16 +67,30 @@ void ApplicationWindow::setWindowProperty(const QString &name, const QVariant &v
 void ApplicationWindow::componentComplete()
 {
     qDebug() << Q_FUNC_INFO << "type" << mType;
+}
 
+void ApplicationWindow::show()
+{
+    qDebug() << Q_FUNC_INFO << "initialized" << mInitialized;
+
+    if (!mInitialized) {
+        configure();
+        mInitialized = true;
+    }
+
+    QQuickWindow::show();
+}
+
+void ApplicationWindow::configure()
+{
     // Make sure the platform window is fully created when we want to deal with it
     create();
 
     // set different information bits for our window
     setWindowProperty(QString("_LUNE_WINDOW_TYPE"), QVariant(windowTypeToString(mType)));
+    setWindowProperty(QString("_LUNE_WINDOW_LOADING_ANIMATION_DISABLED"), QVariant(mLoadingAnimationDisabled));
     setWindowProperty(QString("_LUNE_APP_ID"), QVariant(QCoreApplication::applicationName()));
     setWindowProperty(QString("_LUNE_APP_KEEP_ALIVE"), QVariant(mKeepAlive));
-
-    mInitialized = true;
 }
 
 bool ApplicationWindow::eventFilter(QObject *object, QEvent *event)
@@ -84,7 +99,8 @@ bool ApplicationWindow::eventFilter(QObject *object, QEvent *event)
 
     switch (event->type()) {
     case QEvent::Close:
-        emit closed(this);
+        Q_EMIT closed(this);
+        mInitialized = false;
         break;
     default:
         break;
@@ -120,7 +136,7 @@ void ApplicationWindow::setParentWindowId(unsigned int id)
         return;
 
     mParentWindowId = id;
-    emit parentWindowIdChanged();
+    Q_EMIT parentWindowIdChanged();
 }
 
 unsigned int ApplicationWindow::parentWindowId() const
@@ -149,5 +165,24 @@ void ApplicationWindow::setKeepAlive(bool value)
         return;
 
     setWindowProperty(QString("_LUNE_WINDOW_KEEP_ALIVE"), QVariant(mKeepAlive));
-    emit keepAliveChanged();
+    Q_EMIT keepAliveChanged();
+}
+
+bool ApplicationWindow::loadingAnimationDisabled() const
+{
+    return mLoadingAnimationDisabled;
+}
+
+void ApplicationWindow::setLoadingAnimationDisabled(bool value)
+{
+    if (mLoadingAnimationDisabled == value)
+        return;
+
+    mLoadingAnimationDisabled = value;
+
+    if (!mInitialized)
+        return;
+
+    setWindowProperty(QString("_LUNE_WINDOW_LOADING_ANIMATION_DISABLED"), QVariant(mLoadingAnimationDisabled));
+    Q_EMIT loadingAnimationDisabledChanged();
 }
