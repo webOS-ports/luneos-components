@@ -1,21 +1,30 @@
-TEMPLATE = lib
-TARGET = ../LuneOSApplication
+unix {
+    CONFIG += link_pkgconfig
+    PKGCONFIG += luna-service2
+}
 
-QT += core-private qml qml-private quick quick-private gui-private
+TEMPLATE = lib
+TARGET = ../LuneOSService
+
+QT += qml quick
 CONFIG += qt plugin
 
 CONFIG += c++11 no_keywords
 
 TARGET = $$qtLibraryTarget($$TARGET)
-uri = LuneOS.Application
+uri = LuneOS.Service
+
+LIBS += -lluna-service2++
 
 HEADERS += \
     plugin.h \
-    applicationwindow.h
+    lunaserviceadapter.h \
+    db8model.h
 
 SOURCES += \
     plugin.cpp \
-    applicationwindow.cpp
+    lunaserviceadapter.cpp \
+    db8model.cpp
 
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 target.path = $$installPath
