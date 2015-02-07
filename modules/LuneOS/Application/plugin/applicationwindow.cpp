@@ -89,8 +89,27 @@ void ApplicationWindow::configure()
     // set different information bits for our window
     setWindowProperty(QString("_LUNE_WINDOW_TYPE"), QVariant(windowTypeToString(mType)));
     setWindowProperty(QString("_LUNE_WINDOW_LOADING_ANIMATION_DISABLED"), QVariant(mLoadingAnimationDisabled));
+    setWindowProperty(QString("_LUNE_WINDOW_PARENT_ID"), QVariant(mParentWindowId));
     setWindowProperty(QString("_LUNE_APP_ID"), QVariant(QCoreApplication::applicationName()));
     setWindowProperty(QString("_LUNE_APP_KEEP_ALIVE"), QVariant(mKeepAlive));
+
+    QPlatformNativeInterface *nativeInterface = QGuiApplication::platformNativeInterface();
+    connect(nativeInterface, SIGNAL(windowPropertyChanged(QPlatformWindow*, const QString&)),
+            this, SLOT(onWindowPropertyChanged(QPlatformWindow*, const QString&)));
+}
+
+QVariant ApplicationWindow::getWindowProperty(const QString &name)
+{
+    QPlatformNativeInterface *nativeInterface = QGuiApplication::platformNativeInterface();
+    return nativeInterface->windowProperty(handle(), name);
+}
+
+void ApplicationWindow::onWindowPropertyChanged(QPlatformWindow *window, const QString &name)
+{
+    if (name == "_LUNE_WINDOW_ID") {
+        mWindowId = getWindowProperty("_LUNE_WINDOW_ID").toInt();
+        Q_EMIT windowIdChanged();
+    }
 }
 
 bool ApplicationWindow::eventFilter(QObject *object, QEvent *event)

@@ -70,8 +70,9 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void onDestroyed();
+    void onWindowPropertyChanged(QPlatformWindow *window, const QString &name);
 
-protected:
+protected:;
     bool eventFilter(QObject *object, QEvent *event);
 
 private:
@@ -83,6 +84,8 @@ private:
     bool mLoadingAnimationDisabled;
 
     void setWindowProperty(const QString &name, const QVariant &value);
+    QVariant getWindowProperty(const QString &name);
+
     void configure();
 };
 
