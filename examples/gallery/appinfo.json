@@ -1,0 +1,11 @@
+{
+    "title": "LuneOS Components Gallery",
+    "id": "org.luneos.components.gallery",
+    "version": "0.1.0",
+    "vendor": "webOS ports",
+    "vendor_url": "https://github.com/webOS-ports/luneos-components",
+    "type": "qml",
+    "qml.style": "LuneOS",
+    "main": "main.qml",
+    "icon": "icon.png"
+}

@@ -1,0 +1,5 @@
+module QtQuick.Controls.Styles.LuneOS
+
+plugin luneosstyleplugin
+
+ButtonStyle 1.0 ButtonStyle.qml

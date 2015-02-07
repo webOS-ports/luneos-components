@@ -18,8 +18,6 @@
 #include <QtQml>
 
 #include "plugin.h"
-#include "applicationwindow.h"
-#include "db8model.h"
 
 Plugin::Plugin(QObject *parent) :
     QQmlExtensionPlugin(parent)
@@ -28,9 +26,7 @@ Plugin::Plugin(QObject *parent) :
 
 void Plugin::registerTypes(const char *uri)
 {
-    Q_ASSERT(uri == QLatin1String("LuneOS.Application"));
-    qmlRegisterType<ApplicationWindow>(uri, 1, 0, "ApplicationWindow");
-    qmlRegisterType<Db8Model>(uri, 1, 0, "Db8Model");
+    Q_ASSERT(uri == QLatin1String("QtQuick.Controls.Styles.LuneOS"));
 }
 
 void Plugin::initializeEngine(QQmlEngine *engine, const char *uri)

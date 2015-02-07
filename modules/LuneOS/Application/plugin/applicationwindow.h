@@ -29,6 +29,7 @@ class ApplicationWindow : public QQuickWindow,
     Q_PROPERTY(unsigned int windowId READ windowId NOTIFY windowIdChanged)
     Q_PROPERTY(unsigned int parentWindowId READ parentWindowId WRITE setParentWindowId NOTIFY parentWindowIdChanged)
     Q_PROPERTY(bool keepAlive READ keepAlive WRITE setKeepAlive NOTIFY keepAliveChanged)
+    Q_PROPERTY(bool loadingAnimationDisabled READ loadingAnimationDisabled WRITE setLoadingAnimationDisabled NOTIFY loadingAnimationDisabledChanged)
 
 public:
     explicit ApplicationWindow();
@@ -50,22 +51,28 @@ public:
     bool keepAlive() const;
     void setKeepAlive(bool value);
 
+    bool loadingAnimationDisabled() const;
+    void setLoadingAnimationDisabled(bool value);
+
     virtual void classBegin();
     virtual void componentComplete();
 
-public slots:
+public Q_SLOTS:
     void cleanup();
+    void show();
 
-signals:
+Q_SIGNALS:
     void windowIdChanged();
     void parentWindowIdChanged();
     void closed(ApplicationWindow *window);
     void keepAliveChanged();
+    void loadingAnimationDisabledChanged();
 
-private slots:
+private Q_SLOTS:
     void onDestroyed();
+    void onWindowPropertyChanged(QPlatformWindow *window, const QString &name);
 
-protected:
+protected:;
     bool eventFilter(QObject *object, QEvent *event);
 
 private:
@@ -74,8 +81,12 @@ private:
     unsigned int mParentWindowId;
     bool mKeepAlive;
     bool mInitialized;
+    bool mLoadingAnimationDisabled;
 
     void setWindowProperty(const QString &name, const QVariant &value);
+    QVariant getWindowProperty(const QString &name);
+
+    void configure();
 };
 
 #endif // APPLICATIONWINDOW_H

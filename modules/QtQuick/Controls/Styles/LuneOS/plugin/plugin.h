@@ -15,26 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include <QtQml>
+#ifndef PLUGIN_H_
+#define PLUGIN_H_
 
-#include "plugin.h"
-#include "applicationwindow.h"
-#include "db8model.h"
+#include <QQmlExtensionPlugin>
 
-Plugin::Plugin(QObject *parent) :
-    QQmlExtensionPlugin(parent)
+class Q_DECL_EXPORT Plugin : public QQmlExtensionPlugin
 {
-}
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
 
-void Plugin::registerTypes(const char *uri)
-{
-    Q_ASSERT(uri == QLatin1String("LuneOS.Application"));
-    qmlRegisterType<ApplicationWindow>(uri, 1, 0, "ApplicationWindow");
-    qmlRegisterType<Db8Model>(uri, 1, 0, "Db8Model");
-}
+public:
+    explicit Plugin(QObject *parent = 0);
+    void registerTypes(const char *uri);
+    void initializeEngine(QQmlEngine * engine, const char * uri);
+};
 
-void Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
-{
-    Q_UNUSED(engine);
-    Q_UNUSED(uri);
-}
+#endif

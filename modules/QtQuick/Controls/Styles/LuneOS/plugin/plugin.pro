@@ -1,17 +1,17 @@
 TEMPLATE = lib
-TARGET = ../LuneOSComponents
+TARGET = ../luneosstyleplugin
 
-QT += core-private qml qml-private quick quick-private
+QT += qml quick
 CONFIG += qt plugin
 
 TARGET = $$qtLibraryTarget($$TARGET)
-uri = LuneOS.Components
+uri = QtQuick.Controls.Styles.LuneOS
 
 HEADERS += \
-	plugin.h
+    plugin.h \
 
 SOURCES += \
-	plugin.cpp
+    plugin.cpp \
 
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 target.path = $$installPath

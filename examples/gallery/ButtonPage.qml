@@ -15,26 +15,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include <QtQml>
+import QtQuick 2.1
+import QtQuick.Controls 1.0
+import QtQuick.Controls.Styles 1.0
 
-#include "plugin.h"
-#include "applicationwindow.h"
-#include "db8model.h"
+Item {
+    width: parent.width
+    height: parent.height
 
-Plugin::Plugin(QObject *parent) :
-    QQmlExtensionPlugin(parent)
-{
-}
+    Rectangle {
+        height: 40
+        width: 40
+        color: "red"
+    }
 
-void Plugin::registerTypes(const char *uri)
-{
-    Q_ASSERT(uri == QLatin1String("LuneOS.Application"));
-    qmlRegisterType<ApplicationWindow>(uri, 1, 0, "ApplicationWindow");
-    qmlRegisterType<Db8Model>(uri, 1, 0, "Db8Model");
-}
+    Column {
+        spacing: 40
+        anchors.centerIn: parent
 
-void Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
-{
-    Q_UNUSED(engine);
-    Q_UNUSED(uri);
+        Button {
+            anchors.margins: 20
+            text: "Press me"
+            styleHints:( {color:"orange",pressedColor:"red"})
+        }
+
+        Button {
+            anchors.margins: 20
+            text: "Press me too"
+        }
+
+        Button {
+            anchors.margins: 20
+            enabled:false
+            text: "Dont press me"
+            onClicked: if (pageStack) pageStack.pop()
+        }
+
+    }
 }
