@@ -34,6 +34,9 @@ QString windowTypeToString(ApplicationWindow::Type type)
     case ApplicationWindow::PopupAlert:
         typeStr = "popupalert";
         break;
+    case ApplicationWindow::Pin:
+        typeStr = "pin";
+        break;
     default:
         break;
     }
@@ -98,6 +101,17 @@ void ApplicationWindow::configure()
             this, SLOT(onWindowPropertyChanged(QPlatformWindow*, const QString&)));
 }
 
+void ApplicationWindow::reset()
+{
+    mInitialized = false;
+
+    mWindowId = 0;
+    mParentWindowId = 0;
+
+    Q_EMIT windowIdChanged();
+    Q_EMIT parentWindowIdChanged();
+}
+
 QVariant ApplicationWindow::getWindowProperty(const QString &name)
 {
     QPlatformNativeInterface *nativeInterface = QGuiApplication::platformNativeInterface();
@@ -106,9 +120,15 @@ QVariant ApplicationWindow::getWindowProperty(const QString &name)
 
 void ApplicationWindow::onWindowPropertyChanged(QPlatformWindow *window, const QString &name)
 {
+    if (window != handle())
+        return;
+
     if (name == "_LUNE_WINDOW_ID") {
-        mWindowId = getWindowProperty("_LUNE_WINDOW_ID").toInt();
-        Q_EMIT windowIdChanged();
+        int windowId = getWindowProperty("_LUNE_WINDOW_ID").toInt();
+        if (windowId != mWindowId) {
+            mWindowId = windowId;
+            Q_EMIT windowIdChanged();
+        }
     }
 }
 
@@ -119,7 +139,7 @@ bool ApplicationWindow::eventFilter(QObject *object, QEvent *event)
     switch (event->type()) {
     case QEvent::Close:
         Q_EMIT closed(this);
-        mInitialized = false;
+        reset();
         break;
     default:
         break;

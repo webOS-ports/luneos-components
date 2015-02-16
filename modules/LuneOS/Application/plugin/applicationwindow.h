@@ -37,7 +37,8 @@ public:
     enum Type {
         Card,
         Dashboard,
-        PopupAlert
+        PopupAlert,
+        Pin
     };
 
     Type type() const;
@@ -87,6 +88,7 @@ private:
     QVariant getWindowProperty(const QString &name);
 
     void configure();
+    void reset();
 };
 
 #endif // APPLICATIONWINDOW_H
