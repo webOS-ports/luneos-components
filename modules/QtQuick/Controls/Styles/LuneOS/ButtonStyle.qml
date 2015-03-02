@@ -17,11 +17,39 @@
 import QtQuick 2.1
 import QtQuick.Controls 1.0
 import QtQuick.Controls.Styles 1.0
+import LunaNext.Common 0.1
 
 ButtonStyle {
     id: buttonStyle
 
+    padding {
+        left: Units.gu(1.5)
+        right: Units.gu(1.5)
+    }
+
     background: Rectangle {
-        color: "red"
+        color: control.pressed ? "#69cdff" : "transparent"
+        Text {
+            id: decoratorLeft
+            text: "( "
+            font.pixelSize: FontUtils.sizeToPixels("large")
+            font.weight: Font.Bold
+            anchors.left: parent.left
+            color: "#4b4b4b"
+        }
+
+        Text {
+            id: decoratorRight
+            text: " )"
+            font.pixelSize: FontUtils.sizeToPixels("large")
+            font.weight: Font.Bold
+            anchors.right: parent.right
+            color: "#4b4b4b"
+        }
+    }
+
+    label: Text {
+        text: control.text
+        color: !control.enabled ? "#a2a2a2" : "#4b4b4b"
     }
 }

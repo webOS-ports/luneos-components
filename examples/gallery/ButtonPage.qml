@@ -16,18 +16,13 @@
  */
 
 import QtQuick 2.1
+import LuneOS.Components 1.0
 import QtQuick.Controls 1.0
 import QtQuick.Controls.Styles 1.0
 
-Item {
+Page {
     width: parent.width
     height: parent.height
-
-    Rectangle {
-        height: 40
-        width: 40
-        color: "red"
-    }
 
     Column {
         spacing: 40
@@ -48,6 +43,11 @@ Item {
             anchors.margins: 20
             enabled:false
             text: "Dont press me"
+        }
+
+        Button {
+            anchors.margins: 20
+            text: "Go back"
             onClicked: if (pageStack) pageStack.pop()
         }
 
