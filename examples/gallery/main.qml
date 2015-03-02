@@ -32,10 +32,8 @@ ApplicationWindow {
     ListModel {
         id: pageModel
 
-        ListElement {
-            title: "Button"
-            page: "ButtonPage.qml"
-        }
+        ListElement { title: "Button"; page: "ButtonPage.qml" }
+        ListElement { title: "TextField"; page: "TextFieldPage.qml" }
     }
 
     StackView {

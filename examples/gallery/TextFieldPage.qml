@@ -22,30 +22,7 @@ import QtQuick.Controls 1.0
 import QtQuick.Controls.Styles 1.0
 
 Page {
-    width: parent.width
-    height: parent.height
-
-    Column {
-        spacing: 40
-        anchors.centerIn: parent
-
-        Button {
-            anchors.margins: 20
-            text: "Press me"
-            styleHints: {color:"orange"; pressedColor:"red"}
-        }
-
-        Button {
-            anchors.margins: 20
-            text: "Press me too"
-        }
-
-        Button {
-            anchors.margins: 20
-            enabled:false
-            text: "Dont press me"
-        }
-    }
+    id: inputPage
 
     Button {
         anchors.bottom: parent.bottom
