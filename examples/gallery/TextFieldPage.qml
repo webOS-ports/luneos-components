@@ -24,6 +24,22 @@ import QtQuick.Controls.Styles 1.0
 Page {
     id: inputPage
 
+    Column {
+        anchors.centerIn: parent
+
+        spacing: Units.gu(1)
+
+        TextField {
+            width: Units.gu(20)
+            placeholderText: "A text field ..."
+        }
+
+        TextField {
+            width: Units.gu(20)
+            placeholderText: "Another text field ..."
+        }
+    }
+
     Button {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Units.gu(1)
