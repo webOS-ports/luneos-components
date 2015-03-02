@@ -29,8 +29,8 @@ ApplicationWindow {
         id: pageModel
 
         ListElement {
-            title: "Buttons"
-            page: "ButtonsPage.qml"
+            title: "Button"
+            page: "ButtonPage.qml"
         }
     }
 

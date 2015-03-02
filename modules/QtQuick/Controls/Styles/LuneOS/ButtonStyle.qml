@@ -22,6 +22,6 @@ ButtonStyle {
     id: buttonStyle
 
     background: Rectangle {
-        color: "#35A8EE"
+        color: "red"
     }
 }
