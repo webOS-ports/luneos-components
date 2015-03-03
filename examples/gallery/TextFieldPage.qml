@@ -38,6 +38,12 @@ Page {
             width: Units.gu(20)
             placeholderText: "Another text field ..."
         }
+
+        TextField {
+            width: Units.gu(30)
+            placeholderText: "One for a password"
+            echoMode: TextInput.Password
+        }
     }
 
     Button {
