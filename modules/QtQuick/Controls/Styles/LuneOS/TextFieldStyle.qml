@@ -29,8 +29,8 @@ Style {
 
     property font font
     property color textColor: "#4b4b4b"
-    property color selectionColor: SystemPaletteSingleton.highlight(control.enabled)
-    property color selectedTextColor: SystemPaletteSingleton.highlightedText(control.enabled)
+    property color selectionColor: "#69cdff"
+    property color selectedTextColor: "white"
     property string passwordCharacter: "\u2022" // Qt.styleHints.passwordMaskCharacter will be available in 5.5
     property int renderType: Settings.isMobile ? Text.QtRendering : Text.NativeRendering
 
