@@ -16,42 +16,14 @@
  */
 
 import QtQuick 2.1
-import LuneOS.Components 1.0
 import LunaNext.Common 0.1
-import QtQuick.Controls 1.0
-import QtQuick.Controls.Styles 1.0
 
-Page {
+Rectangle {
+    id: page
+
     width: parent.width
     height: parent.height
-
-    Column {
-        spacing: 40
-        anchors.centerIn: parent
-
-        Button {
-            anchors.margins: 20
-            text: "Press me"
-            styleHints: {color:"orange"; pressedColor:"red"}
-        }
-
-        Button {
-            anchors.margins: 20
-            text: "Press me too"
-        }
-
-        Button {
-            anchors.margins: 20
-            enabled:false
-            text: "Dont press me"
-        }
-    }
-
-    Button {
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: Units.gu(1)
-        anchors.horizontalCenter: parent.horizontalCenter
-        text: "Go back"
-        onClicked: if (pageStack) pageStack.pop()
-    }
+    anchors.rightMargin: Units.gu(4)
+    color: "#f5f5f5"
 }
+

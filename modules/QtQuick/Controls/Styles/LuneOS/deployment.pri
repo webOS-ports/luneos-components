@@ -2,7 +2,8 @@ uri = QtQuick.Controls.Styles.LuneOS
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 
 QML_FILES = \
-    ButtonStyle.qml
+    ButtonStyle.qml \
+    TextFieldStyle.qml
 JS_FILES =
 QMLDIR_FILE = qmldir
 

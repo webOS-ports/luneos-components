@@ -22,28 +22,21 @@ import QtQuick.Controls 1.0
 import QtQuick.Controls.Styles 1.0
 
 Page {
-    width: parent.width
-    height: parent.height
+    id: inputPage
 
     Column {
-        spacing: 40
         anchors.centerIn: parent
 
-        Button {
-            anchors.margins: 20
-            text: "Press me"
-            styleHints: {color:"orange"; pressedColor:"red"}
+        spacing: Units.gu(1)
+
+        TextField {
+            width: Units.gu(20)
+            placeholderText: "A text field ..."
         }
 
-        Button {
-            anchors.margins: 20
-            text: "Press me too"
-        }
-
-        Button {
-            anchors.margins: 20
-            enabled:false
-            text: "Dont press me"
+        TextField {
+            width: Units.gu(20)
+            placeholderText: "Another text field ..."
         }
     }
 

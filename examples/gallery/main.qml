@@ -18,6 +18,7 @@
 import QtQuick 2.1
 import QtQuick.Controls 1.1
 import LunaNext.Common 0.1
+import LuneOS.Components 1.0
 import LuneOS.Application 1.0
 
 ApplicationWindow {
@@ -25,28 +26,21 @@ ApplicationWindow {
 
     visible: true
 
+    width: 480
+    height: 640
+
     ListModel {
         id: pageModel
 
-        ListElement {
-            title: "Buttons"
-            page: "ButtonsPage.qml"
-        }
-    }
-
-    Rectangle {
-        id: background
-        anchors.fill: parent
-        color: "black"
+        ListElement { title: "Button"; page: "ButtonPage.qml" }
+        ListElement { title: "TextField"; page: "TextFieldPage.qml" }
     }
 
     StackView {
         id: pageStack
         anchors.fill: parent
 
-        initialItem: Item {
-            width: parent.width
-            height: parent.height
+        initialItem: Page {
 
             ListView {
                 id: listView
@@ -57,26 +51,13 @@ ApplicationWindow {
                     width: parent.width
                     height: Units.gu(10)
 
-                    Rectangle {
-                        anchors.fill: parent
-                        color: "#11ffffff"
-                    }
-
                     Text {
-                        color: "white"
+                        color: "black"
                         font.pixelSize: FontUtils.sizeToPixels("large")
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.left: parent.left
                         anchors.leftMargin: 30
                         text: title
-                    }
-
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.margins: 15
-                        height: 1
-                        color: "#424246"
                     }
 
                     MouseArea {
