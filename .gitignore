@@ -6,4 +6,5 @@ moc_*.cpp
 *.o
 *.styles
 *.application
+*.service
 
