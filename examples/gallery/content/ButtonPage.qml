@@ -46,6 +46,12 @@ Page {
             enabled:false
             text: "Dont press me"
         }
+
+        TextField {
+            width: Units.gu(30)
+            placeholderText: "A disabled one"
+            enabled: false
+        }
     }
 
     Button {
