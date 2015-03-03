@@ -5,7 +5,8 @@ QT += qml quick
 OTHER_FILES += \
     appinfo.json \
     main.qml \
-    ButtonPage.qml
+    ButtonPage.qml \
+    TextFieldPage.qml
 
 files.path = /usr/palm/applications/org.luneos.components.gallery
 files.files += $$OTHER_FILES
