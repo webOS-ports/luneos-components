@@ -5,7 +5,7 @@ SUBDIRS += \
     LuneOS/Components/components.pro \
     LuneOS/Application/application.pro \
 
-win32:mac {
+win32|mac {
     CONFIG += desktop
 }
 
