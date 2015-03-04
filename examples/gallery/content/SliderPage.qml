@@ -44,7 +44,9 @@ import QtQuick.Controls 1.0
 import QtQuick.Controls.Styles 1.0
 import LuneOS.Components 1.0
 
-Item {
+Page {
+    id: page
+
     width: parent.width
     height: parent.height
 
@@ -58,18 +60,19 @@ Item {
             stepSize: 1
             maximumValue: 100
         }
+
         Slider {
             anchors.margins: 20
             stepSize: 1
             value: 500
             maximumValue: 1000
         }
+
         Slider {
             anchors.margins: 20
             value: 0.3
             enabled:false
         }
-
 
         Button {
             anchors.horizontalCenter: parent.horizontalCenter
@@ -92,12 +95,14 @@ Item {
             groove: Item {
                 implicitHeight: 50
                 implicitWidth: 400
+
                 Rectangle {
                     height: 8
                     width: parent.width
                     anchors.verticalCenter: parent.verticalCenter
                     color: "#444"
                     opacity: 0.8
+
                     Rectangle {
                         antialiasing: true
                         radius: 1

@@ -23,19 +23,28 @@ ButtonStyle {
     id: buttonStyle
 
     padding {
-        left: Units.gu(1.5)
-        right: Units.gu(1.5)
+        left: Units.gu(2)
+        right: Units.gu(2)
     }
 
-    background: Rectangle {
-        color: control.pressed ? "#69cdff" : "transparent"
+    background: Item {
+
         Text {
             id: decoratorLeft
             text: "( "
             font.pixelSize: FontUtils.sizeToPixels("large")
             font.weight: Font.Bold
             anchors.left: parent.left
+            anchors.leftMargin: control.pressed ? Units.gu(0) : Units.gu(0.5)
             color: "#4b4b4b"
+            opacity: control.enabled ? 1.0 : 0.4
+
+            Behavior on anchors.leftMargin {
+                NumberAnimation {
+                    duration: 600
+                    easing.type: Easing.OutBounce
+                }
+            }
         }
 
         Text {
@@ -44,12 +53,38 @@ ButtonStyle {
             font.pixelSize: FontUtils.sizeToPixels("large")
             font.weight: Font.Bold
             anchors.right: parent.right
+            anchors.rightMargin: control.pressed ? Units.gu(0) : Units.gu(0.5)
             color: "#4b4b4b"
+            opacity: control.enabled ? 1.0 : 0.4
+
+            Behavior on anchors.rightMargin {
+                NumberAnimation {
+                    duration: 600
+                    easing.type: Easing.OutBounce
+                }
+            }
         }
     }
 
-    label: Text {
-        text: control.text
-        color: !control.enabled ? "#a2a2a2" : "#4b4b4b"
+    label: Item {
+        implicitWidth: text.width
+        implicitHeight: text.height
+
+        Text {
+            id: text
+            text: control.text
+            color: "#4b4b4b"
+            opacity: control.enabled ? 1.0 : 0.4
+            font.weight: Font.Bold
+        }
+
+        Rectangle {
+            anchors.top: text.bottom
+            anchors.topMargin: Units.gu(0.2)
+            width: text.width
+            visible: control.pressed
+            height: Units.gu(0.1)
+            color: "#69cdff"
+        }
     }
 }

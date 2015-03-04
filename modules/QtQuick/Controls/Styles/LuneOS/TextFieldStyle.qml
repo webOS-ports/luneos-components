@@ -38,7 +38,8 @@ Style {
 
     property Component background: Rectangle {
         color: "#ffffff"
-        border.width: 1
+        opacity: control.enabled ? 1.0 : 0.4
+        border.width: Units.gu(0.1)
         border.color: control.activeFocus ? "#69cdff" : "#a2a2a2"
         radius: 16
     }

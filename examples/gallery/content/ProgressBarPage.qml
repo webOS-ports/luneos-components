@@ -39,28 +39,29 @@
 **
 ****************************************************************************/
 
-
-
-
-
 import QtQuick 2.1
 import QtQuick.Controls 1.0
 import QtQuick.Controls.Styles 1.0
 import LuneOS.Components 1.0
 
-Item {
+Page {
+    id: page
+
     width: parent.width
     height: parent.height
 
     property real progress: 0
+
     SequentialAnimation on progress {
         loops: Animation.Infinite
         running: true
+
         NumberAnimation {
             from: 0
             to: 1
             duration: 3000
         }
+
         NumberAnimation {
             from: 1
             to: 0
@@ -87,7 +88,6 @@ Item {
             value: 1
         }
 
-
         Button {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "Go back"
@@ -97,12 +97,14 @@ Item {
 
     Component {
         id: touchStyle
+
         ProgressBarStyle {
             panel: Rectangle {
                 implicitHeight: 15
                 implicitWidth: 400
                 color: "#444"
                 opacity: 0.8
+
                 Rectangle {
                     antialiasing: true
                     radius: 1

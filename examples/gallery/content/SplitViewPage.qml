@@ -26,39 +26,46 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 import QtQuick 2.1
 import QtQuick.Controls 1.0
 import QtQuick.Layouts 1.0
 import LuneOS.Components 1.0
 
-SplitView {
-    orientation: Qt.Horizontal
+Page {
+    id: page
 
-    Rectangle {
-        Layout.minimumWidth: 50
-        width: 200
-        color: "gray"
-    }
     SplitView {
-        Layout.fillWidth: true
-        Layout.minimumWidth: 50
-        orientation: Qt.Vertical
-        Rectangle {
-            id: centerItem
-            Layout.minimumHeight: 50
-            Layout.fillHeight: true
-            color: "darkgray"
-        }
-        Rectangle {
-            height: 400
-            Layout.minimumHeight: 50
-            color: "gray"
+        orientation: Qt.Horizontal
+        anchors.fill: parent
 
-            Button {
-                anchors.centerIn: parent
-                text: "Go back"
-                onClicked: if (pageStack) pageStack.pop()
+        Rectangle {
+            Layout.minimumWidth: 50
+            width: 200
+            color: "gray"
+        }
+
+        SplitView {
+            Layout.fillWidth: true
+            Layout.minimumWidth: 50
+            orientation: Qt.Vertical
+
+            Rectangle {
+                id: centerItem
+                Layout.minimumHeight: 50
+                Layout.fillHeight: true
+                color: "darkgray"
+            }
+
+            Rectangle {
+                height: 400
+                Layout.minimumHeight: 50
+                color: "gray"
+
+                Button {
+                    anchors.centerIn: parent
+                    text: "Go back"
+                    onClicked: if (pageStack) pageStack.pop()
+                }
             }
         }
     }
