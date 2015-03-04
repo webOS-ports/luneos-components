@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2015 Christophe Chapuis <chris.chapuis@gmail.com>
  * Copyright (C) 2015 Simon Busch <morphis@gravedo.de>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,8 +19,8 @@
 import QtQuick 2.1
 import QtQuick.Controls 1.1
 import LunaNext.Common 0.1
-import LuneOS.Components 1.0
 import LuneOS.Application 1.0
+import LuneOS.Components 1.0
 
 ApplicationWindow {
     id: window
@@ -31,9 +32,34 @@ ApplicationWindow {
 
     ListModel {
         id: pageModel
-
-        ListElement { title: "Button"; page: "ButtonPage.qml" }
-        ListElement { title: "TextField"; page: "TextFieldPage.qml" }
+        ListElement {
+            title: "Buttons"
+            page: "content/ButtonPage.qml"
+        }
+        ListElement {
+            title: "Sliders"
+            page: "content/SliderPage.qml"
+        }
+        ListElement {
+            title: "ProgressBar"
+            page: "content/ProgressBarPage.qml"
+        }
+        ListElement {
+            title: "Tabs"
+            page: "content/TabBarPage.qml"
+        }
+        ListElement {
+            title: "CheckBoxes"
+            page: "content/CheckBoxPage.qml"
+        }
+        ListElement {
+            title: "SplitView"
+            page: "content/SplitViewPage.qml"
+        }
+        ListElement {
+            title: "TextField"
+            page: "content/TextFieldPage.qml"
+        }
     }
 
     StackView {
