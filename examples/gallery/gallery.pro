@@ -11,7 +11,7 @@ OTHER_FILES += \
     content/TabBarPage.qml \
     content/CheckBoxPage.qml \
     content/SplitViewPage.qml \
-    content/TextInputPage.qml
+    content/TextFieldPage.qml
 
 files.path = /usr/palm/applications/org.luneos.components.gallery
 files.files += $$OTHER_FILES

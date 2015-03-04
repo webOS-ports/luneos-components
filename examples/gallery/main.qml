@@ -58,7 +58,7 @@ ApplicationWindow {
         }
         ListElement {
             title: "TextField"
-            page: "content/TextInputPage.qml"
+            page: "content/TextFieldPage.qml"
         }
     }
 
