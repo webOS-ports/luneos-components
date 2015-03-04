@@ -37,6 +37,7 @@ ButtonStyle {
             anchors.left: parent.left
             anchors.leftMargin: control.pressed ? Units.gu(0) : Units.gu(0.5)
             color: "#4b4b4b"
+            opacity: control.enabled ? 1.0 : 0.4
 
             Behavior on anchors.leftMargin {
                 NumberAnimation {
@@ -54,6 +55,7 @@ ButtonStyle {
             anchors.right: parent.right
             anchors.rightMargin: control.pressed ? Units.gu(0) : Units.gu(0.5)
             color: "#4b4b4b"
+            opacity: control.enabled ? 1.0 : 0.4
 
             Behavior on anchors.rightMargin {
                 NumberAnimation {
@@ -72,6 +74,7 @@ ButtonStyle {
             id: text
             text: control.text
             color: "#4b4b4b"
+            opacity: control.enabled ? 1.0 : 0.4
             font.weight: Font.Bold
         }
 
