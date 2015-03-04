@@ -39,16 +39,14 @@
 **
 ****************************************************************************/
 
-
-
-
-
 import QtQuick 2.1
 import QtQuick.Controls 1.0
 import QtQuick.Controls.Styles 1.0
 import LuneOS.Components 1.0
 
-Item {
+Page {
+    id: page
+
     width: parent.width
     height: parent.height
 

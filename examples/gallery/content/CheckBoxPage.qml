@@ -31,8 +31,9 @@ import QtQuick 2.2
 import QtQuick.Controls 1.1
 import LuneOS.Components 1.0
 
-Item {
-    id:root
+Page {
+    id: page
+
     width: parent.width
     height: parent.height
 
@@ -44,7 +45,6 @@ Item {
         color: "lightgrey"
         border.color: "blue"
         border.width: 1
-
         z:1
 
         Text {
@@ -53,18 +53,21 @@ Item {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
         }
+
         Text {
             text:"Right"
             font.pixelSize: 60
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
         }
+
         Text {
             text:"Top"
             font.pixelSize: 60
             anchors.top: parent.top
             anchors.horizontalCenter: parent.horizontalCenter
         }
+
         Button {
             anchors.bottom: parent.bottom
             text: "Close"
@@ -72,6 +75,7 @@ Item {
             onClicked: popup.hide()
             anchors.horizontalCenter: parent.horizontalCenter
         }
+
         BusyIndicator {
             anchors.centerIn: parent
             running: true
@@ -80,6 +84,7 @@ Item {
         function popup() {
             visible = true;
         }
+
         function hide() {
             visible = false;
         }
@@ -93,10 +98,12 @@ Item {
             text:"Check box"
             onClicked: popup.popup()
         }
+
         CheckBox {
             text:"Check box 2"
             onClicked: if (pageStack) pageStack.pop()
         }
+
         CheckBox {
             text:"Inverted"
             x:100
@@ -105,12 +112,12 @@ Item {
             styleHints: {"color": "orange","pressedColor": "red"}
             LayoutMirroring.enabled: true
             LayoutMirroring.childrenInherit: true
-
         }
 
         CheckBox {
             text:"H Switch"
             onCheckedChanged: mSwitch2.checked = checked
+
             Switch {
                 id:mSwitch2
                 checked: parent.checked

@@ -23,6 +23,8 @@ import QtQuick.Controls 1.0
 import QtQuick.Controls.Styles 1.0
 
 Page {
+    id: page
+
     width: parent.width
     height: parent.height
 
@@ -44,13 +46,7 @@ Page {
         Button {
             anchors.margins: 20
             enabled:false
-            text: "Dont press me"
-        }
-
-        TextField {
-            width: Units.gu(30)
-            placeholderText: "A disabled one"
-            enabled: false
+            text: "A disabled one"
         }
     }
 
