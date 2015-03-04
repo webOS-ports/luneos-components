@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2015 Christophe Chapuis <chris.chapuis@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,27 +23,28 @@ import QtQuick.Controls 1.0
 import QtQuick.Controls.Styles 1.0
 
 Page {
-    id: inputPage
+    width: parent.width
+    height: parent.height
 
     Column {
+        spacing: 40
         anchors.centerIn: parent
 
-        spacing: Units.gu(1)
-
-        TextField {
-            width: Units.gu(20)
-            placeholderText: "A text field ..."
+        Button {
+            anchors.margins: 20
+            text: "Press me"
+            styleHints: {color:"orange"; pressedColor:"red"}
         }
 
-        TextField {
-            width: Units.gu(20)
-            placeholderText: "Another text field ..."
+        Button {
+            anchors.margins: 20
+            text: "Press me too"
         }
 
-        TextField {
-            width: Units.gu(30)
-            placeholderText: "One for a password"
-            echoMode: TextInput.Password
+        Button {
+            anchors.margins: 20
+            enabled:false
+            text: "Dont press me"
         }
     }
 

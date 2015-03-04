@@ -3,7 +3,15 @@ installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 
 QML_FILES = \
     ButtonStyle.qml \
+    BusyIndicatorStyle.qml \
+    ButtonStyle.qml \
+    CheckBoxStyle.qml \
+    ProgressBarStyle.qml \
+    SliderStyle.qml \
+    SwitchStyle.qml \
+    TabViewStyle.qml \
     TextFieldStyle.qml
+
 JS_FILES =
 QMLDIR_FILE = qmldir
 
