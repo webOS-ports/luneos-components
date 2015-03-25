@@ -34,7 +34,7 @@ Page {
 
         Button {
             anchors.margins: 20
-            text: "Press me"
+            text: "Button"
             styleHints: {color:"orange"; pressedColor:"red"}
         }
 

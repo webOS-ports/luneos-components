@@ -20,5 +20,44 @@ import QtQuick.Controls.Styles 1.0
 import LunaNext.Common 0.1
 
 CheckBoxStyle {
-    id: buttonStyle
+    id: checkboxStyle
+
+    label: Text {
+            text: control.text
+            font.family: "Lato"
+            font.pixelSize: FontUtils.sizeToPixels("medium")
+            font.weight: Font.Normal
+            font.italic: true
+            color: "#333333"
+
+    }
+
+    indicator: Rectangle {
+
+            width: Units.gu(3.2)
+            height: Units.gu(3.2)
+            radius: Units.gu(1.8)
+            color: "#FFFFFF"
+            border.color: "#646464"
+            border.width:
+                if(control.checked){
+                    Units.gu(0)
+                }
+                else{
+                    Units.gu(0.2)
+                }
+
+
+
+                Rectangle {
+                    visible: control.checked
+
+                    width: Units.gu(3.2)
+                    height: Units.gu(3.2)
+                    radius: Units.gu(1.8)
+                    color: "#FFB80D"
+                    anchors.margins: 0
+                    anchors.fill: parent
+                }
+            }
 }

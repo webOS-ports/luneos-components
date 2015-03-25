@@ -52,6 +52,7 @@ Page {
 
     TabView {
         anchors.fill: parent
+        tabPosition: Qt.BottomEdge
         Tab {
             title: "1"
             ButtonPage{ visible: true }
@@ -68,5 +69,5 @@ Page {
             title: "4"
             CheckBoxPage{ visible: true }
         }
-    }   
+    }
 }

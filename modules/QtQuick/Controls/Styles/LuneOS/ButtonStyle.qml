@@ -32,17 +32,24 @@ ButtonStyle {
         Text {
             id: decoratorLeft
             text: "( "
-            font.pixelSize: FontUtils.sizeToPixels("large")
+            font.family: "Lato"
+            font.pixelSize: FontUtils.sizeToPixels("x-large")
             font.weight: Font.Bold
             anchors.left: parent.left
-            anchors.leftMargin: control.pressed ? Units.gu(0) : Units.gu(0.5)
+            anchors.leftMargin:
+                if(control.pressed){
+                    Units.gu(-0.5)
+                }
+                else{
+                   Units.gu(0)
+                }
             color: "#4b4b4b"
             opacity: control.enabled ? 1.0 : 0.4
 
             Behavior on anchors.leftMargin {
                 NumberAnimation {
-                    duration: 600
-                    easing.type: Easing.OutBounce
+                    duration: 100
+                    easing.type: Easing.InOutQuad
                 }
             }
         }
@@ -50,17 +57,18 @@ ButtonStyle {
         Text {
             id: decoratorRight
             text: " )"
-            font.pixelSize: FontUtils.sizeToPixels("large")
+            font.family: "Lato"
+            font.pixelSize: FontUtils.sizeToPixels("x-large")
             font.weight: Font.Bold
             anchors.right: parent.right
-            anchors.rightMargin: control.pressed ? Units.gu(0) : Units.gu(0.5)
+            anchors.rightMargin: control.pressed ? Units.gu(-0.5) : Units.gu(0)
             color: "#4b4b4b"
             opacity: control.enabled ? 1.0 : 0.4
 
             Behavior on anchors.rightMargin {
                 NumberAnimation {
-                    duration: 600
-                    easing.type: Easing.OutBounce
+                    duration: 100
+                    easing.type: Easing.InOutQuad
                 }
             }
         }
@@ -73,14 +81,20 @@ ButtonStyle {
         Text {
             id: text
             text: control.text
-            color: "#4b4b4b"
-            opacity: control.enabled ? 1.0 : 0.4
+            font.family: "Lato"
+            font.pixelSize: FontUtils.sizeToPixels("medium")
             font.weight: Font.Bold
+            font.italic: true
+            lineHeightMode: Text.ProportionalHeight
+            lineHeight: 2
+            verticalAlignment: Text.AlignVCenter
+            color: "#323231"
+            opacity: control.enabled ? 1.0 : 0.4
         }
 
         Rectangle {
             anchors.top: text.bottom
-            anchors.topMargin: Units.gu(0.2)
+            anchors.topMargin: Units.gu(0)
             width: text.width
             visible: control.pressed
             height: Units.gu(0.1)
