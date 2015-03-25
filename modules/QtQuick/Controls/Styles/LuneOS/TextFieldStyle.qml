@@ -28,6 +28,7 @@ Style {
     padding { top: Units.gu(0.5) ; left: Units.gu(1.5) ; right: Units.gu(1.5) ; bottom: Units.gu(0.5) }
 
     property font font
+
     property color textColor: "#4b4b4b"
     property color selectionColor: "#69cdff"
     property color selectedTextColor: "white"
