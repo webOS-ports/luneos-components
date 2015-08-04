@@ -2,3 +2,14 @@ module LuneOS.Components
 plugin LuneOSComponents
 
 Page 1.0 Page.qml
+AlertDialog 1.0 AlertDialog.qml
+AuthenticationDialog 1.0 AuthenticationDialog.qml
+CertDialog 1.0 CertDialog.qml
+ConfirmDialog 1.0 ConfirmDialog.qml
+DialogButton 1.0 DialogButton.qml
+DialogLineInput 1.0 DialogLineInput.qml
+Dialog 1.0 Dialog.qml
+FilePicker 1.0 FilePicker.qml
+ItemSelector 1.0 ItemSelector.qml
+PromptDialog 1.0 PromptDialog.qml
+ProxyAuthenticationDialog 1.0 ProxyAuthenticationDialog.qml
