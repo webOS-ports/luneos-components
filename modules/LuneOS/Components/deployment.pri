@@ -31,9 +31,9 @@ qmldir_file.path = $$installPath
 qmldir_file.files = $$QMLDIR_FILE
 qml_files.path = $$installPath
 qml_files.files = $$QML_FILES
-js_files.path = $$installPath
+js_files.path = $$installPath/js
 js_files.files = $$JS_FILES
-resources_files.path = $$installPath
+resources_files.path = $$installPath/images
 resources_files.files = $$RESOURCE_FILES
 
 INSTALLS += qmldir_file qml_files js_files resources_files
