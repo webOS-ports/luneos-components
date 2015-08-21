@@ -16,7 +16,7 @@ QML_FILES = Page.qml \
 
 JS_FILES = js/MultiSelect.js
 
-RESOURCE_FILES = images/button-up-center.png button-up-left.png images/button-up-right.png \
+RESOURCE_FILES = images/button-up-center.png images/button-up-left.png images/button-up-right.png \
                  images/checkbox-checked.png images/checkbox-unchecked.png \
                  images/dialog-center-bottom.png images/dialog-center-middle.png images/dialog-center-top.png \
                  images/dialog-left-bottom.png images/dialog-left-middle.png images/dialog-left-top.png \
