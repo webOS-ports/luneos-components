@@ -45,7 +45,7 @@ Item {
     Rectangle {
         id: dialogWindow
         width: Units.gu(40)
-        height: messageText.height + savePWCheckbox.height + Units.gu(23)
+        height: confirmRect.y + confirmRect.height + 2*dialogHeader.anchors.margins
         color: "transparent"
         radius: 10
         anchors.verticalCenter: parent.verticalCenter
@@ -136,7 +136,7 @@ Item {
             id: dialogHeader
             anchors.centerIn: parent
             anchors.fill: parent
-            anchors.margins: Units.gu(1)
+            anchors.margins: Units.gu(3)
 
             Text {
                 id: messageText
@@ -144,182 +144,138 @@ Item {
                 text: authDialog.title //? authDialog.title : "The server " + webViewItem.url + " requires a username and password"
                 horizontalAlignment: Text.AlignLeft
                 anchors.top: parent.top
-                anchors.topMargin: Units.gu(2)
                 anchors.left: parent.left
-                anchors.leftMargin: Units.gu(2)
                 anchors.horizontalCenter: parent.horizontalCenter
-                wrapMode: Text.WordWrap
+                wrapMode: Text.Wrap
                 font.family: "Prelude"
-                font.pixelSize: FontUtils.sizeToPixels("medium")
-                color: "#444444"
+                font.pixelSize: FontUtils.sizeToPixels("15pt")
+                color: Qt.darker("white", 5.)
             }
 
-            Rectangle {
-                id: usernameBG
-                width: parent.width - Units.gu(2)
-                height: Units.gu(4)
-                color: "white"
-                radius: 4
-                visible: false
-                anchors.top: messageText.bottom
-                anchors.topMargin: Units.gu(2)
-                anchors.left: parent.left
-                anchors.leftMargin: Units.gu(1)
-                Image {
-                    id: usernameBGImageLeft
-                    source: "images/input-default-focus-left.png"
-                    anchors.left: parent.left
-                    width: Units.gu(1.2)
-                    height: parent.height
-                }
-                Image {
-                    id: usernameBGImageCenter
-                    source: "images/input-default-focus-center.png"
-                    anchors.left: usernameBGImageLeft.right
-                    width: parent.width - Units.gu(2.4)
-                    height: parent.height
-                }
-                Image {
-                    id: usernameBGImageRight
-                    source: "images/input-default-focus-right.png"
-                    anchors.right: parent.right
-                    width: Units.gu(1.2)
-                    height: parent.height
-                }
-            }
-
-            Rectangle {
-                id: usernameRectangle
+            Item {
+                id: usernameItem
                 width: parent.width
-                height: Units.gu(3)
+                height: username.height * 1.7
                 anchors.left: parent.left
-                anchors.leftMargin: Units.gu(3)
                 anchors.top: messageText.bottom
-                anchors.topMargin: Units.gu(3)
-                color: "transparent"
+                anchors.topMargin: Units.gu(0.2)
+
+                Item {
+                    id: usernameBG
+                    visible: username.activeFocus
+                    anchors.fill: parent
+
+                    Image {
+                        id: usernameBGImageLeft
+                        source: "images/input-default-focus-left.png"
+                        anchors.left: parent.left
+                        height: parent.height
+                        width: height*12./36.
+                    }
+                    Image {
+                        id: usernameBGImageCenter
+                        source: "images/input-default-focus-center.png"
+                        anchors.left: usernameBGImageLeft.right
+                        anchors.right: usernameBGImageRight.left
+                        height: parent.height
+                    }
+                    Image {
+                        id: usernameBGImageRight
+                        source: "images/input-default-focus-right.png"
+                        anchors.right: parent.right
+                        height: parent.height
+                        width: height*12./36.
+                    }
+                }
 
                 Text {
                     id: usernameHint
                     width: parent.width
+                    height: username.height
                     text: "Username..."
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.fill: username
                     font.family: "Prelude"
-                    font.pixelSize: FontUtils.sizeToPixels("large")
+                    font.pixelSize: FontUtils.sizeToPixels("17pt")
                     color: "#888"
+                    visible: (username.length===0)&&(!username.activeFocus)
                 }
 
                 TextInput {
                     id: username
                     width: parent.width
+                    height: Units.gu(3)
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: parent.left
+                    anchors.leftMargin: Units.gu(1)
                     clip: true
                     anchors.horizontalCenter: parent.horizontalCenter
                     focus: true
                     font.family: "Prelude"
-                    font.pixelSize: FontUtils.sizeToPixels("large")
+                    font.pixelSize: FontUtils.sizeToPixels("17pt")
                     color: "black"
-                    onActiveFocusChanged: {
-                        if (username.activeFocus) {
-                            usernameBG.visible = true
-                        } else {
-                            usernameBG.visible = false
-                        }
-                    }
-
-                    onTextChanged: {
-                        if (username.length > 0)
-                            usernameHint.visible = false
-                        else
-                            usernameHint.visible = true
-                    }
                 }
             }
 
-            Rectangle {
-                id: passwordBG
-                width: parent.width - Units.gu(2)
-                height: Units.gu(4)
-                color: "white"
-                radius: 4
-                visible: false
-                anchors.top: usernameRectangle.bottom
-                anchors.left: parent.left
-                anchors.leftMargin: Units.gu(1)
-                Image {
-                    id: passwordBGImageLeft
-                    source: "images/input-default-focus-left.png"
-                    anchors.left: parent.left
-                    width: Units.gu(1.2)
-                    height: parent.height
-                }
-                Image {
-                    id: passwordBGImageCenter
-                    source: "images/input-default-focus-center.png"
-                    anchors.left: passwordBGImageLeft.right
-                    width: parent.width - passwordBGImageLeft.width - passwordBGImageRight.width
-                    height: parent.height
-                }
-                Image {
-                    id: passwordBGImageRight
-                    source: "images/input-default-focus-right.png"
-                    anchors.right: parent.right
-                    width: Units.gu(1.2)
-                    height: parent.height
-                }
-            }
-
-            Rectangle {
-                id: passwordRectangle
+            Item {
+                id: passwordItem
                 width: parent.width
-                height: Units.gu(3)
-                anchors.top: usernameRectangle.bottom
-                anchors.topMargin: Units.gu(1)
+                height: usernameItem.height
+                anchors.top: usernameItem.bottom
                 anchors.left: parent.left
-                anchors.leftMargin: Units.gu(3)
-                color: "transparent"
+
+                Item {
+                    id: passwordBG
+                    anchors.fill: parent
+                    visible: password.activeFocus
+
+                    Image {
+                        id: passwordBGImageLeft
+                        source: "images/input-default-focus-left.png"
+                        anchors.left: parent.left
+                        height: parent.height
+                        width: height*12./36.
+                    }
+                    Image {
+                        id: passwordBGImageCenter
+                        source: "images/input-default-focus-center.png"
+                        anchors.left: passwordBGImageLeft.right
+                        anchors.right: passwordBGImageRight.left
+                        height: parent.height
+                    }
+                    Image {
+                        id: passwordBGImageRight
+                        source: "images/input-default-focus-right.png"
+                        anchors.right: parent.right
+                        height: parent.height
+                        width: height*12./36.
+                    }
+                }
 
                 Text {
                     id: passwordHint
                     width: parent.width
                     text: "Password..."
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.fill: password
                     font.family: "Prelude"
-                    font.pixelSize: FontUtils.sizeToPixels("large")
+                    font.pixelSize: FontUtils.sizeToPixels("17pt")
                     color: "#888"
+                    visible: (password.length===0)&&(!password.activeFocus)
                 }
 
                 TextInput {
                     id: password
                     width: parent.width
+                    height: username.height
                     anchors.left: parent.left
-                    echoMode: TextInput.PasswordEchoOnEdit
+                    anchors.leftMargin: Units.gu(1)
+                    echoMode: TextInput.Password
                     passwordCharacter: "•"
                     clip: true
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.horizontalCenter: parent.horizontalCenter
                     font.family: "Prelude"
-                    font.pixelSize: FontUtils.sizeToPixels("large")
+                    font.pixelSize: FontUtils.sizeToPixels("17pt")
                     color: "black"
-                    onActiveFocusChanged: {
-                        if (password.activeFocus) {
-                            passwordBG.visible = true
-                        } else {
-                            passwordBG.visible = false
-                        }
-                    }
-
-                    onTextChanged: {
-                        if (password.length > 0) {
-                            passwordHint.visible = false
-                        } else {
-                            passwordHint.visible = true
-                        }
-                    }
                 }
             }
 
@@ -327,9 +283,10 @@ Item {
                 id: savePWCheckbox
                 source: authDialog.saveHistoryImageChecked ? "images/checkbox-checked.png" : "images/checkbox-unchecked.png"
                 anchors.left: parent.left
-                anchors.leftMargin: Units.gu(2)
-                anchors.top: passwordRectangle.bottom
+                anchors.top: passwordItem.bottom
                 anchors.topMargin: Units.gu(1)
+                height: Units.gu(2.4)
+                width: Units.gu(2.4)
 
                 MouseArea {
                     anchors.fill: parent
@@ -340,12 +297,12 @@ Item {
             Text {
                 anchors.left: savePWCheckbox.right
                 anchors.leftMargin: Units.gu(1)
-                anchors.top: passwordRectangle.bottom
+                anchors.top: passwordItem.bottom
                 anchors.topMargin: Units.gu(1)
-                text: "Save password in password manager?"
+                text: "Save password in password manager"
                 font.family: "Prelude"
                 font.pixelSize: FontUtils.sizeToPixels("medium")
-                color: "#444444"
+                color: messageText.color
             }
 
             Rectangle {
@@ -354,8 +311,7 @@ Item {
                 anchors.top: savePWCheckbox.bottom
                 anchors.topMargin: Units.gu(1)
                 anchors.left: parent.left
-                anchors.leftMargin: Units.gu(2)
-                width: (parent.width - Units.gu(5)) / 2
+                width: (parent.width - Units.gu(1)) / 2
                 color: "transparent"
                 radius: 4
                 Image {
@@ -404,9 +360,8 @@ Item {
                 height: Units.gu(4.5)
                 anchors.top: savePWCheckbox.bottom
                 anchors.topMargin: Units.gu(1)
-                anchors.left: cancelRect.right
-                anchors.leftMargin: Units.gu(1)
-                width: (parent.width - Units.gu(5)) / 2
+                anchors.right: parent.right
+                width: (parent.width - Units.gu(1)) / 2
                 radius: 4
                 color: "#4b4b4b"
                 Image {
