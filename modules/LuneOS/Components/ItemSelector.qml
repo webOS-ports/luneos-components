@@ -23,29 +23,22 @@ import LunaNext.Common 0.1
 
 MouseArea {
     // To avoid conflicting with ListView.model when inside ListView context.
-    property QtObject selectorModel
+    property QtObject selectorModel: model
     anchors.fill: parent
     onClicked: selectorModel.reject() // Tofe: not great
-
-    function getWidth()
-    {
-        console.log("math max width: "+Math.max(listView.contentItem.width)+" listView.contentItem.width: "+listView.contentItem.width);
-        return Units.gu(15);
-    }
 
     Rectangle {
         id: mainRect
 
         clip: true
-        width: Units.gu(15)
-        //width: getWidth()//Math.max(listView.contentItem.width) + Units.gu(3)
+        width: Units.gu(30)
         height: Math.min(listView.contentItem.height + listView.anchors.topMargin + listView.anchors.bottomMargin
                          , Math.max(selectorModel.elementRect.y, parent.height - selectorModel.elementRect.y - selectorModel.elementRect.height))
         x: (selectorModel.elementRect.x + Units.gu(20.0) > parent.width) ? parent.width - Unit.gu(20.0) : selectorModel.elementRect.x
         y: (selectorModel.elementRect.y + selectorModel.elementRect.height + height < parent.height ) ? selectorModel.elementRect.y + selectorModel.elementRect.height
                                                          : selectorModel.elementRect.y - height;
         radius: 5
-        color: "#DDDDDD"//"gainsboro"
+        color: "#DDDDDD"
         opacity: 0.8
 
         ListView {
@@ -57,19 +50,16 @@ MouseArea {
 
 
             delegate: Rectangle {
-                color: "#DDDDDD"//model.selected ? "gold" : "silver"
-                height: Units.gu(4.4)
-                //width: myText1.contentWidth //.width
+                color: model.selected ? "gold" : "#DDDDDD"
+                height: Units.gu(3)
+                width: parent.width //width: myText1.contentWidth //.width
 
                 Text {
                     id: myText1
-                    //anchors.centerIn: parent
                     anchors.left: parent.left
                     text: model.text
                     color: model.enabled ? "#333333" : "gainsboro"
-                    //color: "#333333"
-                   // elide: Text.ElideRight
-                    font.pixelSize: FontUtils.sizeToPixels("14pt")
+                    font.pixelSize: FontUtils.sizeToPixels("12pt")
                     font.family: "Prelude"
 
                 }
@@ -77,33 +67,22 @@ MouseArea {
                 MouseArea {
                     anchors.fill: parent
                     enabled: model.enabled
-                    onClicked: selectorModel.accept(model.index)
-                }
-                Component.onCompleted:
-
-                {
-                    console.log("Math.max(listView.contentItem.width): "+Math.max(listView.contentItem.width))
-                    //mainRect.width = Units.gu(15)//Math.max(listView.contentItem.width)*-10 + Units.gu(2);
-
-                }
-
+                    onClicked:          selectorModel.accept(model.index)
+					}
             }
 
             section.property: "group"
             section.delegate: Rectangle {
                 height: Units.gu(3.0)
-                //width: parent.width
-                //width: myText2.contentWidth
+                width: parent.width
                 color: "silver"
                 Text {
                     id: myText2
-                    //anchors.centerIn: parent
                     anchors.left: parent.left
                     text: section
                     font.italic: true
                     color: "#333333"
-//                    elide: Text.ElideRight
-                    font.pixelSize: FontUtils.sizeToPixels("14pt")
+                    font.pixelSize: FontUtils.sizeToPixels("12pt")
                     font.family: "Prelude"
 
                 }
