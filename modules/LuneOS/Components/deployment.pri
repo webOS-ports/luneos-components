@@ -12,7 +12,8 @@ QML_FILES = Page.qml \
             FilePicker.qml \
             ItemSelector.qml \
             PromptDialog.qml \
-            ProxyAuthenticationDialog.qml
+            ProxyAuthenticationDialog.qml \
+            LunaWebView.qml
 
 JS_FILES = js/MultiSelect.js
 

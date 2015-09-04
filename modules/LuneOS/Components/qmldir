@@ -13,3 +13,4 @@ FilePicker 1.0 FilePicker.qml
 ItemSelector 1.0 ItemSelector.qml
 PromptDialog 1.0 PromptDialog.qml
 ProxyAuthenticationDialog 1.0 ProxyAuthenticationDialog.qml
+LunaWebView 1.0 LunaWebView.qml
