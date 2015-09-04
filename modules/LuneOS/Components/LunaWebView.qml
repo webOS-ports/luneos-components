@@ -25,6 +25,8 @@ import LuneOS.Components 1.0
 WebView {
     id: webViewItem
 
+    experimental.preferences.fileAccessFromFileURLsAllowed: true
+    experimental.preferences.javascriptEnabled: true
     experimental.preferences.navigatorQtObjectEnabled: true
     experimental.preferences.localStorageEnabled: true
     experimental.preferences.offlineWebApplicationCacheEnabled: true
