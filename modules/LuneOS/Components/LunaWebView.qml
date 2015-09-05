@@ -109,8 +109,8 @@ WebView {
                 console.log("   port: " + model.securityOrigin.port);
             }
 
-            // we allow 5 MB for now
-            model.accept(5 * 1024 * 1024);
+            //We try to be a bit more flexible. Use up to a max of 64MB if requested, otherwise we use a default 5MB
+            model.accept((model.expectedUsage > (5 * 1024 * 1024)) ? (model.expectedUsage > (64*1024*1024)) ? (64 * 1024 * 1024) : model.expectedUsage : (5 * 1024 * 1024));
         }
     }
 }
