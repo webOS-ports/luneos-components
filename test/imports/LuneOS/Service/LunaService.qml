@@ -42,6 +42,8 @@ QtObject {
 
     Component.onCompleted: {
         initialized();
+
+        LSRegisteredMethods.executeMethod("luna://com.palm.applicationManager/launchPointChanges", {"applicationId": name, "payload": "{}"});
     }
 
     function call(serviceURI, jsonArgs, returnFct, handleError) {
@@ -59,6 +61,9 @@ QtObject {
         var args =  JSON.parse(jsonArgs) ;
         if( serviceURI === "luna://com.palm.applicationManager/listLaunchPoints" ) {
             listLaunchPoints_call(args, returnFct, handleError);
+        }
+        else if( serviceURI === "palm://com.palm.appinstaller/remove" ) {
+            removeApp_call(args, returnFct, handleError);
         }
         else if( serviceURI === "luna://com.palm.applicationManager/launch" ) {
             launchApp_call(args, returnFct, handleError);
@@ -135,12 +140,15 @@ QtObject {
         if( serviceURI === "palm://com.palm.bus/signal/registerServerStatus" ||
             serviceURI === "luna://com.palm.bus/signal/registerServerStatus" )
         {
-            returnFct({"payload": JSON.stringify({"connected": true})});
+            if( typeof returnFct !== 'undefined' ) {
+                returnFct({"payload": JSON.stringify({"connected": true})});
+            }
         }
         else if( serviceURI === "luna://com.palm.applicationManager/launchPointChanges" && args.subscribe)
         {
             returnFct({"payload": JSON.stringify({"subscribed": true})}); // simulate subscription answer
-            returnFct({"payload": JSON.stringify({})});
+            LSRegisteredMethods.addRegisteredMethod("luna://com.palm.applicationManager/launchPointChanges", returnFct);
+           // returnFct({"payload": JSON.stringify({})});
         }
         else if( serviceURI === "luna://org.webosports.bootmgr/getStatus" && args.subscribe )
         {
@@ -187,29 +195,27 @@ QtObject {
 
     function listLaunchPoints_call(jsonArgs, returnFct, handleError) {
         returnFct({"payload": JSON.stringify({"returnValue": true,
-                    "launchPoints": [
-             { "title": "Calendar", "id": "com.palm.app.calendar", "icon": "../images/default-app-icon.png" },
-             { "title": "Email", "id": "com.palm.app.email", "icon": "../images/default-app-icon.png" },
-             { "title": "Calculator", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png", "showInSearch": false },
-             { "title": "Snowshoe", "id": "com.palm.app.browser", "icon": "../images/default-app-icon.png" },
-             { "title": "This is a long title", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
-             { "title": "This_is_also_a_long_title", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
-             { "title": "Preware 5", "id": "com.palm.app.swmanager", "icon": "../images/default-app-icon.png" },
-             { "title": "iOS", "id": "com.palm.app.screenlock", "icon": "../images/default-app-icon.png" },
-             { "title": "Oh My", "id": "com.palm.app.enyo-findapps", "icon": "../images/default-app-icon.png" },
-             { "title": "Test1", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
-             { "title": "DummyWindow", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
-             { "title": "DummyWindow2", "id": "org.webosports.tests.dummyWindow2", "icon": "../images/default-app-icon.png" },
-             { "title": "DashboardWindow", "id": "org.webosports.tests.fakeDashboardWindow", "icon": "../images/default-app-icon.png" },
-             { "title": "SIMPinWindow", "id": "org.webosports.tests.fakeSimPinWindow", "icon": "../images/default-app-icon.png" },
-             { "title": "Oh My", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
-             { "title": "Test No Tab", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
-             { "title": "Test3", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
-             { "title": "Test5", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
-             { "title": "Test5bis", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
-             { "title": "Test6", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
-             { "title": "End Of All Tests", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" }
-           ]})});
+                   "launchPoints": LSRegisteredMethods._listLaunchPoints})});
+    }
+
+    function removeApp_call(jsonArgs, returnFct, handleError) {
+        var newListLaunchPoints = [];
+        var appHasBeenRemoved = false;
+
+        for( var i = 0; i < LSRegisteredMethods._listLaunchPoints.length; ++i ) {
+            if( LSRegisteredMethods._listLaunchPoints[i].id !== jsonArgs.packageName ) {
+                newListLaunchPoints.push(LSRegisteredMethods._listLaunchPoints[i]);
+            }
+            else {
+                appHasBeenRemoved = true;
+                console.log("removed " + LSRegisteredMethods._listLaunchPoints[i].id + " from the list of launchPoints");
+            }
+        }
+
+        if( appHasBeenRemoved ) {
+            LSRegisteredMethods._listLaunchPoints = newListLaunchPoints;
+            LSRegisteredMethods.executeMethod("luna://com.palm.applicationManager/launchPointChanges", {"applicationId": name, "payload": "{}"});
+        }
     }
 
     function giveFakeAppInfo_call(args, returnFct, handleError) {
