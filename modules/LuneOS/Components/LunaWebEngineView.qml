@@ -17,11 +17,16 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
+import QtQuick 2.1
 import QtWebEngine 1.1
-import QtWebEngine.experimental 1.1
+import QtWebEngine.experimental 1.0
 import Qt.labs.settings 1.0
 
 WebEngineView {
     id: webViewItem
+
+    settings.javascriptEnabled: true
+    settings.localStorageEnabled:true
+    settings.localContentCanAccessFileUrls: true
 }
 
