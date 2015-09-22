@@ -28,5 +28,7 @@ WebEngineView {
     settings.javascriptEnabled: true
     settings.localStorageEnabled:true
     settings.localContentCanAccessFileUrls: true
+    settings.javascriptCanAccessClipboard: true
+    settings.localContentCanAccessRemoteUrls: true
 }
 
