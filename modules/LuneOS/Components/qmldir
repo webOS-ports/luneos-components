@@ -6,12 +6,16 @@ AlertDialog 1.0 AlertDialog.qml
 AuthenticationDialog 1.0 AuthenticationDialog.qml
 CertDialog 1.0 CertDialog.qml
 ConfirmDialog 1.0 ConfirmDialog.qml
+ContextMenuExtras.qml 1.0 ContextMenuExtras.qml
 DialogButton 1.0 DialogButton.qml
 DialogLineInput 1.0 DialogLineInput.qml
 Dialog 1.0 Dialog.qml
 FilePicker 1.0 FilePicker.qml
 ItemSelector 1.0 ItemSelector.qml
+PermissionDialog.qml 1.0 PermissionDialog.qml
 PromptDialog 1.0 PromptDialog.qml
 ProxyAuthenticationDialog 1.0 ProxyAuthenticationDialog.qml
 LunaWebView 1.0 LunaWebView.qml
 LunaWebEngineView 1.0 LunaWebEngineView.qml
+WebEngineDialog.qml 1.0 WebEngineDialog.qml
+WebEngineDialogButton.qml 1.0 WebEngineDialogButton.qml

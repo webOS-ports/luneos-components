@@ -25,7 +25,30 @@ import Qt.labs.settings 1.0
 WebEngineView {
     id: webViewItem
 
-    settings.javascriptEnabled: true
+    PermissionDialog
+    {
+        id: permDialog
+        view: webViewItem
+        anchors {
+            left: parent.left
+            right: parent.right
+            top: parent.top
+        }
+        z: 3
+    }
+
+    onFeaturePermissionRequested: {
+        permDialog.securityOrigin = securityOrigin;
+        permDialog.requestedFeature = feature;
+        permDialog.visible = true
+    }
+	
+	experimental
+    {
+        extraContextMenuEntriesComponent: ContextMenuExtras {}
+    }
+	
+	settings.javascriptEnabled: true
     settings.localStorageEnabled:true
     settings.localContentCanAccessFileUrls: true
     settings.javascriptCanAccessClipboard: true
