@@ -6,15 +6,19 @@ QML_FILES = Page.qml \
             AuthenticationDialog.qml \
             CertDialog.qml \
             ConfirmDialog.qml \
+            ContextMenuExtras.qml \
             DialogButton.qml \
             DialogLineInput.qml \
             Dialog.qml \
             FilePicker.qml \
             ItemSelector.qml \
+            LunaWebView.qml \
+            LunaWebEngineView.qml \
+            PermissionDialog.qml \
             PromptDialog.qml \
             ProxyAuthenticationDialog.qml \
-            LunaWebView.qml \
-            LunaWebEngineView.qml
+            WebEngineDialog.qml \
+            WebEngineDialogButton.qml
 
 JS_FILES = js/MultiSelect.js
 
@@ -24,7 +28,7 @@ RESOURCE_FILES = images/button-up-center.png images/button-up-left.png images/bu
                  images/dialog-center-bottom.png images/dialog-center-middle.png images/dialog-center-top.png \
                  images/dialog-left-bottom.png images/dialog-left-middle.png images/dialog-left-top.png \
                  images/dialog-right-bottom.png images/dialog-right-middle.png images/dialog-right-top.png \
-                 images/icon-file.png images/icon-folder.png
+                 images/icon-file.png images/icon-folder.png images/icon-warning.png
 
 QMLDIR_FILE = qmldir
 
