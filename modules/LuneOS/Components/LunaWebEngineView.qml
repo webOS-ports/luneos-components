@@ -48,10 +48,14 @@ WebEngineView {
         extraContextMenuEntriesComponent: ContextMenuExtras {}
     }
 	
-	settings.javascriptEnabled: true
+    settings.javascriptEnabled: true
     settings.localStorageEnabled:true
     settings.localContentCanAccessFileUrls: true
     settings.javascriptCanAccessClipboard: true
     settings.localContentCanAccessRemoteUrls: true
+    settings.standardFontFamily: "Prelude"
+    settings.fixedFontFamily: "Courier new"
+    settings.serifFontFamily: "Times New Roman"
+    settings.cursiveFontFamily: "Prelude"
 }
 
