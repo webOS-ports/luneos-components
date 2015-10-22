@@ -164,7 +164,7 @@ QtObject {
             console.log("bootmgr status: normal");
             returnFct({"payload": JSON.stringify({"subscribed":true, "state": "normal"})}); // simulate subscription answer
         }
-        else if( ()serviceURI === "palm://com.palm.systemservice/getPreferences" || serviceURI === "luna://com.palm.systemservice/getPreferences") && args.subscribe)
+        else if( (serviceURI === "palm://com.palm.systemservice/getPreferences" || serviceURI === "luna://com.palm.systemservice/getPreferences") && args.subscribe)
         {
             returnFct({"payload": JSON.stringify({"subscribed": true})}); // simulate subscription answer
             returnFct({"payload": JSON.stringify({"wallpaper": { "wallpaperFile": "images/background.jpg"}})});
