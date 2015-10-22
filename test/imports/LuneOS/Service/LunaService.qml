@@ -124,6 +124,10 @@ QtObject {
 		{
 			getConfigs_call(args, returnFct, handleError);
 		}
+		else if (serviceURI === "luna://org.webosinternals.ipkgservice/setConfigState")
+		{
+			setConfigState_call(args, returnFct, handleError);
+		}
 		
         else {
             // Embed the jsonArgs into a payload message
@@ -164,7 +168,7 @@ QtObject {
             console.log("bootmgr status: normal");
             returnFct({"payload": JSON.stringify({"subscribed":true, "state": "normal"})}); // simulate subscription answer
         }
-        else if( ()serviceURI === "palm://com.palm.systemservice/getPreferences" || serviceURI === "luna://com.palm.systemservice/getPreferences") && args.subscribe)
+        else if( (serviceURI === "palm://com.palm.systemservice/getPreferences" || serviceURI === "luna://com.palm.systemservice/getPreferences") && args.subscribe)
         {
             returnFct({"payload": JSON.stringify({"subscribed": true})}); // simulate subscription answer
             returnFct({"payload": JSON.stringify({"wallpaper": { "wallpaperFile": "images/background.jpg"}})});
@@ -449,11 +453,20 @@ QtObject {
 	function getConfigs_call(args, returnFct, handleError)
     {
         var message
-        console.log("herrie args: "+args);
         message =
             {
                 "returnValue":true,
                 "configs": [{"config": "feedspider.conf", "enabled": false, "contents": "src/gz FeedSpider2 http://feedspider.net/luneos"}, {"config": "hominid-software.conf", "enabled": false, "contents": "src Hominid-Software http://hominidsoftware.com/preware"}, {"config": "macaw-enyo.conf", "enabled": false, "contents": "src Macaw-enyo http://minego.net/preware/macaw-enyo"}, {"config": "pivotce.conf", "enabled": false, "contents": "src PivotCE http://feed.pivotce.com"}, {"config": "webos-ports.conf", "enabled": true, "contents": "src/gz webosports http://feeds.webos-ports.org/webos-ports/all"}]};
+        returnFct({payload: JSON.stringify(message)});
+    }
+	
+	function setConfigState_call(args, returnFct, handleError)
+    {
+        var message
+        message =
+            {
+                "returnValue":true,
+                "stdOut": []};
         returnFct({payload: JSON.stringify(message)});
     }
 
