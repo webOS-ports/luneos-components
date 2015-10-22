@@ -28,6 +28,7 @@ QtObject {
 
     property var lockStatusSubscriber
     property string currentLockStatus: "locked"
+	property string currentSimState: "pinrequired"
 
     property var deviceLockModeSubscriber
     property string deviceLockMode: "none"
@@ -62,13 +63,13 @@ QtObject {
         if( serviceURI === "luna://com.palm.applicationManager/listLaunchPoints" ) {
             listLaunchPoints_call(args, returnFct, handleError);
         }
-        else if( serviceURI === "palm://com.palm.appinstaller/remove" ) {
+        else if( serviceURI === "palm://com.palm.appinstaller/remove" || serviceURI === "luna://com.palm.appinstaller/remove") {
             removeApp_call(args, returnFct, handleError);
         }
         else if( serviceURI === "luna://com.palm.applicationManager/launch" ) {
             launchApp_call(args, returnFct, handleError);
         }
-        else if( serviceURI === "palm://com.palm.applicationManager/getAppInfo" ) {
+        else if( serviceURI === "palm://com.palm.applicationManager/getAppInfo" || serviceURI === "luna://com.palm.applicationManager/getAppInfo" ) {
             giveFakeAppInfo_call(args, returnFct, handleError);
         }
         else if (serviceURI === "luna://com.palm.display/control/setLockStatus") {
@@ -108,14 +109,22 @@ QtObject {
         {
             getConnectionManagerStatus_call(args, returnFct, handleError);
         }
-        else if (serviceURI === "palm://com.palm.display/control/getProperty") {
+        else if (serviceURI === "palm://com.palm.display/control/getProperty" || serviceURI === "luna://com.palm.display/control/getProperty") {
             getDisplayProperty_call(args, returnFct, handleError);
         }
         else if(serviceURI ==="luna://com.palm.db/find")
         {
             findDb_call(args, returnFct, handleError);
         }
-
+		else if(serviceURI ==="luna://com.palm.db/search")
+        {
+            findDb_call(args, returnFct, handleError);
+        }
+		else if (serviceURI === "luna://org.webosinternals.ipkgservice/getConfigs")
+		{
+			getConfigs_call(args, returnFct, handleError);
+		}
+		
         else {
             // Embed the jsonArgs into a payload message
             var message = { applicationId: "org.webosports.tests.dummyWindow", payload: jsonArgs };
@@ -155,7 +164,7 @@ QtObject {
             console.log("bootmgr status: normal");
             returnFct({"payload": JSON.stringify({"subscribed":true, "state": "normal"})}); // simulate subscription answer
         }
-        else if( serviceURI === "palm://com.palm.systemservice/getPreferences" && args.subscribe)
+        else if( (serviceURI === "palm://com.palm.systemservice/getPreferences" || serviceURI === "luna://com.palm.systemservice/getPreferences") && args.subscribe)
         {
             returnFct({"payload": JSON.stringify({"subscribed": true})}); // simulate subscription answer
             returnFct({"payload": JSON.stringify({"wallpaper": { "wallpaperFile": "images/background.jpg"}})});
@@ -172,9 +181,18 @@ QtObject {
             deviceLockModeSubscriber = {func: returnFct};
             getDeviceLockMode_call(jsonArgs, returnFct, handleError);
         }
-        else if (serviceURI === "palm://com.palm.bus/signal/addmatch" )
+        else if (serviceURI === "luna://com.palm.telephony/simStatusQuery") {
+            var simState = {
+                "subscribed": true,
+                "returnValue":true,
+                "extended": { "state": "pinrequired" }
+            };
+            var respData = {"payload": JSON.stringify(simState)};
+            returnFct(respData);
+        }
+		else if (serviceURI === "palm://com.palm.bus/signal/addmatch" || serviceURI === "luna://com.palm.bus/signal/addmatch")
         {
-            LSRegisteredMethods.addRegisteredMethod("palm://" + name + args.category + "/" + args.name, returnFct);
+            LSRegisteredMethods.addRegisteredMethod("luna://" + name + args.category + "/" + args.name, returnFct);
             returnFct({"payload": JSON.stringify({"subscribed": true})}); // simulate subscription answer
         }
     }
@@ -427,6 +445,18 @@ QtObject {
         }
         returnFct({payload: JSON.stringify(message)});
     }
+	
+	function getConfigs_call(args, returnFct, handleError)
+    {
+        var message
+        console.log("herrie args: "+args);
+        message =
+            {
+                "returnValue":true,
+                "configs": [{"config": "feedspider.conf", "enabled": false, "contents": "src/gz FeedSpider2 http://feedspider.net/luneos"}, {"config": "hominid-software.conf", "enabled": false, "contents": "src Hominid-Software http://hominidsoftware.com/preware"}, {"config": "macaw-enyo.conf", "enabled": false, "contents": "src Macaw-enyo http://minego.net/preware/macaw-enyo"}, {"config": "pivotce.conf", "enabled": false, "contents": "src PivotCE http://feed.pivotce.com"}, {"config": "webos-ports.conf", "enabled": true, "contents": "src/gz webosports http://feeds.webos-ports.org/webos-ports/all"}]};
+        returnFct({payload: JSON.stringify(message)});
+    }
+
 
     function matchDevicePasscode_call(args, returnFct, handleError) {
         var success = (args.passCode === configuredPasscode);
