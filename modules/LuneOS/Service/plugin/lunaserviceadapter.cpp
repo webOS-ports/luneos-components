@@ -91,7 +91,7 @@ QString LunaServiceMessage::applicationId() const
 
 QString LunaServiceMessage::serviceId() const
 {
-    return QString(LSMessageGetServiceID(mMessage));
+    return QString(LSMessageGetSenderServiceName(mMessage));
 }
 
 LSMessage* LunaServiceMessage::messageObject() const
