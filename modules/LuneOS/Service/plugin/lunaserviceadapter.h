@@ -32,6 +32,7 @@ class LunaServiceMessage : public QObject
     Q_OBJECT
     Q_PROPERTY(QString payload READ payload CONSTANT)
     Q_PROPERTY(QString applicationId READ applicationId CONSTANT)
+    Q_PROPERTY(QString serviceId READ serviceId CONSTANT)
 
 public:
     LunaServiceMessage(LSMessage *message, QObject *parent = 0);
@@ -39,6 +40,7 @@ public:
 
     QString payload() const;
     QString applicationId() const;
+    QString serviceId() const;
 
     LSMessage* messageObject() const;
 
