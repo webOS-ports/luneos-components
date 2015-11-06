@@ -53,9 +53,17 @@ WebEngineView {
     settings.localContentCanAccessFileUrls: true
     settings.javascriptCanAccessClipboard: true
     settings.localContentCanAccessRemoteUrls: true
-    settings.standardFontFamily: "Prelude"
-    settings.fixedFontFamily: "Courier new"
-    settings.serifFontFamily: "Times New Roman"
-    settings.cursiveFontFamily: "Prelude"
+
+    Component.onCompleted: {
+        // these settings are only available on our custom WebEngine for LuneOS
+        if( typeof webViewItem.settings.standardFontFamily !== 'undefined' )
+            settings.standardFontFamily = "Prelude";
+        if( typeof webViewItem.settings.fixedFontFamily !== 'undefined' )
+            settings.fixedFontFamily = "Courier new";
+        if( typeof webViewItem.settings.serifFontFamily !== 'undefined' )
+            settings.serifFontFamily = "Times New Roman";
+        if( typeof webViewItem.settings.cursiveFontFamily !== 'undefined' )
+            settings.cursiveFontFamily = "Prelude";
+    }
 }
 
