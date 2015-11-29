@@ -1,0 +1,3 @@
+module org.nemomobile.dbus
+DBusInterface 2.0 DBusInterface.qml
+singleton DBus 2.0 DBus.qml

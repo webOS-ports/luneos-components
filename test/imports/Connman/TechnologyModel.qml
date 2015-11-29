@@ -5,4 +5,5 @@ Item {
     property bool powered: true
     property bool connected: false
     property bool scanning: false
+    property bool available: true
 }
