@@ -4,7 +4,7 @@ import "globalVars.js" as NotificationsVars
 QtObject {
     property int __nextId: 0
 
-    function notify(ownerId, replacesId, launchId, launchParams, title, body, iconUrl, priority, expireTimeout) {
+    function notify(ownerId, replacesId, launchId, launchParams, title, body, iconUrl, soundClass, soundFile, duration, doNotSuppress, priority, expireTimeout) {
         __nextId++;
         NotificationsVars.__listModel.append({
                            object: {
@@ -14,6 +14,10 @@ QtObject {
                                title: title,
                                body: body,
                                iconUrl: iconUrl,
+                               soundClass: soundClass,
+                               soundFile: soundFile,
+                               duration: duration,
+                               doNotSuppress: doNotSuppress,
                                priority: priority,
                                expireTimeout: expireTimeout,
                                body: body,
