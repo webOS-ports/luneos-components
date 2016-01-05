@@ -2,6 +2,7 @@ module LunaNext.Shell
 Reticle 0.1 Reticle.qml
 FpsCounter 0.1 FpsCounter.qml
 DeviceKeyHandler 0.1 DeviceKeyHandler.qml
+GestureHandler 0.1 GestureHandler.qml
 InverseMouseArea 0.1 InverseMouseArea.qml
 VolumeKeys 0.1 VolumeKeys.qml
 
