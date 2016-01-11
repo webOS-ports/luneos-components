@@ -105,6 +105,9 @@ QtObject {
         else if (serviceURI === "luna://com.palm.power/com/palm/power/batteryStatusQuery") {
             getBatteryStatusQuery_call(args, returnFct, handleError);
         }
+        else if (serviceURI === "luna://com.palm.power/com/palm/power/chargerStatusQuery") {
+            getChargerStatusQuery_call(args, returnFct, handleError);
+        }
         else if(serviceURI ==="luna://com.palm.connectionmanager/getstatus")
         {
             getConnectionManagerStatus_call(args, returnFct, handleError);
@@ -170,8 +173,7 @@ QtObject {
         }
         else if( (serviceURI === "palm://com.palm.systemservice/getPreferences" || serviceURI === "luna://com.palm.systemservice/getPreferences") && args.subscribe)
         {
-            returnFct({"payload": JSON.stringify({"subscribed": true})}); // simulate subscription answer
-            returnFct({"payload": JSON.stringify({"wallpaper": { "wallpaperFile": "images/background.jpg"}})});
+            returnFct({"payload": JSON.stringify({"subscribed": true, "wallpaper": { "wallpaperFile": "images/background.jpg"}, "timeFormat":"HH24"})});
         }
         else if (serviceURI === "luna://org.webosports.audio/getStatus")
         {
@@ -197,7 +199,7 @@ QtObject {
 		else if (serviceURI === "palm://com.palm.bus/signal/addmatch" || serviceURI === "luna://com.palm.bus/signal/addmatch")
         {
             LSRegisteredMethods.addRegisteredMethod("luna://" + name + args.category + "/" + args.name, returnFct);
-            returnFct({"payload": JSON.stringify({"subscribed": true})}); // simulate subscription answer
+            returnFct({"payload": JSON.stringify({"subscribed": true, "Charging": false, "percent_ui": 10})}); // simulate subscription answer
         }
     }
 
@@ -322,7 +324,8 @@ QtObject {
             "locale": { "languageCode": "en", "countryCode": "us", "phoneRegion": { "countryName": "United States", "countryCode": "us" } }
         };
         }
-        else if(args.keys == "region,timeZone")
+        
+		else if(args.keys == "region,timeZone")
         {
             console.log("returning dummy regionTime")
             var message = {
@@ -330,22 +333,20 @@ QtObject {
                 "region": { "countryName": "United States", "countryCode": "us" },
                 "timeZone": { "City": "New York", "Description": "Eastern Time", "CountryCode": "US", "Country": "United States of America", "supportsDST": 1, "ZoneID": "America\/New_York", "offsetFromUTC": -300, "preferred": true }
             };
-
         }
-
-        else if(args.keys == "region")
+        
+		else if(args.keys == "region")
         {
             var message = {
             "returnValue": true,
             "locale": { "languageCode": "en", "countryCode": "us", "phoneRegion": { "countryName": "United States", "countryCode": "us" } }
         };
         }
-
-        else
+		
+		else
         {
             console.log("We don't have a preference for: "+args.keys);
         }
-
         returnFct({payload: JSON.stringify(message)});
     }
 
@@ -420,6 +421,14 @@ QtObject {
 
         returnFct({payload: JSON.stringify(message)});
     }
+	
+    function getChargerStatusQuery_call(args, returnFct, handleError) {
+        var message = {
+            "returnValue": true,
+            "Charging": false
+        };
+        returnFct({payload: JSON.stringify(message)});
+    }
 
     function getConnectionManagerStatus_call(args, returnFct, handleError)
     {
@@ -429,7 +438,6 @@ QtObject {
     function findDb_call(args, returnFct, handleError)
     {
         var message
-        //console.log("herrie args: "+args);
         if(args.query.from ==="com.palm.browserhistory:1")
         {
             message =
@@ -445,7 +453,7 @@ QtObject {
         }
         else
         {
-            console.log("Herrie others: "+args.query.from)
+            console.log("Others: "+args.query.from)
         }
         returnFct({payload: JSON.stringify(message)});
     }

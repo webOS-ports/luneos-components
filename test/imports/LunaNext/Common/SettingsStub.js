@@ -52,6 +52,7 @@ var splashIconSize = 64;
 var gestureAreaHeight = 64;
 var positiveSpaceTopPadding = 0;
 var positiveSpaceBottomPadding = 0;
+var hasBrightnessControl = true;
 
 var layoutScale = dpi/132;
 var gridUnit = 8;
