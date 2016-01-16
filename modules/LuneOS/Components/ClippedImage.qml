@@ -18,21 +18,41 @@ Item {
     // If zero, the patch image will be scaled w.r.t. the original image proportions and wantedWidth
     property real wantedHeight: 0
 
-    width: wantedWidth
-    height: wantedHeight
-
-    Binding {
-        target: clippingItem
-        property: "width"
-        when: wantedWidth <= 0
-        value: height * (imageSize.width/imageSize.height) / patchGridSize.width
-    }
-    Binding {
-        target: clippingItem
-        property: "height"
-        when: wantedHeight <= 0
-        value: width * (imageSize.height/imageSize.width) / patchGridSize.height
-    }
+    // use states for binding properties, so that we don't end having binding loops
+    states: [
+        State {
+            when: wantedWidth > 0 && wantedHeight > 0
+            PropertyChanges {
+                target: clippingItem
+                width: wantedWidth
+                height: wantedHeight
+            }
+        },
+        State {
+            when: wantedWidth <= 0 && wantedHeight <= 0
+            PropertyChanges {
+                target: clippingItem
+                width: imageSize.width/patchGridSize.width
+                height: imageSize.height/patchGridSize.height
+            }
+        },
+        State {
+            when: wantedWidth > 0 && wantedHeight <= 0
+            PropertyChanges {
+                target: clippingItem
+                width: wantedWidth
+                height: width * (imageSize.height/imageSize.width) / patchGridSize.height
+            }
+        },
+        State {
+            when: wantedWidth <= 0 && wantedHeight > 0
+            PropertyChanges {
+                target: clippingItem
+                width: height * (imageSize.width/imageSize.height) / patchGridSize.width
+                height: wantedHeight
+            }
+        }
+    ]
 
     QtObject {
         id: internal
