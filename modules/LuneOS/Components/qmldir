@@ -5,6 +5,7 @@ Page 1.0 Page.qml
 AlertDialog 1.0 AlertDialog.qml
 AuthenticationDialog 1.0 AuthenticationDialog.qml
 CertDialog 1.0 CertDialog.qml
+ClippedImage 1.0 ClippedImage.qml
 ConfirmDialog 1.0 ConfirmDialog.qml
 ContextMenuExtras.qml 1.0 ContextMenuExtras.qml
 DialogButton 1.0 DialogButton.qml
