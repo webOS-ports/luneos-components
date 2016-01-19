@@ -5,6 +5,7 @@ QML_FILES = Page.qml \
             AlertDialog.qml \
             AuthenticationDialog.qml \
             CertDialog.qml \
+            ClippedImage.qml \
             ConfirmDialog.qml \
             ContextMenuExtras.qml \
             DialogButton.qml \
