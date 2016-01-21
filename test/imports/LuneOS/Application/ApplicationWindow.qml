@@ -18,6 +18,10 @@ Item {
     function hide() {
         window.visible = false;
     }
+    function close() {
+        hide();
+        closed();
+    }
 
     signal closed();
 }

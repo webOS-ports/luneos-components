@@ -36,9 +36,12 @@ public:
 
     enum Type {
         Card,
+        Launcher,
         Dashboard,
         PopupAlert,
-        Pin
+        BannerAlert,
+        Overlay,
+        Pin,
     };
 
     Type type() const;
