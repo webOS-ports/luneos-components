@@ -20,31 +20,33 @@
 #include <QJsonDocument>
 #include <QDebug>
 
-#include "db8model.h"
+#include <luna-service2/lunaservice.h>
 
-LS::Handle Db8Model::mHandle;
+#include "db8model.h"
+#include "lunaserviceadapter.h"
 
 Db8Model::Db8Model(QObject *parent) :
-    QAbstractListModel(parent)
+    QAbstractListModel(parent),
+    mToken(LSMESSAGE_TOKEN_INVALID),
+    mHandle(0)
 {
-    if (!mHandle) {
-        try {
-            mHandle = LS::registerService(QCoreApplication::applicationName().toUtf8().constData());
-            mHandle.attachToLoop(g_main_context_default());
-        }
-        catch (LS::Error &error) {
-            qWarning("Failed to register service handle: %s", error.what());
-        }
-    }
 }
 
 void Db8Model::classBegin()
 {
+    mLS2Service.classBegin();
 }
 
 void Db8Model::componentComplete()
 {
-    restart();
+    mLS2Service.setUsePrivateBus(false);
+    mLS2Service.setName(QCoreApplication::applicationName());
+    mLS2Service.componentComplete();
+
+    mHandle = mLS2Service.getInternalLSHandle();
+    if (mHandle) {
+        restart();
+    }
 }
 
 bool Db8Model::cbProcessResults(LSHandle *handle, LSMessage *message, void *context)
@@ -142,14 +144,31 @@ void Db8Model::restart()
 
     QString payload = QJsonDocument(request).toJson();
 
-    if (!mWatch)
-        mCurrentCall = mHandle.callOneReply("luna://com.palm.db/find",
-                                            payload.toUtf8().constData());
-    else
-        mCurrentCall = mHandle.callMultiReply("luna://com.palm.db/find",
-                                              payload.toUtf8().constData());
+    if (mHandle) {
+        LSError error;
+        LSErrorInit(&error);
+        QString errorMessage;
 
-    mCurrentCall.continueWith(cbProcessResults, this);
+        if (!mWatch) {
+            if (!LSCallOneReply(mHandle, "luna://com.palm.db/find", payload.toUtf8().constData(),
+                                &Db8Model::cbProcessResults, this, &mToken, &error)) {
+                qWarning("Failed to call remote service luna://com.palm.db/find");
+                errorMessage = QString("Failed to call remote service: %0").arg(error.message);
+            }
+        }
+        else {
+            if (!LSCall(mHandle, "luna://com.palm.db/find", payload.toUtf8().constData(),
+                                &Db8Model::cbProcessResults, this, &mToken, &error)) {
+                qWarning("Failed to call remote service luna://com.palm.db/find");
+                errorMessage = QString("Failed to call remote service: %0").arg(error.message);
+            }
+        }
+
+        if (LSErrorIsSet(&error)) {
+            LSErrorPrint(&error, stderr);
+            LSErrorFree(&error);
+        }
+    }
 }
 
 int Db8Model::rowCount(const QModelIndex &parent) const
