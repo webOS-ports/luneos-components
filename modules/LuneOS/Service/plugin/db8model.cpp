@@ -22,15 +22,19 @@
 
 #include "db8model.h"
 
+LS::Handle Db8Model::mHandle;
+
 Db8Model::Db8Model(QObject *parent) :
     QAbstractListModel(parent)
 {
-    try {
-        mHandle = LS::registerService(QCoreApplication::applicationName().toUtf8().constData());
-        mHandle.attachToLoop(g_main_context_default());
-    }
-    catch (LS::Error &error) {
-        qWarning("Failed to register service handle: %s", error.what());
+    if (!mHandle) {
+        try {
+            mHandle = LS::registerService(QCoreApplication::applicationName().toUtf8().constData());
+            mHandle.attachToLoop(g_main_context_default());
+        }
+        catch (LS::Error &error) {
+            qWarning("Failed to register service handle: %s", error.what());
+        }
     }
 }
 
