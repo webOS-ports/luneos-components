@@ -118,6 +118,7 @@ public:
 
     void removePendingCall(LunaServiceCall *call);
 
+    LSHandle *getInternalLSHandle()  { return mServiceHandle; }
 Q_SIGNALS:
     void initialized();
 

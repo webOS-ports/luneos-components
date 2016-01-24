@@ -22,8 +22,10 @@
 #include <QQmlParserStatus>
 #include <QJsonValue>
 #include <QJsonArray>
-#include <luna-service2++/handle.hpp>
-#include <luna-service2++/call.hpp>
+
+#include <luna-service2/lunaservice.h>
+
+#include "lunaserviceadapter.h"
 
 class Db8Model : public QAbstractListModel,
                  public QQmlParserStatus
@@ -64,8 +66,9 @@ private:
     bool mWatch;
     QString mKind;
     QJsonValue mQuery;
-    static LS::Handle mHandle;
-    LS::Call mCurrentCall;
+    LunaServiceAdapter mLS2Service;
+    LSMessageToken mToken;
+    LSHandle *mHandle;
     QJsonArray mResults;
     QHash<int, QByteArray> mRoles;
 
