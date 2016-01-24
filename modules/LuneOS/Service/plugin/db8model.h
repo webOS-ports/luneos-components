@@ -64,7 +64,7 @@ private:
     bool mWatch;
     QString mKind;
     QJsonValue mQuery;
-    LS::Handle mHandle;
+    static LS::Handle mHandle;
     LS::Call mCurrentCall;
     QJsonArray mResults;
     QHash<int, QByteArray> mRoles;

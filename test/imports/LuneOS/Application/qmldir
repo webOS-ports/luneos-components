@@ -1,4 +1,3 @@
 module LuneOS.Application
 ApplicationWindow 1.0 ApplicationWindow.qml
-Db8Model 1.0 Db8Model.qml
 WindowType 1.0 WindowTypes.js

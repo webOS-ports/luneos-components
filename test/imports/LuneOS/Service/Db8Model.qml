@@ -68,8 +68,12 @@ ListModel {
         // Parse _internalDb and try to apply the query
         // We make the assumption that the query is a simple classic one
 
-        var propFilter = testDb8Model.query.where[0].prop;
-        var propFilterValue = testDb8Model.query.where[0].val;
+        var propFilter = "";
+        var propFilterValue = "";
+        if( testDb8Model.query.where ) {
+            propFilter = testDb8Model.query.where[0].prop;
+            propFilterValue = testDb8Model.query.where[0].val;
+        }
         var orderByProp = testDb8Model.query.orderBy;
         var ascending = !testDb8Model.query.desc;
 
@@ -78,17 +82,24 @@ ListModel {
         var dbContent = DB8.getDb(testDb8Model.kind);
         for( var i=0; i<dbContent.length; ++i ) {
             var elt = dbContent[i];
-            if (typeof elt[propFilter] === 'object') {
-                for( var j=0; j<elt[propFilter].length; ++j) {
-                    var subElt = elt[propFilter][j];
-                    if (subElt._id === propFilterValue) {
-                        result.push(elt);
-                        break;
+            if( !testDb8Model.query.where ) {
+                // no filtering --> go on
+                result.push(elt);
+            }
+            else {
+                // apply filter. Only "prop" and "=" are supported so far.
+                if (typeof elt[propFilter] === 'object') {
+                    for( var j=0; j<elt[propFilter].length; ++j) {
+                        var subElt = elt[propFilter][j];
+                        if (subElt._id === propFilterValue) {
+                            result.push(elt);
+                            break;
+                        }
                     }
                 }
-            }
-            else if (elt[propFilter] === propFilterValue) {
-                result.push(elt);
+                else if (elt[propFilter] === propFilterValue) {
+                    result.push(elt);
+                }
             }
         }
 
