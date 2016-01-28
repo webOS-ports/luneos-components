@@ -53,5 +53,6 @@ function put(kind, dataArray)
 
 function getDb(kind)
 {
+    if( typeof _internalDb8[kind] === 'undefined' ) return []
     return _internalDb8[kind].data;
 }
