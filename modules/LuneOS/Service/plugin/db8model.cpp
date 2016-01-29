@@ -49,6 +49,39 @@ void Db8Model::componentComplete()
     }
 }
 
+void Db8Model::setWatch(bool watch)
+{
+    if (mWatch != watch) {
+        mWatch = watch;
+        watchChanged();
+        if (mHandle) {
+            restart();
+        }
+    }
+}
+
+void Db8Model::setQuery(const QJsonValue &query)
+{
+    if (mQuery != query) {
+        mQuery = query;
+        queryChanged();
+        if (mHandle) {
+            restart();
+        }
+    }
+}
+
+void Db8Model::setKind(const QString &kind)
+{
+    if (mKind != kind) {
+        mKind = kind;
+        kindChanged();
+        if (mHandle) {
+            restart();
+        }
+    }
+}
+
 bool Db8Model::cbProcessResults(LSHandle *handle, LSMessage *message, void *context)
 {
     Q_UNUSED(handle);
