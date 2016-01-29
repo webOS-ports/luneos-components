@@ -45,13 +45,13 @@ public:
     QHash<int, QByteArray> roleNames() const;
 
     QString kind() const { return mKind; }
-    void setKind(const QString &kind) { mKind = kind; }
+    void setKind(const QString &kind);
 
     QJsonValue query() const { return mQuery; }
-    void setQuery(const QJsonValue &query) { mQuery = query; }
+    void setQuery(const QJsonValue &query);
 
     bool watch() const { return mWatch; }
-    void setWatch(bool watch) { mWatch = watch; }
+    void setWatch(bool watch);
 
 Q_SIGNALS:
     void kindChanged();
