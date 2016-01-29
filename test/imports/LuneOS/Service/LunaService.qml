@@ -437,7 +437,7 @@ QtObject {
 
     function findDb_call(args, returnFct, handleError)
     {
-        var message
+        var message = {}
         if(args.query.from ==="com.palm.browserhistory:1")
         {
             message =
@@ -450,6 +450,11 @@ QtObject {
             message =
             {"returnValue":true,
                 "results":[{"_id":"browserbookmarkstest1","_kind":"com.palm.browserbookmarks:1","_rev":599,"_sync":true,"date":1439655155269,"title":"WebOS Internals","url":"http://www.webos-internals.org/"},{"_id":"browserbookmarkstest2","_kind":"com.palm.browserbookmarks:1","_rev":600,"_sync":true,"date":1439655173937,"title":"WebOS Nation","url":"http://www.webosnation.com/"},{"_id":"browserbookmarkstest3","_kind":"com.palm.browserbookmarks:1","_rev":1629,"_sync":true,"date":1439894450703,"title":"LG SVL","url":"http://www.lgsvl.com/"}]};
+        }
+        else if(args.query.from ==="com.palm.phonecallgroup:1")
+        {
+            message =
+            {"returnValue":true, "results":[]};
         }
         else
         {

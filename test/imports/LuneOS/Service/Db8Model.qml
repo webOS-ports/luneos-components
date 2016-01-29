@@ -26,6 +26,10 @@ ListModel {
     property bool watch: false
     property variant query: null
 
+    onQueryChanged: {
+        syncDb8Model();
+    }
+
     Component.onCompleted: DB8.initDb8Kind(kind, syncDb8Model);
     Component.onDestruction: DB8.unregisterListener(kind, syncDb8Model);
 
