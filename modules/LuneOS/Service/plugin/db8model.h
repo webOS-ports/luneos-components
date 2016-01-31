@@ -37,12 +37,19 @@ class Db8Model : public QAbstractListModel,
     Q_PROPERTY(QJsonValue query READ query WRITE setQuery NOTIFY queryChanged)
     Q_PROPERTY(bool watch READ watch WRITE setWatch NOTIFY watchChanged)
 
+    Q_PROPERTY(unsigned int count READ count NOTIFY countChanged)
+
+
 public:
     explicit Db8Model(QObject *parent = 0);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role) const;
     QHash<int, QByteArray> roleNames() const;
+
+    Q_INVOKABLE QVariant get(int index);
+
+    unsigned int count() const { return rowCount(); }
 
     QString kind() const { return mKind; }
     void setKind(const QString &kind);
@@ -57,6 +64,7 @@ Q_SIGNALS:
     void kindChanged();
     void queryChanged();
     void watchChanged();
+    void countChanged();
 
 protected:
     virtual void classBegin();

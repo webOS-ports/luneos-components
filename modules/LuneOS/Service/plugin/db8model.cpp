@@ -30,6 +30,8 @@ Db8Model::Db8Model(QObject *parent) :
     mToken(LSMESSAGE_TOKEN_INVALID),
     mHandle(0)
 {
+    connect(this, &Db8Model::rowsInserted, [=]() { Q_EMIT countChanged(); });
+    connect(this, &Db8Model::rowsRemoved, [=]() { Q_EMIT countChanged(); });
 }
 
 void Db8Model::classBegin()
@@ -47,6 +49,15 @@ void Db8Model::componentComplete()
     if (mHandle) {
         restart();
     }
+}
+
+QVariant Db8Model::get(int index)
+{
+    if (index < 0 || index >= mResults.count())
+        return QVariant();
+
+    QJsonValue mValue = mResults.at(index);
+    return mValue.toVariant();
 }
 
 void Db8Model::setWatch(bool watch)
