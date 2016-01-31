@@ -1,3 +1,5 @@
+TEMPLATE = aux
+
 uri = LuneOS.Telephony
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 
