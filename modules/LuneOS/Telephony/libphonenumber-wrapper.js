@@ -36,12 +36,18 @@ function normalizePhoneNumber(phoneNumber, countryCode)
     var phoneNumberObj = PhoneNumber.Parse(phoneNumber, countryCode);
 
     // try to be compatible with Enyo g11n
+    if (phoneNumberObj) {
+        // reverse of "+-countrycode--national_number_without_leading_digits-extension"
+        var phoneNatNumberWithoutLeadingDigits = phoneNumberObj.nationalNumber.substr(phoneNumberObj.leadingDigit.length);
 
-    // reverse of "+-countrycode--national_number-extension"
+        var normalizedNumber = "+-"+phoneNumberObj.regionMetaData.countryCode + "--" + phoneNatNumberWithoutLeadingDigits + "-";
+        var reversedNormalizedNumber = normalizedNumber.split("").reverse().join("");
 
-    var normalizedNumber = "+-"+phoneNumberObj.regionMetaData.countryCode + "--" + phoneNumberObj.nationalNumber + "-";
-    var reversedNormalizedNumber = normalizedNumber.split("").reverse().join("");
+        console.log("normalizePhoneNumber("+phoneNumber+")="+reversedNormalizedNumber);
+        return reversedNormalizedNumber;
+    }
 
-    console.log("normalizePhoneNumber("+phoneNumber+")="+reversedNormalizedNumber);
-    return reversedNormalizedNumber;
+    // worst case scenario: we couldn't parse the number. Fallback to
+    console.log("ERROR: normalizePhoneNumber: couldn't parse "+phoneNumber+" !");
+    return "-" + phoneNumber.split("").reverse().join("") + "---";
 }

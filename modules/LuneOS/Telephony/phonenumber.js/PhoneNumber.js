@@ -130,6 +130,29 @@ var PhoneNumber = (function (dataBase) {
     }
   }
 
+  function FormatLeadingDigits(regionMetaData, number)
+  {
+      // We lazily parse the format description in the meta data for the region,
+      // so make sure to parse it now if we haven't already done so.
+      ParseFormat(regionMetaData);
+      var formats = regionMetaData.formats;
+      if (!formats) {
+        return null;
+      }
+      for (var n = 0; n < formats.length; ++n) {
+        var format = formats[n];
+        // The leading digits field is optional. If we don't have it, just
+        // use the matching pattern to qualify numbers.
+        if (format.leadingDigits && !format.leadingDigits.test(number))
+          continue;
+
+        var numberWithoutLeadingDigits = number.replace(format.leadingDigits, "");
+        return number.substr(0, number.length-numberWithoutLeadingDigits.length);
+      }
+
+      return "";
+  }
+
   // Format a national number for a given region. The boolean flag "intl"
   // indicates whether we want the national or international format.
   function FormatNumber(regionMetaData, number, intl) {
@@ -197,6 +220,7 @@ var PhoneNumber = (function (dataBase) {
     this.nationalFormat = FormatNumber(this.regionMetaData, this.nationalNumber, false);
     var internationalNumber = this.internationalFormat ? this.internationalFormat.replace(NON_DIALABLE_CHARS, "")
                                                        : null;
+    this.leadingDigit = FormatLeadingDigits(this.regionMetaData, this.nationalNumber);
   }
 
   // Check whether the number is valid for the given region.
