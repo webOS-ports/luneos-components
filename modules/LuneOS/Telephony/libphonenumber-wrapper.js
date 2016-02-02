@@ -33,14 +33,14 @@ Qt.include("phonenumber.js/PhoneNumber.js");
 
 function normalizePhoneNumber(phoneNumber, countryCode)
 {
-    var phoneNumberObj = PhoneNumber.Parse(phoneNumber, countryCode);
+    var phoneNumberObj = PhoneNumberLib.Parse(phoneNumber, countryCode);
 
     // try to be compatible with Enyo g11n
     if (phoneNumberObj) {
         // reverse of "+-countrycode--national_number_without_leading_digits-extension"
         var phoneNatNumberWithoutLeadingDigits = phoneNumberObj.nationalNumber.substr(phoneNumberObj.leadingDigit.length);
 
-        var normalizedNumber = "+-"+phoneNumberObj.regionMetaData.countryCode + "--" + phoneNatNumberWithoutLeadingDigits + "-";
+        var normalizedNumber = "+-"+phoneNumberObj.regionMetaData.countryCode + "-" + phoneNumberObj.leadingDigit + "-" + phoneNatNumberWithoutLeadingDigits + "-";
         var reversedNormalizedNumber = normalizedNumber.split("").reverse().join("");
 
         console.log("normalizePhoneNumber("+phoneNumber+")="+reversedNormalizedNumber);
