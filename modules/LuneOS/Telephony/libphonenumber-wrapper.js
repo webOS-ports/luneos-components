@@ -27,9 +27,17 @@ function normalizePhoneNumber(phoneNumber, countryCode)
 */
 
 /**** version using luneos' telephony-lib ******/
-Qt.include("phonenumber.js/PhoneNumberMetadata.js");
-Qt.include("phonenumber.js/PhoneNumberNormalizer.js");
-Qt.include("phonenumber.js/PhoneNumber.js");
+var phoneNumberLibPath = "/usr/palm/frameworks/phonenumberlib/version/1.0/javascript";
+
+var include1 = Qt.include(phoneNumberLibPath + "/PhoneNumberMetadata.js");
+if(!include1.OK) {
+    // it failed with on-device path, so try again with relative path (Qt Desktop situation)
+    phoneNumberLibPath = Qt.resolvedUrl("../../../../loadable-frameworks/phonenumberlib/javascript");
+    console.log("loading phonenumberlib from on-device default path failed, trying with: " + phoneNumberLibPath);
+    Qt.include(phoneNumberLibPath + "/PhoneNumberMetadata.js");
+}
+Qt.include(phoneNumberLibPath + "/PhoneNumberNormalizer.js");
+Qt.include(phoneNumberLibPath + "/PhoneNumber.js");
 
 function normalizePhoneNumber(phoneNumber, countryCode)
 {
@@ -48,6 +56,6 @@ function normalizePhoneNumber(phoneNumber, countryCode)
     }
 
     // worst case scenario: we couldn't parse the number. Fallback to
-    console.log("ERROR: normalizePhoneNumber: couldn't parse "+phoneNumber+" !");
+    console.log("ERROR: normalizePhoneNumber: couldn't parse "+phoneNumber+", returning locale-less normalization");
     return "-" + phoneNumber.split("").reverse().join("") + "---";
 }
