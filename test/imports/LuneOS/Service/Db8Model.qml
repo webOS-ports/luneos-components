@@ -45,8 +45,10 @@ ListModel {
 
     function setTestDataFile(filePath) {
         if( DB8.testDataFileParsed.indexOf(filePath)>=0 ) {
-            // just get in sync with the db and return
-            syncDb8Model();
+            // just get in sync with the db if needed and return
+            if( testDb8Model.count === 0 ) {
+                syncDb8Model();
+            }
             return;
         }
         DB8.testDataFileParsed.push(filePath);
