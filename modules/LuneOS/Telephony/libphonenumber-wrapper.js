@@ -39,6 +39,37 @@ if(!include1.OK) {
 Qt.include(phoneNumberLibPath + "/PhoneNumberNormalizer.js");
 Qt.include(phoneNumberLibPath + "/PhoneNumber.js");
 
+// vCard stuff is using these types. Make sure if you change anything on this
+// that the tests for vCard don't fail. Otherwise the rath of a million sand flies
+// will overtake your shorts!
+// prefixing these with "type_" to discourage direct display of these values
+var PhoneNumberType = {
+    "type_mobile" : "MOBILE",
+    "type_home" : "HOME",
+    "type_home2" : "HOME2",
+    "type_work" : "WORK",
+    "type_work2" : "WORK2",
+    "type_main" : "MAIN",
+    "type_personal_fax" : "PERSONAL_FAX",
+    "type_work_fax" : "WORK_FAX",
+    "type_pager" : "PAGER",
+    "type_personal" : "PERSONAL",
+    "type_sim" : "SIM",
+    "type_assistant" : "ASSISTANT",
+    "type_car" : "CAR",
+    "type_radio" : "RADIO",
+    "type_company" : "COMPANY",
+    "type_other" : "OTHER"
+};
+
+function getPhoneNumberTypeStr(phoneNumberType) {
+    if( PhoneNumberType.hasOwnProperty(phoneNumberType) ) {
+        return PhoneNumberType[phoneNumberType];
+    }
+
+    return "OTHER";
+}
+
 function normalizePhoneNumber(phoneNumber, countryCode)
 {
     var phoneNumberObj = PhoneNumberLib.Parse(phoneNumber, countryCode);
