@@ -30,7 +30,7 @@ function normalizePhoneNumber(phoneNumber, countryCode)
 var phoneNumberLibPath = "/usr/palm/frameworks/phonenumberlib/version/1.0/javascript";
 
 var include1 = Qt.include(phoneNumberLibPath + "/PhoneNumberMetadata.js");
-if(!include1.OK) {
+if(include1.status !== include1.OK) {
     // it failed with on-device path, so try again with relative path (Qt Desktop situation)
     phoneNumberLibPath = Qt.resolvedUrl("../../../../loadable-frameworks/phonenumberlib/javascript");
     console.log("loading phonenumberlib from on-device default path failed, trying with: " + phoneNumberLibPath);
@@ -68,6 +68,18 @@ function getPhoneNumberTypeStr(phoneNumberType) {
     }
 
     return "OTHER";
+}
+
+function formatPhoneNumberForDisplay(phoneNumber, countryCode)
+{
+    var phoneNumberObj = PhoneNumberLib.Parse(phoneNumber, countryCode);
+
+    if( phoneNumberObj )
+    {
+        if( phoneNumber[0] === '+' && phoneNumberObj.internationalFormat ) return phoneNumberObj.internationalFormat;
+        if( phoneNumberObj.nationalFormat ) return phoneNumberObj.nationalFormat
+    }
+    return phoneNumber;
 }
 
 function normalizePhoneNumber(phoneNumber, countryCode)
