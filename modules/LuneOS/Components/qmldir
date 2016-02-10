@@ -1,23 +1,23 @@
 module LuneOS.Components
 plugin LuneOSComponents
 
-Page 1.0 Page.qml
 AlertDialog 1.0 AlertDialog.qml
 AuthenticationDialog 1.0 AuthenticationDialog.qml
 CertDialog 1.0 CertDialog.qml
 ClippedImage 1.0 ClippedImage.qml
 ConfirmDialog 1.0 ConfirmDialog.qml
-ContextMenuExtras.qml 1.0 ContextMenuExtras.qml
+ContextMenuExtras 1.0 ContextMenuExtras.qml
 DialogButton 1.0 DialogButton.qml
 DialogLineInput 1.0 DialogLineInput.qml
 Dialog 1.0 Dialog.qml
 FilePicker 1.0 FilePicker.qml
 ItemSelector 1.0 ItemSelector.qml
-PermissionDialog.qml 1.0 PermissionDialog.qml
+LunaWebEngineView 1.0 LunaWebEngineView.qml
+LunaWebView 1.0 LunaWebView.qml
+Page 1.0 Page.qml
+PermissionDialog 1.0 PermissionDialog.qml
 PromptDialog 1.0 PromptDialog.qml
 ProxyAuthenticationDialog 1.0 ProxyAuthenticationDialog.qml
-LunaWebView 1.0 LunaWebView.qml
-LunaWebEngineView 1.0 LunaWebEngineView.qml
-WebEngineDialog.qml 1.0 WebEngineDialog.qml
-WebEngineDialogButton.qml 1.0 WebEngineDialogButton.qml
-Tweak.qml 1.0 Tweak.qml
+Tweak 1.0 Tweak.qml
+WebEngineDialog 1.0 WebEngineDialog.qml
+WebEngineDialogButton 1.0 WebEngineDialogButton.qml
