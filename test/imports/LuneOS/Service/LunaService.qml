@@ -119,19 +119,23 @@ QtObject {
         {
             findDb_call(args, returnFct, handleError);
         }
-		else if(serviceURI ==="luna://com.palm.db/search")
+        else if(serviceURI ==="luna://com.palm.db/search")
         {
             findDb_call(args, returnFct, handleError);
         }
-		else if (serviceURI === "luna://org.webosinternals.ipkgservice/getConfigs")
-		{
-			getConfigs_call(args, returnFct, handleError);
-		}
-		else if (serviceURI === "luna://org.webosinternals.ipkgservice/setConfigState")
-		{
-			setConfigState_call(args, returnFct, handleError);
-		}
-		
+        else if (serviceURI === "luna://org.webosinternals.ipkgservice/getConfigs")
+        {
+            getConfigs_call(args, returnFct, handleError);
+        }
+        else if (serviceURI === "luna://org.webosinternals.ipkgservice/setConfigState")
+        {
+            setConfigState_call(args, returnFct, handleError);
+        }
+        else if (serviceURI === "luna://org.webosinternals.tweaks.prefs/get") {
+            getTweaks_call(args, returnFct, handleError);
+        }
+
+
         else {
             // Embed the jsonArgs into a payload message
             var message = { applicationId: "org.webosports.tests.dummyWindow", payload: jsonArgs };
@@ -196,7 +200,7 @@ QtObject {
             var respData = {"payload": JSON.stringify(simState)};
             returnFct(respData);
         }
-		else if (serviceURI === "palm://com.palm.bus/signal/addmatch" || serviceURI === "luna://com.palm.bus/signal/addmatch")
+        else if (serviceURI === "palm://com.palm.bus/signal/addmatch" || serviceURI === "luna://com.palm.bus/signal/addmatch")
         {
             LSRegisteredMethods.addRegisteredMethod("luna://" + name + args.category + "/" + args.name, returnFct);
             returnFct({"payload": JSON.stringify({"subscribed": true, "Charging": false, "percent_ui": 10})}); // simulate subscription answer
@@ -325,7 +329,7 @@ QtObject {
         };
         }
         
-		else if(args.keys == "region,timeZone")
+        else if(args.keys == "region,timeZone")
         {
             console.log("returning dummy regionTime")
             var message = {
@@ -335,15 +339,15 @@ QtObject {
             };
         }
         
-		else if(args.keys == "region")
+        else if(args.keys == "region")
         {
             var message = {
             "returnValue": true,
             "locale": { "languageCode": "en", "countryCode": "us", "phoneRegion": { "countryName": "United States", "countryCode": "us" } }
         };
         }
-		
-		else
+
+        else
         {
             console.log("We don't have a preference for: "+args.keys);
         }
@@ -421,7 +425,7 @@ QtObject {
 
         returnFct({payload: JSON.stringify(message)});
     }
-	
+
     function getChargerStatusQuery_call(args, returnFct, handleError) {
         var message = {
             "returnValue": true,
@@ -462,8 +466,8 @@ QtObject {
         }
         returnFct({payload: JSON.stringify(message)});
     }
-	
-	function getConfigs_call(args, returnFct, handleError)
+
+    function getConfigs_call(args, returnFct, handleError)
     {
         var message
         message =
@@ -472,8 +476,8 @@ QtObject {
                 "configs": [{"config": "feedspider.conf", "enabled": false, "contents": "src/gz FeedSpider2 http://feedspider.net/luneos"}, {"config": "hominid-software.conf", "enabled": false, "contents": "src Hominid-Software http://hominidsoftware.com/preware"}, {"config": "macaw-enyo.conf", "enabled": false, "contents": "src Macaw-enyo http://minego.net/preware/macaw-enyo"}, {"config": "pivotce.conf", "enabled": false, "contents": "src PivotCE http://feed.pivotce.com"}, {"config": "webos-ports.conf", "enabled": true, "contents": "src/gz webosports http://feeds.webos-ports.org/webos-ports/all"}]};
         returnFct({payload: JSON.stringify(message)});
     }
-	
-	function setConfigState_call(args, returnFct, handleError)
+
+    function setConfigState_call(args, returnFct, handleError)
     {
         var message
         message =
@@ -504,6 +508,23 @@ QtObject {
             lockedOut: false
         };
 
+        returnFct({payload: JSON.stringify(message)});
+    }
+
+    function getTweaks_call(args, returnFct, handleError) {
+
+        //return preference value for locale
+        console.log("args.keys: "+args.keys);
+        if (args.keys == "dialPadFeedback") {
+            var message = {
+                "returnValue": true,
+                "dialPadFeedback": "vibrateOnly"
+            };
+        }
+
+        else {
+            console.log("We don't have a Tweak for: "+args.keys);
+        }
         returnFct({payload: JSON.stringify(message)});
     }
 }
