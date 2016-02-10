@@ -521,6 +521,97 @@ QtObject {
                 "dialPadFeedback": "vibrateOnly"
             };
         }
+		
+		else if (args.keys == "alwaysShowProgressBarKey") {
+            var message = {
+                "returnValue": true,
+                "alwaysShowProgressBarKey": true
+            };
+        }
+		
+		else if (args.keys == "privateByDefaultKey") {
+            var message = {
+                "returnValue": true,
+                "privateByDefaultKey": true
+            };
+        }
+		
+		else if (args.keys == "toggleVKBKey") {
+            var message = {
+                "returnValue": true,
+                "toggleVKBKey": true
+            };
+        }
+		
+		else if (args.keys == "tapRippleSupport") {
+            var message = {
+                "returnValue": true,
+                "tapRippleSupport": true
+            };
+        }
+
+		else if (args.keys == "showGestureArea") {
+            var message = {
+                "returnValue": true,
+                "showGestureArea": true
+            };
+        }
+
+		else if (args.keys == "capitalizedCase") {
+            var message = {
+                "returnValue": true,
+                "capitalizedCase": "upperCase"
+            };
+        }
+
+		else if (args.keys == "tabIndicatorNumber") {
+            var message = {
+                "returnValue": true,
+                "tabIndicatorNumber": "default"
+            };
+        }
+
+		else if (args.keys == "stackedCardSupport") {
+            var message = {
+                "returnValue": true,
+                "stackedCardSupport": true
+            };
+        }
+		
+		else if (args.keys == "showDateTime") {
+            var message = {
+                "returnValue": true,
+                "showDateTime": "timeOnly"
+            };
+        }
+
+		else if (args.keys == "showBatteryPercentage") {
+            var message = {
+                "returnValue": true,
+                "showBatteryPercentage": "iconOnly"
+            };
+        }
+
+		else if (args.keys == "batteryPercentageColor") {
+            var message = {
+                "returnValue": true,
+                "batteryPercentageColor": "white"
+            };
+        }
+
+		else if (args.keys == "useCustomCarrierString") {
+            var message = {
+                "returnValue": true,
+                "useCustomCarrierString": false
+            };
+        }
+
+		else if (args.keys == "carrierString") {
+            var message = {
+                "returnValue": true,
+                "carrierString": "LuneOS"
+            };
+        }
 
         else {
             console.log("We don't have a Tweak for: "+args.keys);
