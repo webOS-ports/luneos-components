@@ -514,7 +514,6 @@ QtObject {
     function getTweaks_call(args, returnFct, handleError) {
 
         //return preference value for locale
-        console.log("args.keys: "+args.keys);
         if (args.keys == "dialPadFeedback") {
             var message = {
                 "returnValue": true,
@@ -557,10 +556,10 @@ QtObject {
             };
         }
 
-		else if (args.keys == "capitalizedCase") {
+		else if (args.keys == "tabTitleCase") {
             var message = {
                 "returnValue": true,
-                "capitalizedCase": "upperCase"
+                "tabTitleCase": "upperCase"
             };
         }
 
