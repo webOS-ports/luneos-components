@@ -20,3 +20,4 @@ LunaWebView 1.0 LunaWebView.qml
 LunaWebEngineView 1.0 LunaWebEngineView.qml
 WebEngineDialog.qml 1.0 WebEngineDialog.qml
 WebEngineDialogButton.qml 1.0 WebEngineDialogButton.qml
+Tweak.qml 1.0 Tweak.qml
