@@ -26,7 +26,7 @@ Item {
     id: tweak
 
     property string owner: ""
-	property string name: ""
+    property alias serviceName: service.name
     property string key: ""
     property variant value
     property variant defaultValue
@@ -34,7 +34,7 @@ Item {
     LunaService {
         id: service
         onInitialized: {
-            service.call("palm://org.webosinternals.tweaks.prefs/get",
+            service.call("luna://org.webosinternals.tweaks.prefs/get",
                          JSON.stringify({owner: tweak.owner, keys: [tweak.key]}),
                          handleResult, handleError)
         }
