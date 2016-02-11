@@ -18,6 +18,7 @@ QML_FILES = Page.qml \
             PermissionDialog.qml \
             PromptDialog.qml \
             ProxyAuthenticationDialog.qml \
+            Tweak.qml \
             WebEngineDialog.qml \
             WebEngineDialogButton.qml
 
