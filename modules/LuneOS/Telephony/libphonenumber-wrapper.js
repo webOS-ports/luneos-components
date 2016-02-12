@@ -102,3 +102,18 @@ function normalizePhoneNumber(phoneNumber, countryCode)
     console.log("ERROR: normalizePhoneNumber: couldn't parse "+phoneNumber+", returning locale-less normalization");
     return "-" + phoneNumber.split("").reverse().join("") + "---";
 }
+
+function getNumberGeolocation(phoneNumber, countryCode, cb)
+{
+    if(typeof cb !== 'function') return;
+
+    var phoneNumberObj = PhoneNumberLib.Parse(phoneNumber, countryCode);
+    if(phoneNumberObj &&
+       phoneNumberObj.internationalNumber &&
+       phoneNumberObj.regionMetaData && phoneNumberObj.regionMetaData.countryCode) {
+        PhoneNumberLib.GetGeolocation(phoneNumberObj.internationalNumber, cb);
+    }
+    else {
+        cb("Unknown");
+    }
+}
