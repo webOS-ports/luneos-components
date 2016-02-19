@@ -27,17 +27,19 @@ function normalizePhoneNumber(phoneNumber, countryCode)
 */
 
 /**** version using luneos' telephony-lib ******/
-var phoneNumberLibPath = "/usr/palm/frameworks/phonenumberlib/version/1.0/javascript";
+var phoneNumberLibPath = "/usr/palm/frameworks/phonenumberlib/version/1.0";
 
-var include1 = Qt.include(phoneNumberLibPath + "/PhoneNumberMetadata.js");
+var include1 = Qt.include(phoneNumberLibPath + "/javascript/PhoneNumberMetadata.js");
 if(include1.status !== include1.OK) {
     // it failed with on-device path, so try again with relative path (Qt Desktop situation)
-    phoneNumberLibPath = Qt.resolvedUrl("../../../../loadable-frameworks/phonenumberlib/javascript");
+    phoneNumberLibPath = Qt.resolvedUrl("../../../../loadable-frameworks/phonenumberlib");
     console.log("loading phonenumberlib from on-device default path failed, trying with: " + phoneNumberLibPath);
-    Qt.include(phoneNumberLibPath + "/PhoneNumberMetadata.js");
+    Qt.include(phoneNumberLibPath + "/javascript/PhoneNumberMetadata.js");
 }
-Qt.include(phoneNumberLibPath + "/PhoneNumberNormalizer.js");
-Qt.include(phoneNumberLibPath + "/PhoneNumber.js");
+Qt.include(phoneNumberLibPath + "/javascript/PhoneNumberNormalizer.js");
+Qt.include(phoneNumberLibPath + "/javascript/PhoneNumber.js");
+
+PhoneNumberLib.setRootDir(phoneNumberLibPath);
 
 // vCard stuff is using these types. Make sure if you change anything on this
 // that the tests for vCard don't fail. Otherwise the rath of a million sand flies
