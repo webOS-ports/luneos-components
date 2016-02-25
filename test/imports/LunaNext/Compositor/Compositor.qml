@@ -26,6 +26,7 @@ Item {
     signal windowRemoved(Item window);
     signal windowShown(Item window);
     signal windowHidden(Item window);
+    signal windowRaised(Item window);
 
     signal windowModelAdded(ListModel newModel);
     signal windowAddedInListModel(Item window);
@@ -66,6 +67,7 @@ Item {
         WindowModelSingleton.setCompositor(compositor);
 
         createFakeWindow("FakeJustTypeLauncherWindow", {});
+        createFakeWindow("FakeDashboardWindow", {});
     }
 
     function show() {
