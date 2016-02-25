@@ -116,6 +116,6 @@ function getNumberGeolocation(phoneNumber, countryCode, cb)
         PhoneNumberLib.GetGeolocation(phoneNumberObj.internationalNumber, cb);
     }
     else {
-        cb("Unknown");
+        cb({});
     }
 }
