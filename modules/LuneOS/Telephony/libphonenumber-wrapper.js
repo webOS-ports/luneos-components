@@ -110,10 +110,8 @@ function getNumberGeolocation(phoneNumber, countryCode, cb)
     if(typeof cb !== 'function') return;
 
     var phoneNumberObj = PhoneNumberLib.Parse(phoneNumber, countryCode);
-    if(phoneNumberObj &&
-       phoneNumberObj.internationalNumber &&
-       phoneNumberObj.regionMetaData && phoneNumberObj.regionMetaData.countryCode) {
-        PhoneNumberLib.GetGeolocation(phoneNumberObj.internationalNumber, cb);
+    if(phoneNumberObj) {
+        phoneNumberObj.getGeolocation(cb);
     }
     else {
         cb({});
