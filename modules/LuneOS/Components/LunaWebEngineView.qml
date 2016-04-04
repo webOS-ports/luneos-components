@@ -53,6 +53,8 @@ WebEngineView {
     settings.localContentCanAccessFileUrls: true
     settings.javascriptCanAccessClipboard: true
     settings.localContentCanAccessRemoteUrls: true
+    settings.pluginsEnabled: true
+    settings.fullscreenSupportEnabled: true
 
     Component.onCompleted: {
         // these settings are only available on our custom WebEngine for LuneOS
