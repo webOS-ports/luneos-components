@@ -18,7 +18,7 @@
 */
 
 import QtQuick 2.1
-import QtWebEngine 1.1
+import QtWebEngine 1.2
 import QtWebEngine.experimental 1.0
 import Qt.labs.settings 1.0
 
