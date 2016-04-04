@@ -18,7 +18,7 @@
 */
 
 import QtQuick 2.1
-import QtWebEngine 1.1
+import QtWebEngine 1.2
 import QtWebEngine.experimental 1.0
 import Qt.labs.settings 1.0
 
@@ -53,6 +53,8 @@ WebEngineView {
     settings.localContentCanAccessFileUrls: true
     settings.javascriptCanAccessClipboard: true
     settings.localContentCanAccessRemoteUrls: true
+    settings.pluginsEnabled: true
+    settings.fullscreenSupportEnabled: true
 
     Component.onCompleted: {
         // these settings are only available on our custom WebEngine for LuneOS
