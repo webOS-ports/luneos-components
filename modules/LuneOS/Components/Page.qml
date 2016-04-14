@@ -19,11 +19,11 @@ import QtQuick 2.1
 import LunaNext.Common 0.1
 
 Rectangle {
+    property string orientationLock: ""
     id: page
 
     width: parent.width
     height: parent.height
-    anchors.rightMargin: Units.gu(4)
     color: "#f5f5f5"
 }
 
