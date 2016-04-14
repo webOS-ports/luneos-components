@@ -1,8 +1,7 @@
 uri = LuneOS.Components
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 
-QML_FILES = Page.qml \
-            AlertDialog.qml \
+QML_FILES = AlertDialog.qml \
             AuthenticationDialog.qml \
             CertDialog.qml \
             ClippedImage.qml \
@@ -15,6 +14,8 @@ QML_FILES = Page.qml \
             ItemSelector.qml \
             LunaWebView.qml \
             LunaWebEngineView.qml \
+            Page.qml \
+            PageStackWindow.qml \
             PermissionDialog.qml \
             PromptDialog.qml \
             ProxyAuthenticationDialog.qml \

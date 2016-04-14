@@ -15,6 +15,7 @@ ItemSelector 1.0 ItemSelector.qml
 LunaWebEngineView 1.0 LunaWebEngineView.qml
 LunaWebView 1.0 LunaWebView.qml
 Page 1.0 Page.qml
+PageStackWindow 1.0 PageStackWindow.qml
 PermissionDialog 1.0 PermissionDialog.qml
 PromptDialog 1.0 PromptDialog.qml
 ProxyAuthenticationDialog 1.0 ProxyAuthenticationDialog.qml
