@@ -281,6 +281,11 @@ QtObject {
             // Simulate the attachement of a new window to the stub Wayland compositor
             compositor.createFakeWindow("FakeSIMPinWindow", jsonArgs);
         }
+        else if( jsonArgs.id === "org.webosports.tests.fakePopupWindow" ) {
+            // start a FakePopupWindow
+            // Simulate the attachement of a new window to the stub Wayland compositor
+            compositor.createFakeWindow("FakePopupWindow", jsonArgs);
+        }
         else {
             handleError("Error: parameter 'id' not specified");
         }
