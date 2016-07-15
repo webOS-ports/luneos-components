@@ -2,5 +2,7 @@ module LunaNext.Common
 Settings 0.1 SettingsStub.js
 Units 0.1 UnitsStub.js
 FontUtils 0.1 FontUtilsStub.js
+FileUtils 0.1 FileUtilsStub.js
+Leds 0.1 LedsAdapterStub.js
 
 typeinfo LunaNext.Common.qmltypes
