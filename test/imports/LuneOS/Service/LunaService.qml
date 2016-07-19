@@ -78,6 +78,12 @@ QtObject {
         else if (serviceURI === "luna://com.palm.display/control/setLockStatus") {
             setLockStatus_call(args, returnFct, handleError);
         }
+        else if (serviceURI === "palm://com.palm.display/control/getProperty" || serviceURI === "luna://com.palm.display/control/getProperty") {
+            getDisplayProperty_call(args, returnFct, handleError);
+        }
+        else if (serviceURI === "palm://com.palm.display/control/alert" || serviceURI === "luna://com.palm.display/control/alert") {
+            displayAlert_call(args, returnFct, handleError);
+        }
         else if (serviceURI === "luna://com.palm.systemmanager/getDeviceLockMode") {
             getDeviceLockMode_call(args, returnFct, handleError);
         }
@@ -114,9 +120,6 @@ QtObject {
         else if(serviceURI ==="luna://com.palm.connectionmanager/getstatus")
         {
             getConnectionManagerStatus_call(args, returnFct, handleError);
-        }
-        else if (serviceURI === "palm://com.palm.display/control/getProperty" || serviceURI === "luna://com.palm.display/control/getProperty") {
-            getDisplayProperty_call(args, returnFct, handleError);
         }
         else if(serviceURI ==="luna://com.palm.db/find")
         {
@@ -305,13 +308,16 @@ QtObject {
         }
     }
 
-
     function setLockStatus_call(args, returnFct, handleError) {
         console.log("setLockStatus_call: arg.status = " + args.status + " currentLockStatus = " + currentLockStatus);
         if (args.status === "unlock" && currentLockStatus === "locked") {
             currentLockStatus = "unlocked";
             lockStatusSubscriber.func({payload: "{\"lockState\":\"" + currentLockStatus + "\"}"});
         }
+    }
+
+    function displayAlert_call(args, returnFct, handleError) {
+        console.log("displayAlert_call: args = " + JSON.stringify(args));
     }
 
     function getDeviceLockMode_call(args, returnFct, handleError) {
@@ -321,7 +327,6 @@ QtObject {
             "policyState": polcyState,
             "retriesLeft": retriesLeft
         };
-
         returnFct({payload: JSON.stringify(message)});
     }
 
@@ -353,10 +358,21 @@ QtObject {
             "locale": { "languageCode": "en", "countryCode": "us", "phoneRegion": { "countryName": "United States", "countryCode": "us" } }
         };
         }
+        else if(args.keys == "ringtone","alerttone","notificationtone","locale")
+        {
+            var message = {
+            "alerttone": { "fullPath": "\/usr\/palm\/sounds\/alert.wav", "name": "alert.wav" },
+            "locale": { "languageCode": "en", "countryCode": "us", "phoneRegion": { "countryName": "United States", "countryCode": "us" } },
+            "notificationtone": { "fullPath": "\/usr\/palm\/sounds\/notification.wav", "name": "notification.wav" },
+            "ringtone": { "fullPath": "\/usr\/palm\/sounds\/ringtone.mp3", "name": "ringtone.mp3" },
+            "subscribed": true,
+            "returnValue": true
+            };
+        }
 
         else
         {
-            console.log("We don't have a preference for: "+args.keys);
+            console.log("We don't have a preferences for: "+args.keys);
         }
         returnFct({payload: JSON.stringify(message)});
     }
