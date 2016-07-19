@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
- * Copyright (C) 2015 Herman van Hazendonk <github.com@herrie.org>
+ * Copyright (C) 2013-2016 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2015-2016 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,6 +71,9 @@ QtObject {
         }
         else if( serviceURI === "palm://com.palm.applicationManager/getAppInfo" || serviceURI === "luna://com.palm.applicationManager/getAppInfo" ) {
             giveFakeAppInfo_call(args, returnFct, handleError);
+        }
+        else if( serviceURI === "palm://com.palm.applicationManager/getAppBasePath" || serviceURI === "luna://com.palm.applicationManager/getAppBasePath" ) {
+            giveFakeAppBasePath_call(args, returnFct, handleError);
         }
         else if (serviceURI === "luna://com.palm.display/control/setLockStatus") {
             setLockStatus_call(args, returnFct, handleError);
@@ -248,6 +251,10 @@ QtObject {
 
     function giveFakeAppInfo_call(args, returnFct, handleError) {
         returnFct({"payload": JSON.stringify({"returnValue": true, "appInfo": { "appmenu": "Fake App" } })});
+    }
+
+    function giveFakeAppBasePath_call(args, returnFct, handleError) {
+        returnFct({"payload": JSON.stringify({ "returnValue": true, "appId": "org.webosports.tests.fakeDashboardWindow", "basePath": "" })});
     }
 
     function getDisplayProperty_call(args, returnFct, handleError) {
