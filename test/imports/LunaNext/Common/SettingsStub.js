@@ -51,7 +51,7 @@ var dpi = 132;
 var compatDpi = 132;
 var gridUnit = 10;
 /**/
-/* N4 alike */
+/* N4 alike
 var tabletUi = false;
 var displayWidth = 768;
 var displayHeight = 1280;
@@ -59,12 +59,12 @@ var dpi = 264;
 var gridUnit = 18;
 var compatDpi = 180;
 /**/
-/* For desktop debug
+/* For desktop debug */
 var tabletUi = false;
 var displayWidth = 600;
 var displayHeight = 800;
 var dpi = 148;
-var gridUnit = 14;
+var gridUnit = 10;
 var compatDpi = 180;
 /**/
 
