@@ -143,6 +143,17 @@ FakeWindowBase {
             }
             ActionButton {
                 anchors.horizontalCenter: parent.horizontalCenter
+                caption: "Create popup overlay window"
+                width: parent.width / 2
+                height: 50
+
+                onAction: {
+                    lunaNextLS2Service.call("luna://com.palm.applicationManager/launch",
+                        JSON.stringify({"id": "org.webosports.tests.fakePopupWindow", "params": {}}), undefined, undefined)
+                }
+            }
+            ActionButton {
+                anchors.horizontalCenter: parent.horizontalCenter
                 negative: true
                 caption: "Kill me"
                 width: parent.width / 2

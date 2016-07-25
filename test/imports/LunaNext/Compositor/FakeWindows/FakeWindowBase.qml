@@ -29,6 +29,7 @@ Item {
     property string icon: "../images/default-app-icon.png";
     property int windowType: WindowType.Card
     property bool mapped: false
+    property bool isPopup: false
 
     property variant compositor
 
