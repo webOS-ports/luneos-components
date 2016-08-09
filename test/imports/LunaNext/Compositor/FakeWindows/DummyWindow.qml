@@ -29,6 +29,8 @@ FakeWindowBase {
 
     property alias scale: windowFlickable.scale
 
+    property bool isFullScreenModeActive: false;
+
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
@@ -64,20 +66,14 @@ FakeWindowBase {
                 width: parent.width / 2
                 height: 50
 
-                caption: "Current mode: " + (dummyWindow.userData ? dummyWindow.userData.windowState : -1)
+                caption: "Fullscreen mode: " + isFullScreenModeActive
 
                 onAction: {
-                    if( dummyWindow.userData ) {
-                        var currentState = dummyWindow.userData.windowState;
-                        // switch to the next state
-                        currentState = (currentState+1) % 4;
+                    isFullScreenModeActive = !isFullScreenModeActive;
 
-                        // Skip Invisible state
-                        if (currentState === 0)
-                            currentState = WindowState.Carded;
-
-                        dummyWindow.userData.windowState = currentState;
-                    }
+                    lunaNextLS2Service.call("luna://org.webosports.luna/enableFullScreenMode",
+                                            JSON.stringify({"enable": isFullScreenModeActive}),
+                                            undefined, undefined)
                 }
             }
             ActionButton {
