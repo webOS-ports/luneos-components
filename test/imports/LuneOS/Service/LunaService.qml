@@ -90,6 +90,10 @@ QtObject {
         else if (serviceURI === "luna://com.palm.systemservice/getPreferences") {
             getPreferences_call(args, returnFct, handleError);
         }
+		else if (serviceURI === "luna://com.palm.systemservice/deviceInfo/query") {
+            deviceInfoQuery_call(args, returnFct, handleError);
+        }
+
         else if (serviceURI === "luna://com.palm.systemservice/setPreferences") {
             setPreferences_call(args, returnFct, handleError);
         }
@@ -381,6 +385,34 @@ QtObject {
         }
         returnFct({payload: JSON.stringify(message)});
     }
+	
+	function deviceInfoQuery_call(args, returnFct, handleError) {
+
+        //returns device info
+        var message = { "battery_challange": "not supported", 
+                        "battery_response": "not supported", 
+                        "board_type": "not supported", 
+                        "bt_addr": "not supported", 
+                        "device_name": "qemux86", 
+                        "hardware_id": "not supported", 
+                        "hardware_revision": "not supported", 
+                        "installer": "not supported", 
+                        "keyboard_type": "not supported", 
+                        "last_reset_type": "not supported", 
+                        "modem_present": "N", 
+                        "nduid": "d2adec88f1a4caa009b6db861578688b1474f0c9", 
+                        "product_id": "not supported", 
+                        "radio_type": "not supported", 
+                        "ram_size": "not supported", 
+                        "serial_number": "not supported", 
+                        "storage_free": "not supported", 
+                        "storage_size": "not supported", 
+                        "wifi_addr": "not supported", 
+                        "returnValue": true 
+        };
+        returnFct({payload: JSON.stringify(message)});
+    }
+
 
     function setPreferences_call(args, returnFct, handleError) {
         var message = {"returnValue": true};
