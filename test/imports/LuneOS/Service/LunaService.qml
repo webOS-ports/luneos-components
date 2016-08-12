@@ -389,7 +389,7 @@ QtObject {
 	function deviceInfoQuery_call(args, returnFct, handleError) {
 
         //returns device info
-        var message = { "battery_challange": "not supported", 
+        var message = { "battery_challenge": "not supported", 
                         "battery_response": "not supported", 
                         "board_type": "not supported", 
                         "bt_addr": "not supported", 
