@@ -11,11 +11,11 @@ uri = LuneOS.Application
 
 HEADERS += \
     plugin.h \
-    applicationwindow.h
+    luneoswindow.h
 
 SOURCES += \
     plugin.cpp \
-    applicationwindow.cpp
+    luneoswindow.cpp
 
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 target.path = $$installPath

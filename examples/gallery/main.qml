@@ -22,7 +22,7 @@ import LunaNext.Common 0.1
 import LuneOS.Application 1.0
 import LuneOS.Components 1.0
 
-ApplicationWindow {
+LuneOSWindow {
     id: window
 
     visible: true

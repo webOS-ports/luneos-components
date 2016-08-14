@@ -18,23 +18,23 @@
 #include <QGuiApplication>
 #include <QtGui/qpa/qplatformnativeinterface.h>
 
-#include "applicationwindow.h"
+#include "luneoswindow.h"
 
-QString windowTypeToString(ApplicationWindow::Type type)
+QString windowTypeToString(LuneOSWindow::Type type)
 {
     QString typeStr;
 
     switch (type) {
-    case ApplicationWindow::Card:
+    case LuneOSWindow::Card:
         typeStr = "card";
         break;
-    case ApplicationWindow::Dashboard:
+    case LuneOSWindow::Dashboard:
         typeStr = "dashboard";
         break;
-    case ApplicationWindow::PopupAlert:
+    case LuneOSWindow::PopupAlert:
         typeStr = "popupalert";
         break;
-    case ApplicationWindow::Pin:
+    case LuneOSWindow::Pin:
         typeStr = "pin";
         break;
     default:
@@ -44,8 +44,8 @@ QString windowTypeToString(ApplicationWindow::Type type)
     return typeStr;
 }
 
-ApplicationWindow::ApplicationWindow() :
-    mType(ApplicationWindow::Card),
+LuneOSWindow::LuneOSWindow() :
+    mType(LuneOSWindow::Card),
     mWindowId(0),
     mParentWindowId(0),
     mKeepAlive(false),
@@ -57,22 +57,22 @@ ApplicationWindow::ApplicationWindow() :
     connect(this, SIGNAL(destroyed()), this, SLOT(onDestroyed()));
 }
 
-void ApplicationWindow::classBegin()
+void LuneOSWindow::classBegin()
 {
 }
 
-void ApplicationWindow::setWindowProperty(const QString &name, const QVariant &value)
+void LuneOSWindow::setWindowProperty(const QString &name, const QVariant &value)
 {
     QPlatformNativeInterface *nativeInterface = QGuiApplication::platformNativeInterface();
     nativeInterface->setWindowProperty(handle(), name, value);
 }
 
-void ApplicationWindow::componentComplete()
+void LuneOSWindow::componentComplete()
 {
     qDebug() << Q_FUNC_INFO << "type" << mType;
 }
 
-void ApplicationWindow::show()
+void LuneOSWindow::show()
 {
     qDebug() << Q_FUNC_INFO << "initialized" << mInitialized;
 
@@ -84,7 +84,7 @@ void ApplicationWindow::show()
     QQuickWindow::show();
 }
 
-void ApplicationWindow::configure()
+void LuneOSWindow::configure()
 {
     // Make sure the platform window is fully created when we want to deal with it
     create();
@@ -101,7 +101,7 @@ void ApplicationWindow::configure()
             this, SLOT(onWindowPropertyChanged(QPlatformWindow*, const QString&)));
 }
 
-void ApplicationWindow::reset()
+void LuneOSWindow::reset()
 {
     mInitialized = false;
 
@@ -112,13 +112,13 @@ void ApplicationWindow::reset()
     Q_EMIT parentWindowIdChanged();
 }
 
-QVariant ApplicationWindow::getWindowProperty(const QString &name)
+QVariant LuneOSWindow::getWindowProperty(const QString &name)
 {
     QPlatformNativeInterface *nativeInterface = QGuiApplication::platformNativeInterface();
     return nativeInterface->windowProperty(handle(), name);
 }
 
-void ApplicationWindow::onWindowPropertyChanged(QPlatformWindow *window, const QString &name)
+void LuneOSWindow::onWindowPropertyChanged(QPlatformWindow *window, const QString &name)
 {
     if (window != handle())
         return;
@@ -132,7 +132,7 @@ void ApplicationWindow::onWindowPropertyChanged(QPlatformWindow *window, const Q
     }
 }
 
-bool ApplicationWindow::eventFilter(QObject *object, QEvent *event)
+bool LuneOSWindow::eventFilter(QObject *object, QEvent *event)
 {
     Q_UNUSED(object);
 
@@ -148,28 +148,28 @@ bool ApplicationWindow::eventFilter(QObject *object, QEvent *event)
     return false;
 }
 
-void ApplicationWindow::cleanup()
+void LuneOSWindow::cleanup()
 {
     close();
     destroy();
 }
 
-void ApplicationWindow::onDestroyed()
+void LuneOSWindow::onDestroyed()
 {
     qDebug() << Q_FUNC_INFO;
 }
 
-void ApplicationWindow::setType(Type type)
+void LuneOSWindow::setType(Type type)
 {
     mType = type;
 }
 
-ApplicationWindow::Type ApplicationWindow::type() const
+LuneOSWindow::Type LuneOSWindow::type() const
 {
     return mType;
 }
 
-void ApplicationWindow::setParentWindowId(unsigned int id)
+void LuneOSWindow::setParentWindowId(unsigned int id)
 {
     if (mParentWindowId == id)
         return;
@@ -178,22 +178,22 @@ void ApplicationWindow::setParentWindowId(unsigned int id)
     Q_EMIT parentWindowIdChanged();
 }
 
-unsigned int ApplicationWindow::parentWindowId() const
+unsigned int LuneOSWindow::parentWindowId() const
 {
     return mParentWindowId;
 }
 
-unsigned int ApplicationWindow::windowId() const
+unsigned int LuneOSWindow::windowId() const
 {
     return mWindowId;
 }
 
-bool ApplicationWindow::keepAlive() const
+bool LuneOSWindow::keepAlive() const
 {
     return mKeepAlive;
 }
 
-void ApplicationWindow::setKeepAlive(bool value)
+void LuneOSWindow::setKeepAlive(bool value)
 {
     if (mKeepAlive == value)
         return;
@@ -207,12 +207,12 @@ void ApplicationWindow::setKeepAlive(bool value)
     Q_EMIT keepAliveChanged();
 }
 
-bool ApplicationWindow::loadingAnimationDisabled() const
+bool LuneOSWindow::loadingAnimationDisabled() const
 {
     return mLoadingAnimationDisabled;
 }
 
-void ApplicationWindow::setLoadingAnimationDisabled(bool value)
+void LuneOSWindow::setLoadingAnimationDisabled(bool value)
 {
     if (mLoadingAnimationDisabled == value)
         return;
