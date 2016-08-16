@@ -20,11 +20,10 @@
 #include <QQuickWindow>
 #include <QQmlParserStatus>
 
-class ApplicationWindow : public QQuickWindow,
+class LuneOSWindow : public QQuickWindow,
                           public QQmlParserStatus
 {
     Q_OBJECT
-    Q_ENUMS(Type)
     Q_PROPERTY(Type type READ type WRITE setType)
     Q_PROPERTY(unsigned int windowId READ windowId NOTIFY windowIdChanged)
     Q_PROPERTY(unsigned int parentWindowId READ parentWindowId WRITE setParentWindowId NOTIFY parentWindowIdChanged)
@@ -32,7 +31,7 @@ class ApplicationWindow : public QQuickWindow,
     Q_PROPERTY(bool loadingAnimationDisabled READ loadingAnimationDisabled WRITE setLoadingAnimationDisabled NOTIFY loadingAnimationDisabledChanged)
 
 public:
-    explicit ApplicationWindow();
+    explicit LuneOSWindow();
 
     enum Type {
         Card,
@@ -43,6 +42,7 @@ public:
         Overlay,
         Pin,
     };
+    Q_ENUM(Type)
 
     Type type() const;
     void setType(Type type);
@@ -68,7 +68,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void windowIdChanged();
     void parentWindowIdChanged();
-    void closed(ApplicationWindow *window);
+    void closed(LuneOSWindow *window);
     void keepAliveChanged();
     void loadingAnimationDisabledChanged();
 

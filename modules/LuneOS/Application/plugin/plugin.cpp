@@ -18,7 +18,7 @@
 #include <QtQml>
 
 #include "plugin.h"
-#include "applicationwindow.h"
+#include "luneoswindow.h"
 
 Plugin::Plugin(QObject *parent) :
     QQmlExtensionPlugin(parent)
@@ -28,7 +28,7 @@ Plugin::Plugin(QObject *parent) :
 void Plugin::registerTypes(const char *uri)
 {
     Q_ASSERT(uri == QLatin1String("LuneOS.Application"));
-    qmlRegisterType<ApplicationWindow>(uri, 1, 0, "ApplicationWindow");
+    qmlRegisterType<LuneOSWindow>(uri, 1, 0, "LuneOSWindow");
 }
 
 void Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
