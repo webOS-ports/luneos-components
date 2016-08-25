@@ -24,6 +24,8 @@ class LuneOSWindow : public QQuickWindow,
                           public QQmlParserStatus
 {
     Q_OBJECT
+    Q_INTERFACES(QQmlParserStatus)
+
     Q_PROPERTY(Type type READ type WRITE setType)
     Q_PROPERTY(unsigned int windowId READ windowId NOTIFY windowIdChanged)
     Q_PROPERTY(unsigned int parentWindowId READ parentWindowId WRITE setParentWindowId NOTIFY parentWindowIdChanged)

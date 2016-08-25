@@ -18,5 +18,8 @@
 import QtQuick 2.0
 
 QtObject {
+    property real initialScale: 1
+    property string imagePath: ""
+
     function startAt(position) {}
 }
