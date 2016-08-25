@@ -1,5 +1,14 @@
 module MeeGo.QOfono
+
+OfonoVoiceCallManager 0.2 OfonoVoiceCallManager.qml
+OfonoVoiceCall 0.2 OfonoVoiceCall.qml
 OfonoManager 0.2 OfonoManager.qml
-OfonoModem 0.2 OfonoModem.qml
 OfonoConnMan 0.2 OfonoConnMan.qml
+OfonoModem 0.2 OfonoModem.qml
+OfonoContextConnection 0.2 OfonoContextConnection.qml
+OfonoSimManager 0.2 OfonoSimManager.qml
 OfonoNetworkRegistration 0.2 OfonoNetworkRegistration.qml
+OfonoNetworkOperator 0.2 OfonoNetworkOperator.qml
+OfonoSupplementaryServices 0.2 OfonoSupplementaryServices.qml
+
+typeinfo MeeGo.QOfono.qmltypes
