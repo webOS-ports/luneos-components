@@ -1,7 +1,8 @@
 import QtQuick 2.0
 
 Item {
-    property string modemPath: ""
-    property bool attached: false
-    property string bearer: ""
+    id: ofonoConnMan
+
+    property string modemPath
+    property variant contexts: [ "/dummy" ]
 }

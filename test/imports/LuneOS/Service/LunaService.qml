@@ -520,6 +520,11 @@ QtObject {
             message =
             {"returnValue":true, "results":[]};
         }
+        else if(args.query.from ==="com.palm.browserpreferences:1")
+        {
+            message =
+            {"returnValue":true, "results":[]};
+        }
         else
         {
             console.log("Others: "+args.query.from)

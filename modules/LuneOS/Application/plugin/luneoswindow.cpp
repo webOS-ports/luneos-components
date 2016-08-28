@@ -124,7 +124,7 @@ void LuneOSWindow::onWindowPropertyChanged(QPlatformWindow *window, const QStrin
         return;
 
     if (name == "_LUNE_WINDOW_ID") {
-        int windowId = getWindowProperty("_LUNE_WINDOW_ID").toInt();
+        unsigned int windowId = getWindowProperty("_LUNE_WINDOW_ID").toUInt();
         if (windowId != mWindowId) {
             mWindowId = windowId;
             Q_EMIT windowIdChanged();
