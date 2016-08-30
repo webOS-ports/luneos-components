@@ -42,6 +42,7 @@ class Db8Model : public QAbstractListModel,
 
 public:
     explicit Db8Model(QObject *parent = 0);
+    virtual ~Db8Model();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role) const;

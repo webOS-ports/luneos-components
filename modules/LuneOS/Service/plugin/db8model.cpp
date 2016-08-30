@@ -51,6 +51,19 @@ void Db8Model::componentComplete()
     }
 }
 
+Db8Model::~Db8Model()
+{
+    if(mWatch && mToken != LSMESSAGE_TOKEN_INVALID) {
+        LSError error;
+        LSErrorInit(&error);
+        LSCallCancel(mHandle, mToken, &error);
+        if (LSErrorIsSet(&error)) {
+            LSErrorPrint(&error, stderr);
+            LSErrorFree(&error);
+        }
+    }
+}
+
 QVariant Db8Model::get(int index)
 {
     if (index < 0 || index >= mResults.count())
