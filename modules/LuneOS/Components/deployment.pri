@@ -6,7 +6,6 @@ QML_FILES = AlertDialog.qml \
             CertDialog.qml \
             ClippedImage.qml \
             ConfirmDialog.qml \
-            ContextMenuExtras.qml \
             DialogButton.qml \
             DialogLineInput.qml \
             Dialog.qml \
