@@ -43,11 +43,6 @@ WebEngineView {
         permDialog.visible = true
     }
 	
-	experimental
-    {
-        extraContextMenuEntriesComponent: ContextMenuExtras {}
-    }
-	
     settings.javascriptEnabled: true
     settings.localStorageEnabled:true
     settings.localContentCanAccessFileUrls: true
