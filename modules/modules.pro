@@ -2,6 +2,7 @@ TEMPLATE = subdirs
 
 SUBDIRS += \
     QtQuick/Controls/Styles/LuneOS/styles.pro \
+    QtWebEngine/UIDelegates/webengineviewdelegates.pro \
     LuneOS/Components/components.pro \
     LuneOS/Application/application.pro \
     LuneOS/Telephony/telephony.pro \
