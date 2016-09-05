@@ -362,10 +362,11 @@ QtObject {
         
         else if(args.keys == "region")
         {
+            console.log("returning dummy region")
             var message = {
-            "returnValue": true,
-            "locale": { "languageCode": "en", "countryCode": "us", "phoneRegion": { "countryName": "United States", "countryCode": "us" } }
-        };
+                "returnValue": true,
+                "region": { "countryName": "United States", "countryCode": "us" }
+            };
         }
         else if(args.keys == "ringtone","alerttone","notificationtone","locale")
         {
@@ -523,7 +524,26 @@ QtObject {
         else if(args.query.from ==="com.palm.browserpreferences:1")
         {
             message =
-            {"returnValue":true, "results":[]};
+            {"returnValue": true,
+                "results": [
+                {
+                    "key": "blockPopups",
+                    "value": true
+                },
+                {
+                    "key": "acceptCookies",
+                    "value": true
+                },
+                {
+                    "key": "enableJavascript",
+                    "value": true
+                },
+                {
+                    "key": "rememberPasswords",
+                    "value": true
+                }
+                ]
+            };
         }
         else
         {
