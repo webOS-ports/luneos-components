@@ -359,6 +359,19 @@ QtObject {
                 "timeZone": { "City": "New York", "Description": "Eastern Time", "CountryCode": "US", "Country": "United States of America", "supportsDST": 1, "ZoneID": "America\/New_York", "offsetFromUTC": -300, "preferred": true }
             };
         }
+		
+		else if(args.keys == "region,timeZone,timeFormat,locale")
+        {
+            console.log("returning dummy regionTime")
+            var message = {
+                "returnValue": true,
+                "timeFormat": "HH12",
+				"region": { "countryName": "United States", "countryCode": "us" },
+                "timeZone": { "City": "New York", "Description": "Eastern Time", "CountryCode": "US", "Country": "United States of America", "supportsDST": 1, "ZoneID": "America\/New_York", "offsetFromUTC": -300, "preferred": true },
+				"locale": { "languageCode": "en", "countryCode": "us", "phoneRegion": { "countryName": "United States", "countryCode": "us" } }
+            };
+        }
+
         
         else if(args.keys == "region")
         {
