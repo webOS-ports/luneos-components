@@ -19,5 +19,6 @@ PermissionDialog 1.0 PermissionDialog.qml
 PromptDialog 1.0 PromptDialog.qml
 ProxyAuthenticationDialog 1.0 ProxyAuthenticationDialog.qml
 Tweak 1.0 Tweak.qml
+UserAgent 1.0 UserAgent.qml
 WebEngineDialog 1.0 WebEngineDialog.qml
 WebEngineDialogButton 1.0 WebEngineDialogButton.qml
