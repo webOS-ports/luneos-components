@@ -19,10 +19,12 @@ QML_FILES = AlertDialog.qml \
             PromptDialog.qml \
             ProxyAuthenticationDialog.qml \
             Tweak.qml \
+            UserAgent.qml \
             WebEngineDialog.qml \
             WebEngineDialogButton.qml
 
-JS_FILES = js/MultiSelect.js
+JS_FILES =  js/MultiSelect.js \
+            js/ua-overrides.js
 
 RESOURCE_FILES = images/button-up-center.png images/button-up-left.png images/button-up-right.png \
                  images/input-default-focus-center.png images/input-default-focus-left.png images/input-default-focus-right.png \
