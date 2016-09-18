@@ -25,7 +25,12 @@ import Qt.labs.settings 1.0
 WebEngineView {
     id: webViewItem
 
-    PermissionDialog
+    UserAgent
+    {
+        id: userAgent
+    }
+	
+	PermissionDialog
     {
         id: permDialog
         view: webViewItem
@@ -50,6 +55,8 @@ WebEngineView {
     settings.localContentCanAccessRemoteUrls: true
     settings.pluginsEnabled: true
     settings.fullScreenSupportEnabled: true
+    
+    profile.httpUserAgent: userAgent.defaultUA
 
     Component.onCompleted: {
         // these settings are only available on our custom WebEngine for LuneOS
