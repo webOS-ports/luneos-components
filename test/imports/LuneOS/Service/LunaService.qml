@@ -129,6 +129,10 @@ QtObject {
         {
             findDb_call(args, returnFct, handleError);
         }
+        else if(serviceURI ==="luna://com.palm.db/merge")
+        {
+            mergeDb_call(args, returnFct, handleError);
+        }
         else if(serviceURI ==="luna://com.palm.db/search")
         {
             findDb_call(args, returnFct, handleError);
@@ -143,6 +147,9 @@ QtObject {
         }
         else if (serviceURI === "luna://org.webosinternals.tweaks.prefs/get") {
             getTweaks_call(args, returnFct, handleError);
+        }
+		else if (serviceURI === "luna://com.palm.universalsearch/getUniversalSearchList") {
+            getUniversalSearch_call(args, returnFct, handleError);
         }
 
 
@@ -549,10 +556,14 @@ QtObject {
                 },
                 {
                     "key": "enableJavascript",
-                    "value": true
+                    "value": false
                 },
                 {
                     "key": "rememberPasswords",
+                    "value": false
+                },
+                {
+                    "key": "enablePlugins",
                     "value": true
                 }
                 ]
@@ -563,6 +574,25 @@ QtObject {
             console.log("Others: "+args.query.from)
         }
         returnFct({payload: JSON.stringify(message)});
+    }
+	
+	function mergeDb_call(args, returnFct, handleError)
+    {
+        var message = {}
+		if(args.query.from ==="com.palm.browserpreferences:1")
+        {
+            message =
+            {
+                "returnValue":true
+            }
+        }
+        else
+        {
+            console.log("Others: "+args.query.from)
+        }
+        if( typeof returnFct !== 'undefined' ) {
+            returnFct({"payload": JSON.stringify(message)});
+        }
     }
 
     function getConfigs_call(args, returnFct, handleError)
@@ -713,6 +743,11 @@ QtObject {
         else {
             console.log("We don't have a Tweak for: "+args.keys);
         }
+        returnFct({payload: JSON.stringify(message)});
+    }
+	
+	function getUniversalSearch_call(args, returnFct, handleError) {
+        var message = { "returnValue": true, "UniversalSearchList": [ { "id": "google", "displayName": "Google", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-google.png", "url": "https:\/\/www.google.com\/search?q=#{searchTerms}", "suggestURL": "https:\/\/encrypted.google.com\/complete\/search?hl=en&output=firefox&q=#{searchTerms}", "launchParam": "", "type": "web", "enabled": true }, { "id": "wikipedia", "displayName": "Wikipedia", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-wikipedia.png", "url": "https:\/\/en.wikipedia.org\/wiki\/Special:Search?search=#{searchTerms}", "suggestURL": "https:\/\/en.wikipedia.org\/w\/api.php?action=opensearch&search=#{searchTerms}&limit=8&namespace=0&format=json", "launchParam": "", "type": "web", "enabled": true }, { "id": "duckduckgo", "displayName": "DuckDuckGo", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-duckduckgo.png", "url": "https:\/\/www.duckduckgo.com\/?q=#{searchTerms}", "suggestURL": "", "launchParam": "", "type": "web", "enabled": true }, { "id": "cnn", "displayName": "CNN", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-cnn.png", "url": "http:\/\/www.cnn.com\/search\/?query=#{searchTerms}", "suggestURL": "", "launchParam": "", "type": "web", "enabled": false }, { "id": "amazon", "displayName": "Amazon", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-amazon.png", "url": "https:\/\/www.amazon.com\/s\/?k=#{searchTerms}", "suggestURL": "", "launchParam": "", "type": "web", "enabled": false }, { "id": "imdb", "displayName": "IMDb", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-imdb.png", "url": "http:\/\/www.imdb.com\/find?q=#{searchTerms}", "suggestURL": "", "launchParam": "", "type": "web", "enabled": false } ], "ActionList": [ { "id": "com.palm.app.email", "displayName": "New Email", "iconFilePath": "\/usr\/palm\/applications\/com.palm.app.email\/icon.png", "url": "com.palm.app.email", "launchParam": "text", "enabled": true }, { "id": "com.palm.app.calendar", "displayName": "New Event", "iconFilePath": "\/usr\/palm\/applications\/com.palm.app.calendar\/images\/icon-256x256.png", "url": "com.palm.app.calendar", "launchParam": "quickLaunchText", "enabled": true }, { "id": "org.webosports.app.messaging", "displayName": "New Message", "iconFilePath": "\/usr\/palm\/applications\/org.webosports.app.messaging\/icon.png", "url": "org.webosports.app.messaging", "launchParam": "{ \"compose\": { \"messageText\": \"#{searchTerms}\" } }", "enabled": true } ], "DBSearchItemList": [ { "id": "com.palm.app.email", "displayName": "Email", "iconFilePath": "\/usr\/palm\/applications\/com.palm.app.email\/icon.png", "launchParam": "emailId", "launchParamDbField": "_id", "dbQuery": { "from": "com.palm.email:1", "where": [ { "prop": "flags.visible", "op": "=", "val": true }, { "prop": "searchText", "op": "?", "val": "", "collate": "primary" } ], "orderBy": "timestamp", "desc": true, "limit": 20 }, "displayFields": [ "from.name", "subject" ], "batchQuery": false, "enabled": true }, { "id": "com.palm.app.calendar", "displayName": "Calendar Events", "iconFilePath": "\/usr\/palm\/applications\/com.palm.app.calendar\/images\/icon-256x256.png", "launchParam": "showEventDetail", "launchParamDbField": "_id", "dbQuery": { "from": "com.palm.calendarevent:1", "where": [ { "prop": "searchText", "op": "?", "val": "", "collate": "primary" } ], "orderBy": "subject", "desc": false, "limit": 20 }, "displayFields": [ "subject", { "name": "dtstart", "type": "timestamp" } ], "batchQuery": false, "enabled": true } ], "defaultSearchEngine": "google", "subscribed": false };
         returnFct({payload: JSON.stringify(message)});
     }
 }
