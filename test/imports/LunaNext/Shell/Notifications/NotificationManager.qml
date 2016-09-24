@@ -14,6 +14,7 @@ QtObject {
                                title: title,
                                body: body,
                                iconUrl: iconUrl,
+                               iconPath: iconUrl,
                                soundClass: soundClass,
                                soundFile: soundFile,
                                duration: duration,
