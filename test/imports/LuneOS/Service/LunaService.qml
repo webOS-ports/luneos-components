@@ -194,7 +194,7 @@ QtObject {
         }
         else if( (serviceURI === "palm://com.palm.systemservice/getPreferences" || serviceURI === "luna://com.palm.systemservice/getPreferences") && args.subscribe)
         {
-            returnFct({"payload": JSON.stringify({"subscribed": true, "wallpaper": { "wallpaperFile": "images/background.jpg"}, "timeFormat":"HH24"})});
+            returnFct({"payload": JSON.stringify({"subscribed": true, "wallpaper": { "wallpaperFile": "images/background.jpg"}, "timeFormat":"HH24", "locale": { "languageCode": "en", "countryCode": "us", "phoneRegion": { "countryName": "United States", "countryCode": "us" } }})});
         }
         else if (serviceURI === "luna://org.webosports.audio/getStatus")
         {
@@ -359,7 +359,7 @@ QtObject {
         
         else if(args.keys == "region,timeZone")
         {
-            console.log("returning dummy regionTime")
+            console.log("returning dummy region, timeZone")
             var message = {
                 "returnValue": true,
                 "region": { "countryName": "United States", "countryCode": "us" },
@@ -369,7 +369,7 @@ QtObject {
 		
 		else if(args.keys == "region,timeZone,timeFormat,locale")
         {
-            console.log("returning dummy regionTime")
+            console.log("returning dummy region, timezone, timeFormat, locale")
             var message = {
                 "returnValue": true,
                 "timeFormat": "HH12",
@@ -378,7 +378,6 @@ QtObject {
 				"locale": { "languageCode": "en", "countryCode": "us", "phoneRegion": { "countryName": "United States", "countryCode": "us" } }
             };
         }
-
         
         else if(args.keys == "region")
         {
