@@ -4,8 +4,11 @@ var _listRegisteredMethods = new Array;
 var _listLaunchPoints = [
             { "title": "Calendar", "id": "com.palm.app.calendar", "icon": "../images/default-app-icon.png", "removable": true },
             { "title": "Email", "id": "com.palm.app.email", "icon": "../images/default-app-icon.png", "userHideable": false },
+            { "title": "Messaging", "id": "org.webosports.app.messaging", "icon": "../images/default-app-icon.png", "removable": true },
+            { "title": "Memos", "id": "org.webosports.app.memos", "icon": "../images/default-app-icon.png", "userHideable": false },
+            { "title": "Phone", "id": "org.webosports.app.phone", "icon": "../images/default-app-icon.png", "userHideable": false },
             { "title": "Calculator", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png", "showInSearch": false },
-            { "title": "Snowshoe", "id": "com.palm.app.browser", "icon": "../images/default-app-icon.png", "userHideable": true },
+            { "title": "Browser", "id": "org.webosports.app.browser", "icon": "../images/default-app-icon.png", "userHideable": true },
             { "title": "This is a long title", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
             { "title": "This_is_also_a_long_title", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
             { "title": "Preware 5", "id": "com.palm.app.swmanager", "icon": "../images/default-app-icon.png" },
