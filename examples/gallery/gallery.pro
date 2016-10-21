@@ -1,17 +1,11 @@
 TEMPLATE = subdirs
 
-QT += qml quick
+QT += qml quick quickcontrols2
 
 OTHER_FILES += \
     appinfo.json \
-    main.qml \
-    content/ButtonPage.qml \
-    content/SliderPage.qml \
-    content/ProgressBarPage.qml \
-    content/TabBarPage.qml \
-    content/CheckBoxPage.qml \
-    content/SplitViewPage.qml \
-    content/TextFieldPage.qml
+    gallery.qml \
+    pages/*.qml
 
 files.path = /usr/palm/applications/org.luneos.components.gallery
 files.files += $$OTHER_FILES
