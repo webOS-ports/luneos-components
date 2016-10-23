@@ -48,18 +48,8 @@ T.BusyIndicator {
     padding: 6
 
     //! [contentItem]
-    contentItem: BusyRing {
-        id: ring
-        implicitWidth: 48
-        implicitHeight: 48
-        opacity: control.running ? 1 : 0
-
-        Behavior on opacity { OpacityAnimator { duration: 250 } }
-
-        BusyRingAnimator {
-            target: ring
-            running: control.visible && control.running
-        }
+    contentItem: AnimatedImage {
+        source: "images/spinner-light.gif"
     }
     //! [contentItem]
 }
