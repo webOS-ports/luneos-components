@@ -88,7 +88,9 @@ T.RadioDelegate {
 
     //! [background]
     background: BorderImage {
-        property string _positionButton: index === 0 ? "first" : index === totalCount-1 ? "last" : "middle"
+        property string _positionButton: totalCount === 1 ? "single" :
+                                            index === 0 ? "first" :
+                                               index === totalCount-1 ? "last" : "middle"
         property string _pressed: (control.pressed || control.checked) ? "-pressed" : ""
         source: "images/radiobutton-"+_positionButton+_pressed+".png"
         width: control.width; height: control.height
