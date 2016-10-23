@@ -53,7 +53,7 @@ T.SwitchDelegate {
     spacing: 12
 
     //! [indicator]
-    indicator: SwitchIndicator {
+    indicator: SwitchIndicatorLuneOS {
         x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control

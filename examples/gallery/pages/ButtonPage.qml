@@ -45,7 +45,7 @@ Flickable {
     id: flickable
     contentHeight: pane.height
 
-    readonly property int itemWidth: Math.max(button.implicitWidth, Math.min(button.implicitWidth * 2, pane.availableWidth / 3))
+    readonly property int itemWidth: Math.max(120, Math.min(120 * 2, pane.availableWidth / 3))
 
     Pane {
         id: pane
@@ -64,24 +64,37 @@ Flickable {
                     + "Buttons are normally used to perform an action, or to answer a question."
             }
 
-            Column {
+            property var buttonStyles: [ "Primary", "Secondary", "Affirmative", "Negative", "Gray", "Blue" ]
+
+            Row {
                 spacing: 20
                 anchors.horizontalCenter: parent.horizontalCenter
+                Column {
+                    spacing: 10
 
-                Button {
-                    text: "First"
-                    width: itemWidth
+                    Repeater {
+                        model: column.buttonStyles
+                        Button {
+                            text: modelData
+                            width: itemWidth
+
+                            mainColor: colors[String(modelData).toLowerCase()]
+                        }
+                    }
                 }
-                Button {
-                    id: button
-                    text: "Second"
-                    width: itemWidth
-                    highlighted: true
-                }
-                Button {
-                    text: "Third"
-                    enabled: false
-                    width: itemWidth
+                Column {
+                    spacing: 10
+
+                    Repeater {
+                        model: column.buttonStyles
+                        Button {
+                            text: modelData
+                            width: itemWidth
+                            enabled: false
+
+                            mainColor: colors[String(modelData).toLowerCase()]
+                        }
+                    }
                 }
             }
         }

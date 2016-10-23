@@ -37,6 +37,8 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
 
+import LunaNext.Common 0.1
+
 T.GroupBox {
     id: control
 
@@ -52,18 +54,26 @@ T.GroupBox {
     padding: 12
     topPadding: padding + (label && label.implicitWidth > 0 ? label.implicitHeight + spacing : 0)
 
+    font.family: "Prelude"
+    font.pixelSize: FontUtils.sizeToPixels("medium")
+    font.weight: Font.Bold
+    font.capitalization: Font.AllUppercase
+
     //! [contentItem]
     contentItem: Item { }
     //! [contentItem]
 
     //! [label]
     label: Text {
+        y: 4
         x: control.leftPadding
         width: control.availableWidth
 
         text: control.title
         font: control.font
-        color: control.enabled ? "#353637" : "#bdbebf"
+        color: "white"
+        style: Text.Raised
+        styleColor: "#646454"
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
@@ -71,13 +81,22 @@ T.GroupBox {
     //! [label]
 
     //! [background]
-    background: Rectangle {
-        y: control.topPadding - control.padding
+    background: Column {
         width: parent.width
-        height: parent.height - control.topPadding + control.padding
-
-        color: "transparent"
-        border.color: "#bdbebf"
+        BorderImage {
+            id: groupBoxTitleBg
+            source: "images/group-labeled-top.png"
+            width: parent.width; height: control.topPadding - control.padding
+            border.left: 12; border.top: 12
+            border.right: 12; border.bottom: 0
+        }
+        BorderImage {
+            id: groupBoxContentBg
+            source: "images/group-labeled-bottom.png"
+            width: parent.width; height: parent.height - control.topPadding + control.padding
+            border.left: 12; border.top: 9
+            border.right: 12; border.bottom: 12
+        }
     }
     //! [background]
 }

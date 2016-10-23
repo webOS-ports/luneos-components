@@ -42,6 +42,8 @@ import QtQuick 2.6
 import QtQuick.Layouts 1.1
 import QtQuick.Controls 2.0
 
+import LuneOS.Components 1.0
+
 Pane {
     padding: 0
 
@@ -181,6 +183,13 @@ Pane {
                 property string labelText: text
                 property ListView view: listView
                 property int ourIndex: index
+
+                ListDelegateSeparator {
+                    z: 1
+                    anchors.fill: parent
+                    index: ourIndex
+                    count: listView.model.count
+                }
 
                 // Can't find a way to do this in the SwipeDelegate component itself,
                 // so do it here instead.

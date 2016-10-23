@@ -53,12 +53,8 @@ T.Pane {
     //! [contentItem]
 
     //! [background]
-    background: BorderImage {
-        source: "images/dialog-bg.png"
-        anchors.fill: parent
-        border.left: 25; border.top: 25
-        border.right: 25; border.bottom: 25
+    background: Rectangle {
+        color: "#D8D8D8"
     }
-
     //! [background]
 }

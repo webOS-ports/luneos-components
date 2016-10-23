@@ -56,14 +56,25 @@ T.Button {
     font.pixelSize: FontUtils.sizeToPixels("medium")
     font.weight: Font.Light
 
-    property color mainColor: "#4B4B4B"
+    property QtObject colors: QtObject {
+        property color primary: "#80171717"
+        property color secondary: "#CCFFFFFF"
+        property color affirmative: "#2aa100"
+        property color negative: "#be0003"
+        property color blue: "#2071bb"
+        property color gray: "#4b4b4b"
+    }
+
+    property color mainColor: "#292929"
+    property color textColor: _isMainColorDark ? "white" : "#292929"
+    property bool _isMainColorDark: (mainColor.r*0.299 + mainColor.g*0.587 + mainColor.b*0.114) < 0.726
 
     //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
-        opacity: enabled || control.highlighted || control.checked ? 1 : 0.3
-        color: "white"
+        opacity: enabled || control.highlighted || control.checked ? 1 : 0.4
+        color: control.textColor
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
@@ -73,10 +84,10 @@ T.Button {
     //! [background]
     background:
         Rectangle {
-            implicitWidth: 100
+            implicitWidth: 120
             implicitHeight: 40
             radius: 4
-            opacity: enabled ? 1 : 0.3
+            opacity: enabled ? 1 : 0.4
             visible: !control.flat || control.down || control.checked || control.highlighted
             color: control.mainColor
 

@@ -54,7 +54,7 @@ T.RadioButton {
     opacity: enabled ? 1 : 0.2
 
     //! [indicator]
-    indicator: RadioIndicator {
+    indicator: RadioIndicatorLuneOS {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control

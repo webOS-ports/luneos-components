@@ -65,24 +65,7 @@ T.Drawer {
 
     //! [background]
     background: Rectangle {
-        color: "#4B4B4B"
-        Rectangle {
-            readonly property bool horizontal: control.edge === Qt.LeftEdge || control.edge === Qt.RightEdge
-            width: 50
-            height: 50
-            x: control.edge === Qt.LeftEdge ? parent.width - width*control.position : horizontal ? width*control.position : parent.width - width
-            y: control.edge === Qt.TopEdge ? parent.height - height*control.position : (!horizontal) ? height*control.position : parent.height - height
-            /*
-            x: control.edge === Qt.LeftEdge ? parent.width - width + control.dragMargin : horizontal ? -control.dragMargin : parent.width - width
-            y: control.edge === Qt.TopEdge ? parent.height - height + control.dragMargin : (!horizontal) ? -control.dragMargin : parent.height - height
-            */
 
-            color: "#4B4B4B"
-            Image {
-                source: "images/drag-handle.png"
-                anchors.fill: parent
-            }
-        }
     }
     //! [background]
 }

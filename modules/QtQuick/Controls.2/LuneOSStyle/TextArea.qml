@@ -50,12 +50,15 @@ T.TextArea {
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
     padding: 6
-    leftPadding: padding + 4
+    leftPadding: padding + 5
+    rightPadding: padding + 5
+    topPadding: padding + 5
+    bottomPadding: padding + 5
 
     opacity: enabled ? 1 : 0.2
     color: "#353637"
-    selectionColor: "#fddd5c"
-    selectedTextColor: color
+    selectionColor: "#338fff"
+    selectedTextColor: "white"
 
     font.family: "Prelude"
     font.pixelSize: FontUtils.sizeToPixels("medium")
@@ -70,10 +73,18 @@ T.TextArea {
 
         text: control.placeholderText
         font: control.font
-        color: "#c2c2c2"
+        color: "#646464"
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         elide: Text.ElideRight
+    }
+
+    background: BorderImage {
+        source: "images/input-focus.png"
+        anchors.fill: control
+        border.left: 10; border.top: 10
+        border.right: 10; border.bottom: 10
+        visible: control.activeFocus
     }
 }

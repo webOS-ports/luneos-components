@@ -57,7 +57,7 @@ Pane {
         }
 
         ComboBox {
-            model: ["First", "Second", "Third"]
+            model: ["First", "Second", "Third", "More", "More", "More", "More", "More", "More", "More"]
             width: Math.max(implicitWidth, Math.min(implicitWidth * 2, pane.availableWidth / 3))
             anchors.horizontalCenter: parent.horizontalCenter
         }

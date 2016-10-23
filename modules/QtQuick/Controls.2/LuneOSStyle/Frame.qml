@@ -55,7 +55,8 @@ T.Frame {
     //! [background]
     background: Rectangle {
         color: "transparent"
-        border.color: "#bdbebf"
+        radius: 12
+        border.color: "#7b7b7b"
     }
     //! [background]
 }

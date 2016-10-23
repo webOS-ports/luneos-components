@@ -44,6 +44,8 @@ import QtQuick.Controls 2.0
 import QtQuick.Controls.Material 2.0
 import QtQuick.Controls.Universal 2.0
 
+import LuneOS.Components 1.0
+
 ApplicationWindow {
     id: window
     width: 360
@@ -124,6 +126,14 @@ ApplicationWindow {
                         stackView.replace(model.source)
                     }
                     drawer.close()
+                }
+
+                property int ourIndex: index
+
+                ListDelegateSeparator {
+                    anchors.fill: parent
+                    index: ourIndex
+                    count: listView.model.count
                 }
             }
 

@@ -68,7 +68,7 @@ T.CheckDelegate {
     //! [contentItem]
 
     //! [indicator]
-    indicator: CheckIndicator {
+    indicator: CheckIndicatorLuneOS {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
 

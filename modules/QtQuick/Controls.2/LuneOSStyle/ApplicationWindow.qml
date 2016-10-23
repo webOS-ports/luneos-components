@@ -41,7 +41,7 @@ import QtQuick.Templates 2.0 as T
 T.ApplicationWindow {
     id: window
 
-    color: "#ffffff"
+    color: "#D8D8D8"
 
     overlay.modal: Rectangle {
         color: "#7f28282a"

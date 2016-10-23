@@ -37,18 +37,23 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
 
+import LunaNext.Common 0.1
+
 T.ItemDelegate {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(contentItem.implicitHeight,
-                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
+    implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
+    implicitHeight:contentItem.implicitHeight + topPadding + bottomPadding
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 12
     spacing: 12
+
+    font.family: "Prelude"
+    font.pixelSize: FontUtils.sizeToPixels("medium")
+    font.weight: Font.Light
+
+    property bool bottomLineSeparator: false
 
     //! [contentItem]
     contentItem: Text {
@@ -57,7 +62,7 @@ T.ItemDelegate {
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        color: control.enabled ? "#333333" : "#646464"
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
@@ -66,11 +71,21 @@ T.ItemDelegate {
     //! [contentItem]
 
     //! [background]
-    background: Rectangle {
-        implicitWidth: 100
-        implicitHeight: 40
-        visible: control.down || control.highlighted || control.visualFocus
-        color: control.visualFocus ? (control.pressed ? "#cce0ff" : "#e5efff") : (control.down ? "#bdbebf" : "#eeeeee")
+    indicator: Image {
+        source: "images/checkmark.png"
+        height: control.implicitHeight/2
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.right: parent.right
+        fillMode: Image.PreserveAspectFit
+        visible: control.checked
+    }
+    //! [background]
+
+    //! [background]
+    background: Image {
+            height: control.implicitHeight
+            source: "images/item-highlight.png"
+            visible: control.down || control.highlighted || control.visualFocus
     }
     //! [background]
 }

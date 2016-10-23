@@ -52,6 +52,9 @@ T.RadioDelegate {
     padding: 12
     spacing: 12
 
+    property int totalCount: 0 // if the app tells how many delegates there are, we can style the first and last
+                               // items properly
+
     //! [contentItem]
     contentItem: Text {
         leftPadding: control.mirrored ? control.indicator.width + control.spacing : 0
@@ -68,7 +71,7 @@ T.RadioDelegate {
     //! [contentItem]
 
     //! [indicator]
-    indicator: RadioIndicator {
+    indicator: RadioIndicatorLuneOS {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
 

@@ -48,12 +48,15 @@ T.TextField {
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
     padding: 6
-    leftPadding: padding + 4
+    leftPadding: padding + 5
+    rightPadding: padding + 5
+    topPadding: padding + 5
+    bottomPadding: padding + 5
 
     opacity: enabled ? 1 : 0.2
     color: "#353637"
-    selectionColor: "#fddd5c"
-    selectedTextColor: color
+    selectionColor: "#338fff"
+    selectedTextColor: "white"
     verticalAlignment: TextInput.AlignVCenter
 
     font.family: "Prelude"
@@ -69,7 +72,7 @@ T.TextField {
 
         text: control.placeholderText
         font: control.font
-        color: "#bdbebf"
+        color: "#646464"
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
@@ -77,12 +80,12 @@ T.TextField {
     }
 
     //! [background]
-    background: Rectangle {
-        implicitWidth: 200
-        implicitHeight: 40
-        border.width: control.activeFocus ? 2 : 1
-        color: control.enabled ? "transparent" : "#353637"
-        border.color: control.activeFocus ? "#0066ff" : (control.enabled ? "#bdbebf" : "transparent")
+    background: BorderImage {
+        source: "images/input-focus.png"
+        anchors.fill: control
+        border.left: 10; border.top: 10
+        border.right: 10; border.bottom: 10
+        visible: control.activeFocus
     }
     //! [background]
 }

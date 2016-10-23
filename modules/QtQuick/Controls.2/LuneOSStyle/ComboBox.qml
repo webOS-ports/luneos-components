@@ -39,6 +39,9 @@ import QtQuick.Window 2.2
 import QtQuick.Controls 2.0
 import QtQuick.Templates 2.0 as T
 
+import LunaNext.Common 0.1
+import LuneOS.Components 1.0
+
 T.ComboBox {
     id: control
 
@@ -56,12 +59,24 @@ T.ComboBox {
 
     opacity: enabled ? 1 : 0.3
 
+    font.family: "Prelude"
+    font.pixelSize: FontUtils.sizeToPixels("medium")
+    font.weight: Font.Light
+
     //! [delegate]
     delegate: ItemDelegate {
         width: control.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         font.weight: control.currentIndex === index ? Font.DemiBold : Font.Normal
-        highlighted: control.highlightedIndex == index
+        checked: control.currentIndex == index
+
+        property int myIndex: index
+
+        ListDelegateSeparator {
+            anchors.fill: parent
+            index: parent.myIndex
+            count: control.count
+        }
     }
     //! [delegate]
 
@@ -69,9 +84,9 @@ T.ComboBox {
     indicator: Image {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
-        source: "image://default/double-arrow/" + (control.visualFocus ? "#0066ff" : "#353637")
-        sourceSize.width: width
-        sourceSize.height: height
+        source: "images/menu-arrow.png"
+        width: 15
+        height: 10
     }
     //! [indicator]
 
@@ -82,7 +97,7 @@ T.ComboBox {
 
         text: control.displayText
         font: control.font
-        color: control.visualFocus ? "#0066ff" : "#353637"
+        color: "#333333"
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
@@ -90,44 +105,36 @@ T.ComboBox {
     //! [contentItem]
 
     //! [background]
-    background: Rectangle {
-        implicitWidth: 120
-        implicitHeight: 40
-
-        color: control.visualFocus ? (control.pressed ? "#cce0ff" : "#f0f6ff") :
-            (control.pressed || popup.visible ? "#d0d0d0" : "#e0e0e0")
-        border.color: "#0066ff"
-        border.width: control.visualFocus ? 2 : 0
-    }
+    background: Item { }
     //! [background]
 
     //! [popup]
     popup: T.Popup {
         y: control.height - (control.visualFocus ? 0 : 1)
         width: control.width
-        implicitHeight: listview.contentHeight
+        implicitHeight: Math.min(listview.contentHeight, control.parent.height)
         topMargin: 6
         bottomMargin: 6
 
         contentItem: ListView {
-            id: listview
-            clip: true
-            model: control.popup.visible ? control.delegateModel : null
-            currentIndex: control.highlightedIndex
+                id: listview
+                model: control.popup.visible ? control.delegateModel : null
+                currentIndex: control.highlightedIndex
+                boundsBehavior: Flickable.StopAtBounds
+                anchors.fill: parent
+                clip: true
 
-            Rectangle {
-                z: 10
-                parent: listview
-                width: listview.width
-                height: listview.height
-                color: "transparent"
-                border.color: "#bdbebf"
-            }
-
-            T.ScrollIndicator.vertical: ScrollIndicator { }
+                T.ScrollIndicator.vertical: ScrollIndicator { }
         }
 
-        background: Rectangle { }
+        background: BorderImage {
+            source: "images/popupselect-background.png"
+            x: -9; y: -13
+            width: parent.width + 9 + 9
+            height: parent.height + 13 + 13
+            border.left: 15; border.top: 19
+            border.right: 15; border.bottom: 19
+        }
     }
     //! [popup]
 }

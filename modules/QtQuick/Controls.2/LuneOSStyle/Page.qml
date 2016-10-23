@@ -46,7 +46,7 @@ T.Page {
 
     //! [background]
     background: Rectangle {
-        color: "#ffffff"
+        color: "#D8D8D8"
     }
     //! [background]
 }
