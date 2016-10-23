@@ -54,6 +54,7 @@ T.RadioDelegate {
     padding: 12
     spacing: 12
 
+    property int _index: typeof index !== 'undefined' ? index : 0
     property int totalCount: 0
     property bool useCollapsedLayout: true
     property bool _reallyUseCollapsedLayout: useCollapsedLayout && totalCount>0 && index >= 0
@@ -89,8 +90,8 @@ T.RadioDelegate {
     //! [background]
     background: BorderImage {
         property string _positionButton: totalCount === 1 ? "single" :
-                                            index === 0 ? "first" :
-                                               index === totalCount-1 ? "last" : "middle"
+                                            _index === 0 ? "first" :
+                                               _index === totalCount-1 ? "last" : "middle"
         property string _pressed: (control.pressed || control.checked) ? "-pressed" : ""
         source: "images/radiobutton-"+_positionButton+_pressed+".png"
         width: control.width; height: control.height

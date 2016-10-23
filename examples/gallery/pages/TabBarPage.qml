@@ -83,12 +83,15 @@ Page {
 
         TabButton {
             text: "First"
+            height: parent.height
         }
         TabButton {
             text: "Second"
+            height: parent.height
         }
         TabButton {
             text: "Third"
+            height: parent.height
         }
     }
 }

@@ -36,21 +36,23 @@
 
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
+import QtQml.Models 2.2
 
 T.TabButton {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.contentHeight + topPadding + bottomPadding)
+    implicitWidth: contentItem.contentWidth + leftPadding + rightPadding
+    implicitHeight: contentItem.contentHeight + topPadding + bottomPadding
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
 
+    property int _index: ObjectModel.index
+    property int _totalCount: ListView.view.model.count
+
     //! [contentItem]
     contentItem: Text {
-        text: control.text
+        text: control.text + " " + _index + "/" + _totalCount
         font: control.font
         elide: Text.ElideRight
         opacity: enabled ? 1 : 0.3
@@ -62,8 +64,15 @@ T.TabButton {
 
     //! [background]
     background: Rectangle {
-        implicitHeight: 40
-        color: control.down ? (control.checked ? "#e4e4e4" : "#585a5c") : (control.checked ? "transparent" : "#353637")
+        color: control.checked ? "#2071bb" : "#343434"
+        height: control.height
+
+        BorderImage {
+            anchors.fill: parent
+            source: "images/toolbar.png"
+            border.left: 2; border.top: 2
+            border.right: 2; border.bottom: 2
+        }
     }
     //! [background]
 }

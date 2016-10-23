@@ -63,6 +63,6 @@ T.TabBar {
     //! [contentItem]
 
     //! [background]
-    background: Rectangle { }
+    background: Rectangle { color: "#343434" }
     //! [background]
 }
