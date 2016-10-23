@@ -39,40 +39,62 @@ import QtQuick.Controls 2.0
 import QtQuick.Controls.impl 2.0
 import QtQuick.Templates 2.0 as T
 
+import LunaNext.Common 0.1
+
 T.RadioButton {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(contentItem.implicitHeight,
-                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
+    implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
+    implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
     spacing: 6
     opacity: enabled ? 1 : 0.2
 
+    property int totalCount: 0 // if the app tells how many delegates there are, we can style the first and last
+                               // items properly
+    property int index: -1
+    property bool useCollapsedLayout: true
+    property bool _reallyUseCollapsedLayout: useCollapsedLayout && totalCount>0 && index >= 0
+
+    font.family: "Prelude"
+    font.pixelSize: FontUtils.sizeToPixels("medium")
+    font.weight: Font.Light
+
     //! [indicator]
     indicator: RadioIndicatorLuneOS {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
+        visible: !_reallyUseCollapsedLayout
     }
     //! [indicator]
 
     //! [contentItem]
     contentItem: Text {
-        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
+        leftPadding: control.indicator && control.indicator.visible && !control.mirrored ? control.indicator.width + control.spacing : 0
+        rightPadding: control.indicator && control.indicator.visible && control.mirrored ? control.indicator.width + control.spacing : 0
 
         text: control.text
         font: control.font
         color: control.down ? "#26282a" : "#353637"
         elide: Text.ElideRight
         visible: control.text
-        horizontalAlignment: Text.AlignLeft
+        horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
     //! [contentItem]
+
+    //! [background]
+    background: BorderImage {
+        property string _positionButton: index === 0 ? "first" : index === totalCount-1 ? "last" : "middle"
+        property string _pressed: (control.pressed || control.checked) ? "-pressed" : ""
+        source: "images/radiobutton-"+_positionButton+_pressed+".png"
+        width: control.width; height: control.height
+        border.left: 5; border.top: 5
+        border.right: 5; border.bottom: 5
+        visible: _reallyUseCollapsedLayout
+    }
+    //! [background]
 }

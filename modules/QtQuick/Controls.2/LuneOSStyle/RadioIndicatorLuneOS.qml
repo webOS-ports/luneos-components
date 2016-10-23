@@ -36,24 +36,8 @@
 
 import QtQuick 2.6
 
-Rectangle {
-    implicitWidth: 28
-    implicitHeight: 28
-
-    radius: width / 2
-    color: control.down ? (control.visualFocus ? "#cce0ff" : "#f6f6f6") : (control.visualFocus ? "#f0f6ff" : "#ffffff")
-    border.width: control.visualFocus ? 2 : 1
-    border.color: control.visualFocus ? "#0066ff" : (control.down ? "#808080" : "#909090")
-
+Image {
     property Item control
 
-    Rectangle {
-        x: (parent.width - width) / 2
-        y: (parent.height - height) / 2
-        width: 20
-        height: 20
-        radius: width / 2
-        color: control.down ? "#26282a" : "#353637"
-        visible: control.checked
-    }
+    source: control.checked || control.pressed ? "images/radiobutton-indicator-pressed.png" : "images/radiobutton-indicator.png"
 }

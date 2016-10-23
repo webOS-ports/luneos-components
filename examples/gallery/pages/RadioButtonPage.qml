@@ -78,6 +78,41 @@ Flickable {
                     enabled: false
                 }
             }
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                RadioButton {
+                    text: "First"
+                    totalCount: 3
+                    index: 0
+                }
+                RadioButton {
+                    text: "Second"
+                    checked: true
+                    totalCount: 3
+                    index: 1
+                }
+                RadioButton {
+                    text: "Third"
+                    enabled: false
+                    totalCount: 3
+                    index: 2
+                }
+            }
+            ListView {
+                id: listViewRadioButtons
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: parent.width
+                height: 40
+
+                orientation: ListView.Horizontal
+                model: [ "First", "Second", "Third" ]
+                delegate: RadioDelegate {
+                    width: listViewRadioButtons.width / 3
+                    text: modelData
+                    totalCount: listViewRadioButtons.model.length
+                }
+            }
         }
     }
 
