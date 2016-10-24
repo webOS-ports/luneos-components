@@ -37,6 +37,8 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
 
+import LunaNext.Common 0.1
+
 T.ToolBar {
     id: control
 
@@ -46,6 +48,10 @@ T.ToolBar {
     contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
+    font.family: "Prelude"
+    font.pixelSize: FontUtils.sizeToPixels("medium")
+    font.weight: Font.Light
+
     //! [contentItem]
     contentItem: Item { }
     //! [contentItem]
@@ -53,7 +59,14 @@ T.ToolBar {
     //! [background]
     background: Rectangle {
         implicitHeight: 40
-        color: "#eeeeee"
+        color: "#343434"
+
+        BorderImage {
+            anchors.fill: parent
+            source: "images/toolbar.png"
+            border.left: 2; border.top: 2
+            border.right: 2; border.bottom: 2
+        }
     }
     //! [background]
 }

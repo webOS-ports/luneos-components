@@ -40,10 +40,8 @@ import QtQuick.Templates 2.0 as T
 T.ToolButton {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
+    implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
+    implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
@@ -52,7 +50,7 @@ T.ToolButton {
     contentItem: Text {
         text: control.text
         font: control.font
-        color: control.enabled ? (control.visualFocus ? "#0066ff" : "#26282a") : "#c2c2c2"
+        color: "white"
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -60,13 +58,12 @@ T.ToolButton {
     //! [contentItem]
 
     //! [background]
-    background: Rectangle {
-        implicitWidth: 40
-        implicitHeight: 40
-
-        color: Qt.darker("#33333333", control.enabled && (control.checked || control.highlighted) ? 1.5 : 1.0)
-        opacity: control.down ? 1.0 : control.enabled && (control.checked || control.highlighted) ? 0.5 : 0
-        visible: control.down || (control.enabled && (control.checked || control.highlighted))
+    background: BorderImage {
+        width: control.width
+        height: control.height
+        source: (control.pressed || control.checked) ? "images/button-down.png" : "images/button-toolbar.png"
+        border.left: 2; border.top: 2
+        border.right: 2; border.bottom: 2
     }
     //! [background]
 }
