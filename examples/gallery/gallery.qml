@@ -45,6 +45,7 @@ import QtQuick.Controls.Material 2.0
 import QtQuick.Controls.Universal 2.0
 
 import LuneOS.Components 1.0
+import LunaNext.Common 0.1
 
 ApplicationWindow {
     id: window
@@ -75,7 +76,12 @@ ApplicationWindow {
             Label {
                 id: titleLabel
                 text: "Gallery"
-                font.pixelSize: 20
+                color: "white"
+
+                font.family: "Prelude"
+                font.pixelSize: FontUtils.sizeToPixels("medium")
+                font.weight: Font.Light
+
                 elide: Label.ElideRight
                 horizontalAlignment: Qt.AlignHCenter
                 verticalAlignment: Qt.AlignVCenter
@@ -110,72 +116,93 @@ ApplicationWindow {
         width: Math.min(window.width, window.height) / 3 * 2
         height: window.height
 
-        ListView {
-            id: listView
-            currentIndex: -1
+        Pane {
             anchors.fill: parent
+            padding: 0
 
-            delegate: ItemDelegate {
-                width: parent.width
-                text: model.title
-                highlighted: ListView.isCurrentItem
-                onClicked: {
-                    if (listView.currentIndex != index) {
-                        listView.currentIndex = index
-                        titleLabel.text = model.title
-                        stackView.replace(model.source)
+            ListView {
+                id: listView
+                currentIndex: -1
+                anchors.fill: parent
+
+                delegate: ItemDelegate {
+                    width: parent.width
+                    text: model.title
+                    highlighted: ListView.isCurrentItem
+                    onClicked: {
+                        if (listView.currentIndex != index) {
+                            listView.currentIndex = index
+                            titleLabel.text = model.title
+                            stackView.replace(model.source)
+                        }
+                        drawer.close()
                     }
-                    drawer.close()
-                }
 
-                property int ourIndex: index
+                    property int ourIndex: index
 
-                ListDelegateSeparator {
-                    anchors.fill: parent
-                    index: ourIndex
-                    count: listView.model.count
-                }
-            }
-
-            model: ListModel {
-                id: subPagesModel
-                Component.onCompleted: {
-                    var listPages = [
-                 { "title": "BusyIndicator ✓", "source": currentDir + "pages/BusyIndicatorPage.qml" },
-                 { "title": "Button ✓", "source": currentDir + "pages/ButtonPage.qml" },
-                 { "title": "CheckBox ✓", "source": currentDir + "pages/CheckBoxPage.qml" },
-                 { "title": "ComboBox ✓", "source": currentDir + "pages/ComboBoxPage.qml" },
-                 { "title": "Dial", "source": currentDir + "pages/DialPage.qml" },
-                 { "title": "Delegates ✓", "source": currentDir + "pages/DelegatePage.qml" },
-                 { "title": "Drawer ✓", "source": currentDir + "pages/DrawerPage.qml" },
-                 { "title": "Frame ✓", "source": currentDir + "pages/FramePage.qml" },
-                 { "title": "GroupBox ✓", "source": currentDir + "pages/GroupBoxPage.qml" },
-                 { "title": "Menu", "source": currentDir + "pages/MenuPage.qml" },
-                 { "title": "PageIndicator", "source": currentDir + "pages/PageIndicatorPage.qml" },
-                 { "title": "Popup ✓", "source": currentDir + "pages/PopupPage.qml" },
-                 { "title": "ProgressBar", "source": currentDir + "pages/ProgressBarPage.qml" },
-                 { "title": "RadioButton ✓", "source": currentDir + "pages/RadioButtonPage.qml" },
-                 { "title": "RangeSlider", "source": currentDir + "pages/RangeSliderPage.qml" },
-                 { "title": "ScrollBar", "source": currentDir + "pages/ScrollBarPage.qml" },
-                 { "title": "ScrollIndicator", "source": currentDir + "pages/ScrollIndicatorPage.qml" },
-                 { "title": "Slider", "source": currentDir + "pages/SliderPage.qml" },
-                 { "title": "SpinBox", "source": currentDir + "pages/SpinBoxPage.qml" },
-                 { "title": "StackView", "source": currentDir + "pages/StackViewPage.qml" },
-                 { "title": "SwipeView", "source": currentDir + "pages/SwipeViewPage.qml" },
-                 { "title": "Switch ✓", "source": currentDir + "pages/SwitchPage.qml" },
-                 { "title": "TabBar", "source": currentDir + "pages/TabBarPage.qml" },
-                 { "title": "TextArea ✓", "source": currentDir + "pages/TextAreaPage.qml" },
-                 { "title": "TextField ✓", "source": currentDir + "pages/TextFieldPage.qml" },
-                 { "title": "ToolTip", "source": currentDir + "pages/ToolTipPage.qml" },
-                 { "title": "Tumbler", "source": currentDir + "pages/TumblerPage.qml" }
-                                         ];
-                    for(var elt in listPages) {
-                        subPagesModel.append(listPages[elt]);
+                    ListDelegateSeparator {
+                        anchors.fill: parent
+                        index: ourIndex
+                        count: listView.model.count
                     }
                 }
+
+                model: ListModel {
+                    id: subPagesModel
+                    Component.onCompleted: {
+                        var listPages = [
+                     { "title": "BusyIndicator ✓", "source": currentDir + "pages/BusyIndicatorPage.qml" },
+                     { "title": "Button ✓", "source": currentDir + "pages/ButtonPage.qml" },
+                     { "title": "CheckBox ✓", "source": currentDir + "pages/CheckBoxPage.qml" },
+                     { "title": "ComboBox ✓", "source": currentDir + "pages/ComboBoxPage.qml" },
+                     { "title": "Dial", "source": currentDir + "pages/DialPage.qml" },
+                     { "title": "Delegates ✓", "source": currentDir + "pages/DelegatePage.qml" },
+                     { "title": "Drawer ✓", "source": currentDir + "pages/DrawerPage.qml" },
+                     { "title": "Frame ✓", "source": currentDir + "pages/FramePage.qml" },
+                     { "title": "GroupBox ✓", "source": currentDir + "pages/GroupBoxPage.qml" },
+                     { "title": "Menu", "source": currentDir + "pages/MenuPage.qml" },
+                     { "title": "PageIndicator", "source": currentDir + "pages/PageIndicatorPage.qml" },
+                     { "title": "Popup ✓", "source": currentDir + "pages/PopupPage.qml" },
+                     { "title": "ProgressBar", "source": currentDir + "pages/ProgressBarPage.qml" },
+                     { "title": "RadioButton ✓", "source": currentDir + "pages/RadioButtonPage.qml" },
+                     { "title": "RangeSlider", "source": currentDir + "pages/RangeSliderPage.qml" },
+                     { "title": "ScrollBar", "source": currentDir + "pages/ScrollBarPage.qml" },
+                     { "title": "ScrollIndicator", "source": currentDir + "pages/ScrollIndicatorPage.qml" },
+                     { "title": "Slider", "source": currentDir + "pages/SliderPage.qml" },
+                     { "title": "SpinBox", "source": currentDir + "pages/SpinBoxPage.qml" },
+                     { "title": "StackView", "source": currentDir + "pages/StackViewPage.qml" },
+                     { "title": "SwipeView", "source": currentDir + "pages/SwipeViewPage.qml" },
+                     { "title": "Switch ✓", "source": currentDir + "pages/SwitchPage.qml" },
+                     { "title": "TabBar", "source": currentDir + "pages/TabBarPage.qml" },
+                     { "title": "TextArea ✓", "source": currentDir + "pages/TextAreaPage.qml" },
+                     { "title": "TextField ✓", "source": currentDir + "pages/TextFieldPage.qml" },
+                     { "title": "ToolTip", "source": currentDir + "pages/ToolTipPage.qml" },
+                     { "title": "Tumbler", "source": currentDir + "pages/TumblerPage.qml" }
+                                             ];
+                        for(var elt in listPages) {
+                            subPagesModel.append(listPages[elt]);
+                        }
+                    }
+                }
+
+                ScrollIndicator.vertical: ScrollIndicator { }
             }
 
-            ScrollIndicator.vertical: ScrollIndicator { }
+            ToolBar {
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+
+                Image {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    fillMode: Image.Pad
+                    horizontalAlignment: Image.AlignHCenter
+                    verticalAlignment: Image.AlignVCenter
+                    source: Qt.resolvedUrl("images/drag-handle.png")
+                }
+            }
         }
     }
 
