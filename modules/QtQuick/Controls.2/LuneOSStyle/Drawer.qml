@@ -64,8 +64,35 @@ T.Drawer {
     //! [contentItem]
 
     //! [background]
-    background: Rectangle {
+    background: Item {
+        Image {
+            source: "images/sliding-shadow.png"
 
+            readonly property bool horizontal: control.edge === Qt.LeftEdge || control.edge === Qt.RightEdge
+
+            rotation: {
+                if (horizontal) {
+                    if (control.edge === Qt.LeftEdge)
+                        return 180;
+                    else
+                        return 0;
+                } else {
+                    if (control.edge === Qt.TopEdge)
+                        return 270;
+                    else
+                        return 90;
+                }
+            }
+
+            width: 20
+            height: horizontal ? control.height : control.width
+
+            transformOrigin: horizontal ? Item.Center :
+                                  control.edge === Qt.TopEdge ? Item.TopRight : Item.TopLeft
+
+            x: horizontal    ? (control.edge === Qt.LeftEdge ? parent.width - 1 : -20) : control.edge === Qt.TopEdge ? -20 : parent.width
+            y: (!horizontal) ? (control.edge === Qt.TopEdge ? parent.height - 1 : -20) : 0
+        }
     }
     //! [background]
 }
