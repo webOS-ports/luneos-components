@@ -55,7 +55,7 @@ T.RadioDelegate {
     spacing: 12
 
     property int _index: typeof index !== 'undefined' ? index : 0
-    property int totalCount: 0
+    property int totalCount: ((!!ListView.view) && (!!ListView.view.model)) ? (ListView.view.model.count || ListView.view.model.length) : 0
     property bool useCollapsedLayout: true
     property bool _reallyUseCollapsedLayout: useCollapsedLayout && totalCount>0 && index >= 0
 

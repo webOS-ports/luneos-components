@@ -81,22 +81,20 @@ Flickable {
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter
 
+                property bool useCollapsedLayout: true
+
                 RadioButton {
                     text: "First"
-                    totalCount: 3
-                    index: 0
                 }
                 RadioButton {
                     text: "Second"
                     checked: true
-                    totalCount: 3
-                    index: 1
                 }
                 RadioButton {
                     text: "Third"
-                    enabled: false
-                    totalCount: 3
-                    index: 2
+                }
+                RadioButton {
+                    text: "FourthWRONG"
                 }
             }
             ListView {
@@ -110,7 +108,6 @@ Flickable {
                 delegate: RadioDelegate {
                     width: listViewRadioButtons.width / 3
                     text: modelData
-                    totalCount: listViewRadioButtons.model.length
                 }
             }
         }
