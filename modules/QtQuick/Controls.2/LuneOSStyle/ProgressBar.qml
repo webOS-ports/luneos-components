@@ -48,31 +48,41 @@ T.ProgressBar {
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
     //! [contentItem]
-    contentItem: ProgressStrip {
-        id: strip
-        implicitHeight: 6
-        implicitWidth: 116
-        scale: control.mirrored ? -1 : 1
-        progress: control.position
-        indeterminate: control.indeterminate
+    contentItem: Item {
+        implicitHeight: 18
+        implicitWidth: 200
 
-        ProgressStripAnimator {
-            target: strip
-            running: control.visible && control.indeterminate
+        BorderImage {
+            source: "images/progress-bar-inner.png"
+            border.left: 4; border.top: 8
+            border.right: 4; border.bottom: 8
+
+            anchors.verticalCenter: parent.verticalCenter
+            scale: control.mirrored ? -1 : 1
+            height: 18
+            width: control.indeterminate ? control.availableWidth/3 : (control.position*control.availableWidth)
+            x: 0
+
+            SequentialAnimation on x {
+                running: control.indeterminate && control.enabled && control.visible
+                loops: Animation.Infinite
+                PropertyAnimation { to: 2*control.availableWidth/3; duration: 500 }
+                PropertyAnimation { to: 0; duration: 500 }
+            }
         }
     }
     //! [contentItem]
 
     //! [background]
-    background: Rectangle {
-        implicitWidth: 200
-        implicitHeight: 6
+    background: BorderImage {
+        source: "images/progress-bar.png"
+        border.left: 4; border.top: 8
+        border.right: 4; border.bottom: 8
+
         x: control.leftPadding
         y: control.topPadding + (control.availableHeight - height) / 2
         width: control.availableWidth
-        height: 6
-
-        color: "#e4e4e4"
+        height: 18
     }
     //! [background]
 }

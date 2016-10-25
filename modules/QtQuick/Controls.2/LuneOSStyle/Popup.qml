@@ -37,6 +37,8 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
 
+import LunaNext.Common 0.1
+
 T.Popup {
     id: control
 
@@ -48,9 +50,13 @@ T.Popup {
     contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
-    padding: 12
+    padding: 25
 
     contentItem: Item { }
+
+    font.family: "Prelude"
+    font.pixelSize: FontUtils.sizeToPixels("medium")
+    font.weight: Font.Light
 
     background: BorderImage {
         source: "images/dialog-bg.png"

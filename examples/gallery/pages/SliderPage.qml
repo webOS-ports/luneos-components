@@ -44,7 +44,7 @@ import QtQuick.Controls 2.0
 Pane {
     id: pane
 
-    readonly property int itemWidth: Math.max(slider.implicitWidth, Math.min(slider.implicitWidth * 2, pane.availableWidth / 3))
+    readonly property int itemWidth: Math.max(pane.availableWidth / 2, Math.min(slider.implicitWidth * 2, pane.availableWidth / 3))
 
     Column {
         spacing: 40

@@ -44,7 +44,7 @@ import QtQuick.Controls 2.0
 Pane {
     id: pane
 
-    readonly property int itemWidth: Math.max(bar.implicitWidth, pane.availableWidth / 3)
+    readonly property int itemWidth: pane.availableWidth / 2
 
     Column {
         spacing: 40
@@ -59,7 +59,6 @@ Pane {
         }
 
         ProgressBar {
-            id: bar
             value: 0.5
             width: itemWidth
             anchors.horizontalCenter: parent.horizontalCenter

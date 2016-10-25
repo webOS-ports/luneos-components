@@ -37,6 +37,9 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
 
+import LunaNext.Common 0.1
+import QtQml.Models 2.2
+
 T.MenuItem {
     id: control
 
@@ -47,7 +50,12 @@ T.MenuItem {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    padding: 6
+    property int _index: ObjectModel.index
+    property int _totalCount: ListView.view.model.count
+
+    font.family: "Prelude"
+    font.pixelSize: FontUtils.sizeToPixels("medium")
+    font.weight: Font.Light
 
     //! [contentItem]
     contentItem: Text {
@@ -57,7 +65,6 @@ T.MenuItem {
         text: control.text
         font: control.font
         color: control.enabled ? "#26282a" : "#bdbebf"
-        elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
@@ -70,7 +77,7 @@ T.MenuItem {
         y: control.topPadding + (control.availableHeight - height) / 2
 
         visible: control.checked
-        source: control.checkable ? "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png" : ""
+        source: control.checkable ? "images/checkmark.png" : ""
     }
     //! [indicator]
 
@@ -79,12 +86,20 @@ T.MenuItem {
         implicitWidth: 200
         implicitHeight: 40
 
+        // Show a separator between items
         Rectangle {
-            x: 1
-            y: 1
-            width: parent.width - 2
-            height: parent.height - 2
-            color: control.visualFocus || control.down ? "#eeeeee" : "transparent"
+            y: parent.height-1
+            height: 1
+            width: parent.width
+            color: '#ADADAD'
+            visible: _index < _totalCount - 1
+        }
+        Rectangle {
+            y: parent.height
+            height: 1
+            width: parent.width
+            color: '#ECECEC'
+            visible: _index < _totalCount - 1
         }
     }
     //! [background]

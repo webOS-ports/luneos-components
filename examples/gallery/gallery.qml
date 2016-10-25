@@ -106,6 +106,10 @@ ApplicationWindow {
                         text: "About"
                         onTriggered: aboutDialog.open()
                     }
+                    MenuItem {
+                        text: "About"
+                        onTriggered: aboutDialog.open()
+                    }
                 }
             }
         }
@@ -123,7 +127,10 @@ ApplicationWindow {
             ListView {
                 id: listView
                 currentIndex: -1
-                anchors.fill: parent
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: handleToolbar.top
 
                 delegate: ItemDelegate {
                     width: parent.width
@@ -160,15 +167,15 @@ ApplicationWindow {
                      { "title": "Drawer ✓", "source": currentDir + "pages/DrawerPage.qml" },
                      { "title": "Frame ✓", "source": currentDir + "pages/FramePage.qml" },
                      { "title": "GroupBox ✓", "source": currentDir + "pages/GroupBoxPage.qml" },
-                     { "title": "Menu", "source": currentDir + "pages/MenuPage.qml" },
+                     { "title": "Menu ✓", "source": currentDir + "pages/MenuPage.qml" },
                      { "title": "PageIndicator", "source": currentDir + "pages/PageIndicatorPage.qml" },
                      { "title": "Popup ✓", "source": currentDir + "pages/PopupPage.qml" },
-                     { "title": "ProgressBar", "source": currentDir + "pages/ProgressBarPage.qml" },
+                     { "title": "ProgressBar ✓", "source": currentDir + "pages/ProgressBarPage.qml" },
                      { "title": "RadioButton ✓", "source": currentDir + "pages/RadioButtonPage.qml" },
                      { "title": "RangeSlider", "source": currentDir + "pages/RangeSliderPage.qml" },
                      { "title": "ScrollBar", "source": currentDir + "pages/ScrollBarPage.qml" },
                      { "title": "ScrollIndicator", "source": currentDir + "pages/ScrollIndicatorPage.qml" },
-                     { "title": "Slider", "source": currentDir + "pages/SliderPage.qml" },
+                     { "title": "Slider ✓", "source": currentDir + "pages/SliderPage.qml" },
                      { "title": "SpinBox", "source": currentDir + "pages/SpinBoxPage.qml" },
                      { "title": "StackView", "source": currentDir + "pages/StackViewPage.qml" },
                      { "title": "SwipeView ✓", "source": currentDir + "pages/SwipeViewPage.qml" },
@@ -189,9 +196,10 @@ ApplicationWindow {
             }
 
             ToolBar {
-                anchors.bottom: parent.bottom
+                id: handleToolbar
                 anchors.left: parent.left
                 anchors.right: parent.right
+                anchors.bottom: parent.bottom
 
                 Image {
                     anchors.right: parent.right
@@ -260,13 +268,20 @@ ApplicationWindow {
             Label {
                 text: "About"
                 font.bold: true
+
+                font.family: "Prelude"
+                font.pixelSize: FontUtils.sizeToPixels("medium")
+                font.weight: Font.Light
             }
 
             Label {
                 width: aboutDialog.availableWidth
                 text: "The Qt Quick Controls 2 module delivers the next generation user interface controls based on Qt Quick."
                 wrapMode: Label.Wrap
-                font.pixelSize: 12
+
+                font.family: "Prelude"
+                font.pixelSize: FontUtils.sizeToPixels("small")
+                font.weight: Font.Light
             }
 
             Label {
@@ -275,7 +290,10 @@ ApplicationWindow {
                     + "are an order of magnitude simpler, lighter and faster, and are primarily targeted "
                     + "towards embedded and mobile platforms."
                 wrapMode: Label.Wrap
-                font.pixelSize: 12
+
+                font.family: "Prelude"
+                font.pixelSize: FontUtils.sizeToPixels("small")
+                font.weight: Font.Light
             }
         }
     }
