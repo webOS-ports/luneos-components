@@ -72,28 +72,8 @@ Pane {
             text: labelText
             width: parent.width
 
-            onClicked: if (swipe.complete) view.model.remove(ourIndex)
-
-            Component {
-                id: removeComponent
-
-                Rectangle {
-                    color: swipeDelegate.swipe.complete && swipeDelegate.pressed ? "#333" : "#444"
-                    width: parent.width
-                    height: parent.height
-                    clip: true
-
-                    Label {
-                        font.pixelSize: swipeDelegate.font.pixelSize
-                        text: "Remove"
-                        color: "white"
-                        anchors.centerIn: parent
-                    }
-                }
-            }
-
-            swipe.left: removeComponent
-            swipe.right: removeComponent
+            confirmText: "Delete"
+            onConfirmed: view.model.remove(ourIndex)
         }
     }
 

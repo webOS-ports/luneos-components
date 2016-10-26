@@ -37,6 +37,8 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
 
+import LunaNext.Common 0.1
+
 T.SwipeDelegate {
     id: control
 
@@ -49,6 +51,44 @@ T.SwipeDelegate {
 
     padding: 12
     spacing: 12
+
+    font.family: "Prelude"
+    font.pixelSize: FontUtils.sizeToPixels("medium")
+    font.weight: Font.Light
+
+    property string confirmText: "Confirm"
+    signal confirmed()
+    onClicked: {
+        if(swipe.complete) control.confirmed();
+    }
+
+    // Tofe remark: currently the SwipeDelegate C++ template filters out all mouse events from left,right and behind
+    //              items. In addition, there is no API to reset the swiped delegate to its original position.
+    //              Therefore we simply draw a big red button, and send a "confirmed" signal if we see a
+    //              click on it and the item is fully swiped out.
+    //      In Qt 5.8, there will be a swipe.close() function and the interactive items in left,right and behind will
+    //      be functional (through SwipeDelegate.onClicked for instance)
+    swipe.behind: Rectangle {
+        width: control.width; height: control.height
+        radius: 4
+        color: "#be0003"
+        opacity: control.swipe.complete ? 1.0 : 0.3
+
+        BorderImage {
+            source: (control.down && control.swipe.complete) ? "images/button-down.png" : "images/button-up.png"
+            border.left: 19; border.right: 19
+            anchors.fill: parent
+        }
+        Text {
+            anchors.centerIn: parent
+            text: control.confirmText
+            font: control.font
+            color: "white"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideRight
+        }
+    }
 
     //! [contentItem]
     contentItem: Text {
