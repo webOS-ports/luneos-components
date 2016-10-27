@@ -39,27 +39,65 @@ import QtQuick 2.6
 import LunaNext.Common 0.1
 
 Item {
-    implicitWidth: indicatorOn.implicitWidth
+    implicitWidth: indicatorOn.implicitWidth + Math.max(Math.max(onLabelText.implicitWidth,offLabelText.implicitWidth) - 20, 0)
     implicitHeight: indicatorOn.implicitHeight
 
     property Item control
+    property string onLabel: ""
+    property string offLabel: ""
     opacity: control.enabled ? 1 : 0.3
 
-    Image {
+    BorderImage {
         id: indicatorOn
-
-        anchors.fill: parent
-
-        opacity: control.checked ? 1.0 : 0
         source: "images/toggle-button-on.png"
-    }
-
-    Image {
-        id: indicatorOff
-
         anchors.fill: parent
+        border.left: 7; border.top: 7
+        border.right: 30; border.bottom: 7
+        opacity: control.checked ? 1 : 0
 
-        opacity: control.checked ? 0 : 1.0
-        source: "images/toggle-button-off.png"
+        Text {
+            id: onLabelText
+            text: onLabel
+            font.capitalization: Font.AllUppercase
+
+            color: "white"
+            font.family: "Prelude"
+            font.pixelSize: FontUtils.sizeToPixels("small")
+            font.weight: Font.Bold
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+
+            anchors.fill: parent
+            anchors.topMargin: 2
+            anchors.leftMargin: 7
+            anchors.rightMargin: 32
+        }
     }
+    BorderImage {
+        id: indicatorOff
+        source: "images/toggle-button-off.png"
+        anchors.fill: parent
+        border.left: 30; border.top: 7
+        border.right: 7; border.bottom: 7
+        opacity: control.checked ? 0 : 1
+
+        Text {
+            id: offLabelText
+            text: offLabel
+            font.capitalization: Font.AllUppercase
+
+            color: "white"
+            font.family: "Prelude"
+            font.pixelSize: FontUtils.sizeToPixels("small")
+            font.weight: Font.Bold
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+
+            anchors.fill: parent
+            anchors.topMargin: 2
+            anchors.leftMargin: 32
+            anchors.rightMargin: 7
+        }
+    }
+
 }

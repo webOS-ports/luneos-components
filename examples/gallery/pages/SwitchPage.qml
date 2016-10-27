@@ -68,6 +68,8 @@ Flickable {
 
                 Switch {
                     text: "First"
+                    onLabel: "on"
+                    offLabel: "off"
                 }
                 Switch {
                     text: "Second"

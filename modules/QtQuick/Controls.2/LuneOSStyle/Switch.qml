@@ -54,6 +54,9 @@ T.Switch {
     padding: 6
     spacing: 6
 
+    property string onLabel: ""
+    property string offLabel: ""
+
     font.family: "Prelude"
     font.pixelSize: FontUtils.sizeToPixels("medium")
     font.weight: Font.Light
@@ -63,6 +66,9 @@ T.Switch {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
+
+        onLabel: control.onLabel
+        offLabel: control.offLabel
     }
     //! [indicator]
 
