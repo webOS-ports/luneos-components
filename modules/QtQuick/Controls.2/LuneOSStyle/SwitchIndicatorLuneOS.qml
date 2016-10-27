@@ -39,8 +39,8 @@ import QtQuick 2.6
 import LunaNext.Common 0.1
 
 Item {
-    implicitWidth: 56
-    implicitHeight: 28
+    implicitWidth: indicatorOn.implicitWidth
+    implicitHeight: indicatorOn.implicitHeight
 
     property Item control
     opacity: control.enabled ? 1 : 0.3
