@@ -39,6 +39,8 @@ import QtQuick.Templates 2.0 as T
 import QtQuick.Controls 2.0
 import QtQuick.Controls.impl 2.0
 
+import QtQuick.Controls.LuneOSStyle 2.0
+
 T.SwitchDelegate {
     id: control
 
@@ -52,11 +54,17 @@ T.SwitchDelegate {
     padding: 12
     spacing: 12
 
+    readonly property string _onLabel: LuneOSSwitch.labelOn
+    readonly property string _offLabel: LuneOSSwitch.labelOff
+
     //! [indicator]
     indicator: SwitchIndicatorLuneOS {
         x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
+
+        onLabel: control._onLabel
+        offLabel: control._offLabel
     }
     //! [indicator]
 
@@ -80,7 +88,7 @@ T.SwitchDelegate {
         implicitWidth: 100
         implicitHeight: 40
         visible: control.down || control.highlighted
-        color: control.down ? "#bdbebf" : "#eeeeee"
+        color: "#eeeeee"
     }
     //! [background]
 }

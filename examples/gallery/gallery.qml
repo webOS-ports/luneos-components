@@ -41,8 +41,6 @@
 import QtQuick 2.6
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.0
-import QtQuick.Controls.Material 2.0
-import QtQuick.Controls.Universal 2.0
 
 import LuneOS.Components 1.0
 import LunaNext.Common 0.1
@@ -57,8 +55,6 @@ ApplicationWindow {
     property string currentDir: Qt.resolvedUrl(".")
 
     header: ToolBar {
-        Material.foreground: "white"
-
         RowLayout {
             spacing: 20
             anchors.fill: parent

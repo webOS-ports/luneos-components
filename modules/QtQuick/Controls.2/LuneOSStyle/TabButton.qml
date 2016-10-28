@@ -47,8 +47,8 @@ T.TabButton {
 
     padding: 6
 
-    property int _index: ObjectModel.index
-    property int _totalCount: ListView.view.model.count
+    readonly property int _index: ObjectModel.index
+    readonly property int _totalCount: ListView.view.model.count
 
     //! [contentItem]
     contentItem: Text {

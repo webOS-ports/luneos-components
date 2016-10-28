@@ -37,6 +37,7 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
 
+import QtQuick.Controls.LuneOSStyle 2.0
 import LunaNext.Common 0.1
 
 T.SwipeDelegate {
@@ -56,10 +57,9 @@ T.SwipeDelegate {
     font.pixelSize: FontUtils.sizeToPixels("medium")
     font.weight: Font.Light
 
-    property string confirmText: "Confirm"
-    signal confirmed()
+    readonly property string _confirmText: LuneOSSwipeDelegate.confirmText
     onClicked: {
-        if(swipe.complete) control.confirmed();
+        if(swipe.complete) control.LuneOSSwipeDelegate.confirmed();
     }
 
     // Tofe remark: currently the SwipeDelegate C++ template filters out all mouse events from left,right and behind
@@ -81,7 +81,7 @@ T.SwipeDelegate {
         }
         Text {
             anchors.centerIn: parent
-            text: control.confirmText
+            text: control._confirmText
             font: control.font
             color: "white"
             horizontalAlignment: Text.AlignHCenter

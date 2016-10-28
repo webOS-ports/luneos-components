@@ -39,6 +39,7 @@ import QtQuick.Templates 2.0 as T
 import QtQuick.Controls 2.0
 import QtQuick.Controls.impl 2.0
 
+import QtQuick.Controls.LuneOSStyle 2.0
 import LunaNext.Common 0.1
 
 T.Switch {
@@ -54,8 +55,8 @@ T.Switch {
     padding: 6
     spacing: 6
 
-    property string onLabel: ""
-    property string offLabel: ""
+    readonly property string _onLabel: LuneOSSwitch.labelOn
+    readonly property string _offLabel: LuneOSSwitch.labelOff
 
     font.family: "Prelude"
     font.pixelSize: FontUtils.sizeToPixels("medium")
@@ -67,8 +68,8 @@ T.Switch {
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
 
-        onLabel: control.onLabel
-        offLabel: control.offLabel
+        onLabel: control._onLabel
+        offLabel: control._offLabel
     }
     //! [indicator]
 

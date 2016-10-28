@@ -50,8 +50,8 @@ T.MenuItem {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    property int _index: ObjectModel.index
-    property int _totalCount: ListView.view.model.count
+    readonly property int _index: ObjectModel.index
+    readonly property int _totalCount: ListView.view.model.count
 
     font.family: "Prelude"
     font.pixelSize: FontUtils.sizeToPixels("medium")

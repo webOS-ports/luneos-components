@@ -40,6 +40,7 @@
 
 import QtQuick 2.6
 import QtQuick.Controls 2.0
+import QtQuick.Controls.LuneOSStyle 2.0
 
 Flickable {
     id: flickable
@@ -67,9 +68,10 @@ Flickable {
                 anchors.horizontalCenter: parent.horizontalCenter
 
                 Switch {
+                    LuneOSSwitch.labelOn: "on"
+                    LuneOSSwitch.labelOff: "off"
+
                     text: "First"
-                    onLabel: "on"
-                    offLabel: "off"
                 }
                 Switch {
                     text: "Second"

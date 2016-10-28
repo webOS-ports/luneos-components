@@ -40,6 +40,7 @@ import QtQuick.Controls.impl 2.0
 import QtQuick.Templates 2.0 as T
 import QtQml.Models 2.2
 
+import QtQuick.Controls.LuneOSStyle 2.0
 import LunaNext.Common 0.1
 
 T.RadioButton {
@@ -53,10 +54,10 @@ T.RadioButton {
     spacing: 6
     opacity: enabled ? 1 : 0.2
 
-    property bool useCollapsedLayout: typeof Positioner.index !== 'undefined' && (!!parent.useCollapsedLayout)
-    property bool isFirst: useCollapsedLayout && Positioner.isFirstItem
-    property bool isLast: useCollapsedLayout && Positioner.isLastItem
-    property bool isSingle: isFirst && isLast
+    readonly property bool _useCollapsedLayout: LuneOSRadioButton.useCollapsedLayout
+    readonly property bool _isFirst: _useCollapsedLayout && Positioner.isFirstItem
+    readonly property bool _isLast: _useCollapsedLayout && Positioner.isLastItem
+    readonly property bool _isSingle: _isFirst && _isLast
 
     font.family: "Prelude"
     font.pixelSize: FontUtils.sizeToPixels("medium")
@@ -67,7 +68,7 @@ T.RadioButton {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
-        visible: !useCollapsedLayout
+        visible: !_useCollapsedLayout
     }
     //! [indicator]
 
@@ -88,15 +89,15 @@ T.RadioButton {
 
     //! [background]
     background: BorderImage {
-        property string _positionButton: isSingle ? "single" :
-                                            isFirst ? "first" :
-                                               isLast ? "last" : "middle"
+        property string _positionButton: _isSingle ? "single" :
+                                            _isFirst ? "first" :
+                                               _isLast ? "last" : "middle"
         property string _pressed: (control.pressed || control.checked) ? "-pressed" : ""
-        source: useCollapsedLayout ? "images/radiobutton-"+_positionButton+_pressed+".png" : ""
+        source: _useCollapsedLayout ? "images/radiobutton-"+_positionButton+_pressed+".png" : ""
         width: control.width; height: control.height
         border.left: 5; border.top: 5
         border.right: 5; border.bottom: 5
-        visible: useCollapsedLayout
+        visible: _useCollapsedLayout
     }
     //! [background]
 }

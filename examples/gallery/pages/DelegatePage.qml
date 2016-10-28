@@ -42,6 +42,7 @@ import QtQuick 2.6
 import QtQuick.Layouts 1.1
 import QtQuick.Controls 2.0
 
+import QtQuick.Controls.LuneOSStyle 2.0
 import LuneOS.Components 1.0
 
 Pane {
@@ -72,8 +73,8 @@ Pane {
             text: labelText
             width: parent.width
 
-            confirmText: "Delete"
-            onConfirmed: view.model.remove(ourIndex)
+            LuneOSSwipeDelegate.confirmText: "Delete"
+            LuneOSSwipeDelegate.onConfirmed: view.model.remove(ourIndex)
         }
     }
 
@@ -104,6 +105,9 @@ Pane {
 
         SwitchDelegate {
             text: labelText
+
+            LuneOSSwitch.labelOn: "enabled"
+            LuneOSSwitch.labelOff: "disabled"
         }
     }
 

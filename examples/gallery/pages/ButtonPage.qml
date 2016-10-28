@@ -41,6 +41,8 @@
 import QtQuick 2.6
 import QtQuick.Controls 2.0
 
+import QtQuick.Controls.LuneOSStyle 2.0
+
 Flickable {
     id: flickable
     contentHeight: pane.height
@@ -64,7 +66,14 @@ Flickable {
                     + "Buttons are normally used to perform an action, or to answer a question."
             }
 
-            property var buttonStyles: [ "Primary", "Secondary", "Affirmative", "Negative", "Gray", "Blue" ]
+            property var buttonStyles: [
+                { text: "Primary", color: LuneOSButton.primaryColor },
+                { text: "Secondary", color: LuneOSButton.secondaryColor },
+                { text: "Affirmative", color: LuneOSButton.affirmativeColor },
+                { text: "Negative", color: LuneOSButton.negativeColor },
+                { text: "Gray", color: LuneOSButton.grayColor },
+                { text: "Blue", color: LuneOSButton.blueColor }
+            ]
 
             Row {
                 spacing: 20
@@ -75,10 +84,10 @@ Flickable {
                     Repeater {
                         model: column.buttonStyles
                         Button {
-                            text: modelData
+                            text: modelData.text
                             width: itemWidth
 
-                            mainColor: colors[String(modelData).toLowerCase()]
+                            LuneOSButton.mainColor: modelData.color
                         }
                     }
                 }
@@ -88,11 +97,11 @@ Flickable {
                     Repeater {
                         model: column.buttonStyles
                         Button {
-                            text: modelData
+                            text: modelData.text
                             width: itemWidth
                             enabled: false
 
-                            mainColor: colors[String(modelData).toLowerCase()]
+                            LuneOSButton.mainColor: modelData.color
                         }
                     }
                 }

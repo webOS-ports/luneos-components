@@ -37,6 +37,7 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
 
+import QtQuick.Controls.LuneOSStyle 2.0
 import LunaNext.Common 0.1
 
 T.ItemDelegate {
@@ -52,8 +53,6 @@ T.ItemDelegate {
     font.family: "Prelude"
     font.pixelSize: FontUtils.sizeToPixels("medium")
     font.weight: Font.Light
-
-    property bool bottomLineSeparator: false
 
     //! [contentItem]
     contentItem: Text {

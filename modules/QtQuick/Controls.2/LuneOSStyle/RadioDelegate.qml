@@ -39,6 +39,7 @@ import QtQuick.Controls 2.0
 import QtQuick.Controls.impl 2.0
 import QtQuick.Templates 2.0 as T
 
+import QtQuick.Controls.LuneOSStyle 2.0
 import LunaNext.Common 0.1
 
 T.RadioDelegate {
@@ -54,10 +55,10 @@ T.RadioDelegate {
     padding: 12
     spacing: 12
 
-    property int _index: typeof index !== 'undefined' ? index : 0
-    property int totalCount: ((!!ListView.view) && (!!ListView.view.model)) ? (ListView.view.model.count || ListView.view.model.length) : 0
-    property bool useCollapsedLayout: true
-    property bool _reallyUseCollapsedLayout: useCollapsedLayout && totalCount>0 && index >= 0
+    readonly property int _index: typeof index !== 'undefined' ? index : 0
+    readonly property int _totalCount: ((!!ListView.view) && (!!ListView.view.model)) ? (ListView.view.model.count || ListView.view.model.length || 0) : 0
+    readonly property bool _useCollapsedLayout: LuneOSRadioButton.useCollapsedLayout
+    readonly property bool _reallyUseCollapsedLayout: _useCollapsedLayout && _totalCount>0 && index >= 0
 
     font.family: "Prelude"
     font.pixelSize: FontUtils.sizeToPixels("medium")
@@ -89,9 +90,9 @@ T.RadioDelegate {
 
     //! [background]
     background: BorderImage {
-        property string _positionButton: totalCount === 1 ? "single" :
+        property string _positionButton: _totalCount === 1 ? "single" :
                                             _index === 0 ? "first" :
-                                               _index === totalCount-1 ? "last" : "middle"
+                                               _index === _totalCount-1 ? "last" : "middle"
         property string _pressed: (control.pressed || control.checked) ? "-pressed" : ""
         source: "images/radiobutton-"+_positionButton+_pressed+".png"
         width: control.width; height: control.height

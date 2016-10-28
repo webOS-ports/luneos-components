@@ -40,6 +40,7 @@
 
 import QtQuick 2.6
 import QtQuick.Controls 2.0
+import QtQuick.Controls.LuneOSStyle 2.0
 
 Flickable {
     id: flickable
@@ -81,20 +82,22 @@ Flickable {
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter
 
-                property bool useCollapsedLayout: true
-
                 RadioButton {
                     text: "First"
+                    LuneOSRadioButton.useCollapsedLayout: true
                 }
                 RadioButton {
                     text: "Second"
+                    LuneOSRadioButton.useCollapsedLayout: true
                     checked: true
                 }
                 RadioButton {
                     text: "Third"
+                    LuneOSRadioButton.useCollapsedLayout: true
                 }
                 RadioButton {
                     text: "FourthWRONG"
+                    LuneOSRadioButton.useCollapsedLayout: true
                 }
             }
             ListView {
@@ -106,6 +109,8 @@ Flickable {
                 orientation: ListView.Horizontal
                 model: [ "First", "Second", "Third" ]
                 delegate: RadioDelegate {
+                    LuneOSRadioButton.useCollapsedLayout: true
+
                     width: listViewRadioButtons.width / 3
                     text: modelData
                 }
