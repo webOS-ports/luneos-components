@@ -59,6 +59,9 @@ Pane {
             id: field
             placeholderText: "TextField"
             width: Math.max(implicitWidth, Math.min(implicitWidth * 2, pane.availableWidth / 3))
+            topPadding: 0
+            bottomPadding: 0
+            height: 30
             anchors.horizontalCenter: parent.horizontalCenter
         }
     }

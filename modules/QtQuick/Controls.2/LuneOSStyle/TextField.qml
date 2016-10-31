@@ -47,6 +47,8 @@ T.TextField {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
+    property bool showBg:true
+
     padding: 6
     leftPadding: padding + 5
     rightPadding: padding + 5
@@ -80,12 +82,22 @@ T.TextField {
     }
 
     //! [background]
-    background: BorderImage {
-        source: "images/input-focus.png"
+    background: Item {
         anchors.fill: control
-        border.left: 10; border.top: 10
-        border.right: 10; border.bottom: 10
-        visible: control.activeFocus
+        BorderImage {
+            source: "images/input-focus.png"
+            anchors.fill: parent
+            border.left: 10; border.top: 10
+            border.right: 10; border.bottom: 10
+            visible: control.activeFocus
+        }
+        BorderImage {
+            source: "images/input-tool.png"
+            anchors.fill: parent
+            border.left: 6; border.top: 6
+            border.right: 6; border.bottom: 6
+            visible: !control.activeFocus && showBg
+        }
     }
     //! [background]
 }

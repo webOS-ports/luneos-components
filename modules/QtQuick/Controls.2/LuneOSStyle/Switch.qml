@@ -55,6 +55,7 @@ T.Switch {
     padding: 6
     spacing: 6
 
+    readonly property string _textColor: LuneOSSwitch.textColor
     readonly property string _onLabel: LuneOSSwitch.labelOn
     readonly property string _offLabel: LuneOSSwitch.labelOff
 
@@ -80,7 +81,8 @@ T.Switch {
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        opacity: control.enabled ? 1 : 0.3
+        color: control._textColor
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
