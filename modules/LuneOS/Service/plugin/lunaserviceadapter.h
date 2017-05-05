@@ -82,8 +82,8 @@ class LunaServiceAdapter : public QObject,
     Q_PROPERTY(bool usePrivateBus READ usePrivateBus WRITE setUsePrivateBus)
     Q_PROPERTY(QString service READ service WRITE setService)
     Q_PROPERTY(QString method READ method WRITE setMethod)
-    Q_PROPERTY(QJSValue onResponse WRITE setResponseCallback)
-    Q_PROPERTY(QJSValue onError WRITE setErrorCallback)
+    Q_PROPERTY(QJSValue onResponse READ getResponseCallback WRITE setResponseCallback)
+    Q_PROPERTY(QJSValue onError READ getErrorCallback WRITE setErrorCallback)
 
 public:
     LunaServiceAdapter(QObject *parent = 0);
@@ -96,6 +96,8 @@ public:
     bool usePrivateBus() const;
     QString service() const;
     QString method() const;
+    QJSValue getResponseCallback() const;
+    QJSValue getErrorCallback() const;
 
     void setName(const QString& name);
     void setUsePrivateBus(bool usePrivateBus);
