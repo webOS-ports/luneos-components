@@ -129,7 +129,8 @@ bool LunaServiceCall::execute(const QString& uri, const QString& arguments)
     QString errorMessage;
 
     if (mResponseLimit == 1) {
-        if (!LSCallOneReply(mServiceHandle, uri.toUtf8().constData(), arguments.toUtf8().constData(),
+        if (!LSCallFromApplicationOneReply(mServiceHandle, uri.toUtf8().constData(), arguments.toUtf8().constData(),
+                            LSHandleGetName(mServiceHandle),
                             &LunaServiceCall::responseCallback, this, &mToken, &error)) {
             qWarning("Failed to call remote service %s", uri.toUtf8().constData());
             errorMessage = QString("Failed to call remote service: %0").arg(error.message);
@@ -137,7 +138,8 @@ bool LunaServiceCall::execute(const QString& uri, const QString& arguments)
         }
     }
     else {
-        if (!LSCall(mServiceHandle, uri.toUtf8().constData(), arguments.toUtf8().constData(),
+        if (!LSCallFromApplication(mServiceHandle, uri.toUtf8().constData(), arguments.toUtf8().constData(),
+                            LSHandleGetName(mServiceHandle),
                             &LunaServiceCall::responseCallback, this, &mToken, &error)) {
             qWarning("Failed to call remote service %s", uri.toUtf8().constData());
             errorMessage = QString("Failed to call remote service: %0").arg(error.message);
@@ -359,6 +361,16 @@ void LunaServiceAdapter::setResponseCallback(QJSValue callback)
 void LunaServiceAdapter::setErrorCallback(QJSValue callback)
 {
     mErrorCallback = callback;
+}
+
+QJSValue LunaServiceAdapter::getResponseCallback() const
+{
+    return mResponseCallback;
+}
+
+QJSValue LunaServiceAdapter::getErrorCallback() const
+{
+    return mErrorCallback;
 }
 
 void LunaServiceAdapter::updateCallUri()
