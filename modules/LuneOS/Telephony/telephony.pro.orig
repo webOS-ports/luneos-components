@@ -1,0 +1,27 @@
+TEMPLATE = aux
+
+uri = LuneOS.Telephony
+installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
+
+<<<<<<< HEAD
+JS_FILES = libphonenumber.js  libphonenumber-wrapper.js \
+           phonenumber.js/*.js
+=======
+JS_FILES = libphonenumber-wrapper.js
+>>>>>>> 5dc71a89e17254a00dc92c1bbcc4c9ed7634aa33
+
+RESOURCE_FILES = geocoding/*.json
+
+QMLDIR_FILE = qmldir
+
+OTHER_FILES += $$JS_FILES $$QMLDIR_FILE $$RESOURCE_FILES 
+
+qmldir_file.path = $$installPath
+qmldir_file.files = $$QMLDIR_FILE
+js_files.path = $$installPath
+js_files.files = $$JS_FILES
+resources_files.path = $$installPath/geocoding
+resources_files.files = $$RESOURCE_FILES
+
+INSTALLS += qmldir_file js_files resources_files 
+

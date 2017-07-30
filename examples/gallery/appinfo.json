@@ -6,6 +6,6 @@
     "vendor_url": "https://github.com/webOS-ports/luneos-components",
     "type": "qml",
     "qml.style": "LuneOS",
-    "main": "main.qml",
+    "main": "gallery.qml",
     "icon": "icon.png"
 }
