@@ -35,14 +35,14 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Templates 2.0 as T
 import QtQuick.Controls 2.0
 import QtQuick.Controls.impl 2.0
-import QtQuick.Templates 2.0 as T
 
-import QtQuick.Controls.LuneOSStyle 2.0
+import QtQuick.Controls.LuneOS 2.0
 import LunaNext.Common 0.1
 
-T.RadioDelegate {
+T.Switch {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
@@ -52,53 +52,41 @@ T.RadioDelegate {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    padding: 12
-    spacing: 12
+    padding: 6
+    spacing: 6
 
-    readonly property int _index: typeof index !== 'undefined' ? index : 0
-    readonly property int _totalCount: ((!!ListView.view) && (!!ListView.view.model)) ? (ListView.view.model.count || ListView.view.model.length || 0) : 0
-    readonly property bool _useCollapsedLayout: LuneOSRadioButton.useCollapsedLayout
-    readonly property bool _reallyUseCollapsedLayout: _useCollapsedLayout && _totalCount>0 && index >= 0
+    readonly property string _textColor: LuneOSSwitch.textColor
+    readonly property string _onLabel: LuneOSSwitch.labelOn
+    readonly property string _offLabel: LuneOSSwitch.labelOff
 
     font.family: "Prelude"
     font.pixelSize: FontUtils.sizeToPixels("medium")
     font.weight: Font.Light
 
-    //! [contentItem]
-    contentItem: Text {
-        leftPadding: control.indicator && control.indicator.visible && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.indicator && control.indicator.visible && control.mirrored ? control.indicator.width + control.spacing : 0
-
-        text: control.text
-        font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
-        elide: Text.ElideRight
-        visible: control.text
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-    }
-    //! [contentItem]
-
     //! [indicator]
-    indicator: RadioIndicatorLuneOS {
+    indicator: SwitchIndicatorLuneOS {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
-        visible: !_reallyUseCollapsedLayout
+
+        onLabel: control._onLabel
+        offLabel: control._offLabel
     }
     //! [indicator]
 
-    //! [background]
-    background: BorderImage {
-        property string _positionButton: _totalCount === 1 ? "single" :
-                                            _index === 0 ? "first" :
-                                               _index === _totalCount-1 ? "last" : "middle"
-        property string _pressed: (control.pressed || control.checked) ? "-pressed" : ""
-        source: "images/radiobutton-"+_positionButton+_pressed+".png"
-        width: control.width; height: control.height
-        border.left: 5; border.top: 5
-        border.right: 5; border.bottom: 5
-        visible: _reallyUseCollapsedLayout
+    //! [contentItem]
+    contentItem: Text {
+        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
+        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
+
+        text: control.text
+        font: control.font
+        opacity: control.enabled ? 1 : 0.3
+        color: control._textColor
+        elide: Text.ElideRight
+        visible: control.text
+        horizontalAlignment: Text.AlignLeft
+        verticalAlignment: Text.AlignVCenter
     }
-    //! [background]
+    //! [contentItem]
 }

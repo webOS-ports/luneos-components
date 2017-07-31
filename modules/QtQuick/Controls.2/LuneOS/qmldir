@@ -1,4 +1,4 @@
-module QtQuick.Controls.LuneOSStyle
+module QtQuick.Controls.LuneOS
 plugin luneosstyleplugin
 classname QtQuickControls2LuneOSStylePlugin
 depends QtQuick.Controls 2.0
