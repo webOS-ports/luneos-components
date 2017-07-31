@@ -4,7 +4,8 @@ Makefile
 *.so
 moc_*.cpp
 *.o
-*.styles
 *.application
-*.service
+*.qmlproject.user
+*.qmlc
+*.jsc
 

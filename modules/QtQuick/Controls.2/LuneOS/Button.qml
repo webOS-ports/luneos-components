@@ -37,7 +37,7 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
 
-import QtQuick.Controls.LuneOSStyle 2.0
+import QtQuick.Controls.LuneOS 2.0
 import LunaNext.Common 0.1
 
 T.Button {

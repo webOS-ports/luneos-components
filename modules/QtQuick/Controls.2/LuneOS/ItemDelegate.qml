@@ -37,17 +37,14 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
 
-import QtQuick.Controls.LuneOSStyle 2.0
+import QtQuick.Controls.LuneOS 2.0
 import LunaNext.Common 0.1
 
-T.SwipeDelegate {
+T.ItemDelegate {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(contentItem.implicitHeight,
-                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
+    implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
+    implicitHeight:contentItem.implicitHeight + topPadding + bottomPadding
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 12
@@ -57,39 +54,6 @@ T.SwipeDelegate {
     font.pixelSize: FontUtils.sizeToPixels("medium")
     font.weight: Font.Light
 
-    readonly property string _confirmText: LuneOSSwipeDelegate.confirmText
-    onClicked: {
-        if(swipe.complete) control.LuneOSSwipeDelegate.confirmed();
-    }
-
-    // Tofe remark: currently the SwipeDelegate C++ template filters out all mouse events from left,right and behind
-    //              items. In addition, there is no API to reset the swiped delegate to its original position.
-    //              Therefore we simply draw a big red button, and send a "confirmed" signal if we see a
-    //              click on it and the item is fully swiped out.
-    //      In Qt 5.8, there will be a swipe.close() function and the interactive items in left,right and behind will
-    //      be functional (through SwipeDelegate.onClicked for instance)
-    swipe.behind: Rectangle {
-        width: control.width; height: control.height
-        radius: 4
-        color: "#be0003"
-        opacity: control.swipe.complete ? 1.0 : 0.3
-
-        BorderImage {
-            source: (control.down && control.swipe.complete) ? "images/button-down.png" : "images/button-up.png"
-            border.left: 19; border.right: 19
-            anchors.fill: parent
-        }
-        Text {
-            anchors.centerIn: parent
-            text: control._confirmText
-            font: control.font
-            color: "white"
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            elide: Text.ElideRight
-        }
-    }
-
     //! [contentItem]
     contentItem: Text {
         leftPadding: control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
@@ -97,33 +61,30 @@ T.SwipeDelegate {
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        color: control.enabled ? "#333333" : "#646464"
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
-
-        Behavior on x {
-            enabled: !control.down
-            NumberAnimation {
-                easing.type: Easing.OutExpo
-                duration: 400
-            }
-        }
     }
     //! [contentItem]
 
     //! [background]
-    background: Rectangle {
-        color: control.visualFocus ? (control.down ? "#cce0ff" : "#e5efff") : (control.down ? "#bdbebf" : "#ffffff")
+    indicator: Image {
+        source: "images/checkmark.png"
+        height: control.implicitHeight/2
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.right: parent.right
+        fillMode: Image.PreserveAspectFit
+        visible: control.checked
+    }
+    //! [background]
 
-        Behavior on x {
-            enabled: !control.down
-            NumberAnimation {
-                easing.type: Easing.OutExpo
-                duration: 400
-            }
-        }
+    //! [background]
+    background: Image {
+            height: control.implicitHeight
+            source: "images/item-highlight.png"
+            visible: control.down || control.highlighted || control.visualFocus
     }
     //! [background]
 }

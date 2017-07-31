@@ -35,60 +35,69 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
 import QtQuick.Controls 2.0
 import QtQuick.Controls.impl 2.0
+import QtQuick.Templates 2.0 as T
+import QtQml.Models 2.2
 
-import QtQuick.Controls.LuneOSStyle 2.0
+import QtQuick.Controls.LuneOS 2.0
+import LunaNext.Common 0.1
 
-T.SwitchDelegate {
+T.RadioButton {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(contentItem.implicitHeight,
-                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
+    implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
+    implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    padding: 12
-    spacing: 12
+    padding: 6
+    spacing: 6
+    opacity: enabled ? 1 : 0.2
 
-    readonly property string _onLabel: LuneOSSwitch.labelOn
-    readonly property string _offLabel: LuneOSSwitch.labelOff
+    readonly property bool _useCollapsedLayout: LuneOSRadioButton.useCollapsedLayout
+    readonly property bool _isFirst: _useCollapsedLayout && Positioner.isFirstItem
+    readonly property bool _isLast: _useCollapsedLayout && Positioner.isLastItem
+    readonly property bool _isSingle: _isFirst && _isLast
+
+    font.family: "Prelude"
+    font.pixelSize: FontUtils.sizeToPixels("medium")
+    font.weight: Font.Light
 
     //! [indicator]
-    indicator: SwitchIndicatorLuneOS {
-        x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
+    indicator: RadioIndicatorLuneOS {
+        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
-
-        onLabel: control._onLabel
-        offLabel: control._offLabel
+        visible: !_useCollapsedLayout
     }
     //! [indicator]
 
     //! [contentItem]
     contentItem: Text {
-        leftPadding: control.indicator && !control.mirrored ? 0 : control.indicator.width + control.spacing
-        rightPadding: control.indicator && control.mirrored ? 0 : control.indicator.width + control.spacing
+        leftPadding: control.indicator && control.indicator.visible && !control.mirrored ? control.indicator.width + control.spacing : 0
+        rightPadding: control.indicator && control.indicator.visible && control.mirrored ? control.indicator.width + control.spacing : 0
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        color: control.down ? "#26282a" : "#353637"
         elide: Text.ElideRight
         visible: control.text
-        horizontalAlignment: Text.AlignLeft
+        horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
     //! [contentItem]
 
     //! [background]
-    background: Rectangle {
-        implicitWidth: 100
-        implicitHeight: 40
-        visible: control.down || control.highlighted
-        color: "#eeeeee"
+    background: BorderImage {
+        property string _positionButton: _isSingle ? "single" :
+                                            _isFirst ? "first" :
+                                               _isLast ? "last" : "middle"
+        property string _pressed: (control.pressed || control.checked) ? "-pressed" : ""
+        source: _useCollapsedLayout ? "images/radiobutton-"+_positionButton+_pressed+".png" : ""
+        width: control.width; height: control.height
+        border.left: 5; border.top: 5
+        border.right: 5; border.bottom: 5
+        visible: _useCollapsedLayout
     }
     //! [background]
 }
