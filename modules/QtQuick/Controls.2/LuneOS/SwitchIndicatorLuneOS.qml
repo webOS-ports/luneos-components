@@ -39,65 +39,93 @@ import QtQuick 2.6
 import LunaNext.Common 0.1
 
 Item {
-    implicitWidth: indicatorOn.implicitWidth + Math.max(Math.max(onLabelText.implicitWidth,offLabelText.implicitWidth) - 20, 0)
-    implicitHeight: indicatorOn.implicitHeight
+    implicitWidth: Units.gu(3.2)+Math.max(Math.max(onLabelText.contentWidth+7,Units.gu(3.2)),
+                                          Math.max(offLabelText.contentWidth+7,Units.gu(3.2)))
+    implicitHeight: Math.max(Units.gu(3.2), Math.max(onLabelText.implicitHeight,offLabelText.implicitHeight) + 14)
 
     property Item control
     property string onLabel: ""
     property string offLabel: ""
     opacity: control.enabled ? 1 : 0.3
 
-    BorderImage {
-        id: indicatorOn
-        source: "images/toggle-button-on.png"
+    Item {
         anchors.fill: parent
-        border.left: 7; border.top: 7
-        border.right: 30; border.bottom: 7
         opacity: control.checked ? 1 : 0
 
-        Text {
-            id: onLabelText
-            text: onLabel
-            font.capitalization: Font.AllUppercase
+        BorderImage {
+            id: indicatorOnLeft
+            source: "images/toggle-button-on-left.png"
+            height: parent.height
+            width: parent.width - indicatorOnRight.width
+            x: 0; y: 0
+            border.left: 7; border.top: 7
+            border.right: 0; border.bottom: 7
 
-            color: "white"
-            font.family: "Prelude"
-            font.pixelSize: FontUtils.sizeToPixels("small")
-            font.weight: Font.Bold
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
+            Text {
+                id: onLabelText
+                text: onLabel
+                font.capitalization: Font.AllUppercase
 
-            anchors.fill: parent
-            anchors.topMargin: 2
-            anchors.leftMargin: 7
-            anchors.rightMargin: 32
+                color: "white"
+                font.family: "Prelude"
+                font.pixelSize: FontUtils.sizeToPixels("small")
+                font.weight: Font.Bold
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+
+                anchors.fill: parent
+                anchors.topMargin: 2
+                anchors.leftMargin: 7
+            }
+        }
+        BorderImage {
+            id: indicatorOnRight
+            source: "images/toggle-button-on-right.png"
+            height: parent.height
+            width: height
+            x: indicatorOnLeft.width; y: 0
+            border.left: 0; border.top: 7
+            border.right: 7; border.bottom: 7
         }
     }
-    BorderImage {
-        id: indicatorOff
-        source: "images/toggle-button-off.png"
+    Item {
         anchors.fill: parent
-        border.left: 30; border.top: 7
-        border.right: 7; border.bottom: 7
         opacity: control.checked ? 0 : 1
 
-        Text {
-            id: offLabelText
-            text: offLabel
-            font.capitalization: Font.AllUppercase
+        BorderImage {
+            id: indicatorOffLeft
+            source: "images/toggle-button-off-left.png"
+            height: parent.height
+            width: height
+            x: 0; y: 0
+            border.left: 7; border.top: 7
+            border.right: 0; border.bottom: 7
+        }
+        BorderImage {
+            id: indicatorOffRight
+            source: "images/toggle-button-off-right.png"
+            height: parent.height
+            width: parent.width - indicatorOffLeft.width
+            x: indicatorOffLeft.width; y: 0
+            border.left: 0; border.top: 7
+            border.right: 7; border.bottom: 7
 
-            color: "white"
-            font.family: "Prelude"
-            font.pixelSize: FontUtils.sizeToPixels("small")
-            font.weight: Font.Bold
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
+            Text {
+                id: offLabelText
+                text: offLabel
+                font.capitalization: Font.AllUppercase
 
-            anchors.fill: parent
-            anchors.topMargin: 2
-            anchors.leftMargin: 32
-            anchors.rightMargin: 7
+                color: "white"
+                font.family: "Prelude"
+                font.pixelSize: FontUtils.sizeToPixels("small")
+                font.weight: Font.Bold
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+
+                anchors.fill: parent
+                anchors.topMargin: 2
+                anchors.rightMargin: 7
+            }
         }
     }
-
 }

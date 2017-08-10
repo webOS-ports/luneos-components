@@ -75,8 +75,8 @@ T.Button {
     //! [background]
     background:
         Rectangle {
-            implicitWidth: 120
-            implicitHeight: 40
+            implicitWidth: Units.gu(12)
+            implicitHeight: Units.gu(4)
             radius: 4
             opacity: enabled ? 1 : 0.4
             visible: !control.flat || control.down || control.checked || control.highlighted
