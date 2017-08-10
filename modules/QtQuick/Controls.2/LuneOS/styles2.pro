@@ -49,7 +49,7 @@ QML_FILES = \
 JS_FILES =
 QMLDIR_FILE = qmldir
 
-OTHER_FILES += $$QML_FILES $$JS_FILES $$QMLDIR_FILE
+OTHER_FILES += $$QML_FILES $$JS_FILES $$QMLDIR_FILE images/*
 
 installPath = $$[QT_INSTALL_QML]/QtQuick/Controls.2/LuneOS
 
