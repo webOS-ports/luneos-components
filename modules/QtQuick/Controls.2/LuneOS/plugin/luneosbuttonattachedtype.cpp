@@ -1,6 +1,7 @@
 #include "luneosbuttonattachedtype.h"
 
 #include <QColor>
+#include <QUrl>
 
 LuneOSButtonAttachedType::LuneOSButtonAttachedType(QObject *parent) : QObject(parent)
 {
@@ -39,3 +40,20 @@ void LuneOSButtonAttachedType::setTextColor(QColor newColor)
         textColorChanged();
     }
 }
+
+QUrl LuneOSButtonAttachedType::image() const
+{
+    return mImage;
+}
+
+void LuneOSButtonAttachedType::setImage(QUrl image)
+{
+    if(mImage != image) {
+        mImage = image;
+        imageChanged();
+    }
+}
+
+
+
+

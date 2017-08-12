@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QColor>
+#include <QUrl>
 
 class LuneOSButtonAttachedType : public QObject
 {
@@ -16,6 +17,8 @@ class LuneOSButtonAttachedType : public QObject
     Q_PROPERTY(QColor negativeColor    READ negativeColor CONSTANT)
     Q_PROPERTY(QColor blueColor        READ blueColor CONSTANT)
     Q_PROPERTY(QColor grayColor        READ grayColor CONSTANT)
+
+    Q_PROPERTY(QUrl image READ image WRITE setImage NOTIFY imageChanged)
 public:
     LuneOSButtonAttachedType(QObject *parent);
 
@@ -31,13 +34,20 @@ public:
     QColor negativeColor() { return QColor("#be0003"); }
     QColor blueColor() { return QColor("#2071bb"); }
     QColor grayColor() { return QColor("#4b4b4b"); }
+
+    QUrl image() const;
+    void setImage(QUrl image);
+
 signals:
     void mainColorChanged();
     void textColorChanged();
+    void imageChanged();
 
 private:
     QColor mMainColor;
     QColor mTextColor;
+
+    QUrl mImage;
 };
 
 #endif // LUNEOSBUTTONATTACHEDTYPE_H
