@@ -57,7 +57,6 @@ T.GroupBox {
     font.family: "Prelude"
     font.pixelSize: FontUtils.sizeToPixels("medium")
     font.weight: Font.Bold
-    font.capitalization: Font.AllUppercase
 
     //! [contentItem]
     contentItem: Item { }
@@ -70,7 +69,11 @@ T.GroupBox {
         width: control.availableWidth
 
         text: control.title
-        font: control.font
+        font.family: control.font.family
+        font.pixelSize: control.font.pixelSize
+        font.weight: control.font.weight
+        font.capitalization: Font.AllUppercase
+
         color: "white"
         style: Text.Raised
         styleColor: "#646454"

@@ -61,7 +61,7 @@ T.ComboBox {
 
     font.family: "Prelude"
     font.pixelSize: FontUtils.sizeToPixels("medium")
-    font.weight: Font.Light
+    font.weight: Font.Normal
 
     //! [delegate]
     delegate: ItemDelegate {
@@ -112,7 +112,7 @@ T.ComboBox {
     popup: T.Popup {
         y: control.height - (control.visualFocus ? 0 : 1)
         width: control.width
-        implicitHeight: Math.min(listview.contentHeight, control.parent.height)
+        implicitHeight: Math.min(listview.contentHeight, Math.max(T.ApplicationWindow.overlay.height/2,control.parent.height))
         topMargin: 6
         bottomMargin: 6
 

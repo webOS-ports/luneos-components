@@ -55,7 +55,7 @@ T.MenuItem {
 
     font.family: "Prelude"
     font.pixelSize: FontUtils.sizeToPixels("medium")
-    font.weight: Font.Light
+    property bool darkTheme: false
 
     //! [contentItem]
     contentItem: Text {
@@ -64,7 +64,7 @@ T.MenuItem {
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        color: (darkTheme ? (!control.enabled) : control.enabled) ? "#26282a" : "#bdbebf"
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter

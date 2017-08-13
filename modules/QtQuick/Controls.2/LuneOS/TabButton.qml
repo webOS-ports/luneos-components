@@ -49,9 +49,6 @@ T.TabButton {
 
     padding: 6
 
-    readonly property int _index: ObjectModel.index
-    readonly property int _totalCount: ListView.view.model.count
-
     readonly property url _image: LuneOSButton.image
 
     //! [contentItem]
