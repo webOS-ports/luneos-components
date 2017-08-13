@@ -37,9 +37,12 @@
 import QtQuick 2.6
 import QtQuick.Window 2.2
 import QtQuick.Templates 2.0 as T
+import LuneOS.Application 1.0
 
-T.ApplicationWindow {
+LuneOSWindow {
     id: window
+
+    type: LuneOSWindow.Card
 
     color: "#D8D8D8"
 

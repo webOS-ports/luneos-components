@@ -1,7 +1,7 @@
 TEMPLATE = lib
 TARGET = ../LuneOSApplication
 
-QT += core-private qml qml-private quick quick-private gui-private
+QT += core-private qml qml-private quick quick-private gui-private quicktemplates2-private
 CONFIG += qt plugin
 
 CONFIG += c++11 no_keywords
