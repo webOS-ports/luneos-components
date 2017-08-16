@@ -36,7 +36,10 @@
 
 import QtQuick 2.6
 import QtQuick.Controls 2.0
+import QtQuick.Controls.LuneOS 2.0
 import QtQuick.Templates 2.0 as T
+
+import LunaNext.Common 0.1
 
 T.Menu {
     id: control
@@ -50,6 +53,8 @@ T.Menu {
     leftPadding: 20; rightPadding: 20
     topPadding: 10; bottomPadding: 10
 
+    readonly property bool _appMenuStyle: LuneOSMenu.appMenuStyle
+
     //! [contentItem]
     contentItem: ListView {
         implicitHeight: contentHeight
@@ -61,15 +66,31 @@ T.Menu {
         keyNavigationWraps: false
         currentIndex: -1
 
+        property bool _appMenuStyle: control._appMenuStyle
+
         ScrollIndicator.vertical: ScrollIndicator {}
     }
     //! [contentItem]
 
     //! [background]
-    background: BorderImage {
-        source: "images/menu-background.png"
-        border.left: 20; border.top: 20
-        border.right: 20; border.bottom: 20
+    background: Item {
+        implicitWidth: _appMenuStyle ? appMenuStyleBg.implicitWidth : generalStyleBg.implicitWidth
+        implicitHeight: _appMenuStyle ? appMenuStyleBg.implicitHeight : generalStyleBg.implicitHeight
+        BorderImage {
+            id: generalStyleBg
+            source: "images/menu-background.png"
+            border.left: 20; border.top: 20
+            border.right: 20; border.bottom: 20
+            visible: !_appMenuStyle
+            anchors.fill: parent
+        }
+        Rectangle {
+            id: appMenuStyleBg
+            radius: Units.gu(0.4)
+            color: "#313131"
+            visible: _appMenuStyle
+            anchors.fill: parent
+        }
     }
     //! [background]
 }

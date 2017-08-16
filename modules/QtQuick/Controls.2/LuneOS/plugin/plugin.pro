@@ -12,6 +12,8 @@ HEADERS += \
     luneosswitchattachedtype.h \
     luneosradiobutton.h \
     luneosradiobuttonattachedtype.h \
+    luneosmenu.h \
+    luneosmenuattachedtype.h \
     luneosbutton.h \
     luneosbuttonattachedtype.h \
     luneosswipedelegate.h \
@@ -23,6 +25,8 @@ SOURCES += \
     luneosswitchattachedtype.cpp \
     luneosradiobutton.cpp \
     luneosradiobuttonattachedtype.cpp \
+    luneosmenu.cpp \
+    luneosmenuattachedtype.cpp \
     luneosbutton.cpp \
     luneosbuttonattachedtype.cpp \
     luneosswipedelegate.cpp \
