@@ -59,6 +59,14 @@ var dpi = 264;
 var gridUnit = 18;
 var compatDpi = 180;
 /**/
+/* N5 alike
+var tabletUi = false;
+var displayWidth = 1080;
+var displayHeight = 1920;
+var dpi = 445;
+var gridUnit = 26;
+var compatDpi = 260;
+/**/
 /* For desktop debug */
 var tabletUi = false;
 var displayWidth = 600;

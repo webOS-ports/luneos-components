@@ -17,14 +17,11 @@
 #ifndef APPLICATIONWINDOW_H
 #define APPLICATIONWINDOW_H
 
-#include <QQuickWindow>
-#include <QQmlParserStatus>
+#include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 
-class LuneOSWindow : public QQuickWindow,
-                          public QQmlParserStatus
+class LuneOSWindow : public QQuickApplicationWindow
 {
     Q_OBJECT
-    Q_INTERFACES(QQmlParserStatus)
 
     Q_PROPERTY(Type type READ type WRITE setType)
     Q_PROPERTY(unsigned int windowId READ windowId NOTIFY windowIdChanged)
@@ -59,9 +56,6 @@ public:
 
     bool loadingAnimationDisabled() const;
     void setLoadingAnimationDisabled(bool value);
-
-    virtual void classBegin();
-    virtual void componentComplete();
 
 public Q_SLOTS:
     void cleanup();

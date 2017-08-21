@@ -1,3 +1,0 @@
-module LuneOS.Application
-LuneOSWindow 1.0 LuneOSWindow.qml
-WindowType 1.0 WindowTypes.js

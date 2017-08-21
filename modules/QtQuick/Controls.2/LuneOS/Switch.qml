@@ -65,7 +65,8 @@ T.Switch {
 
     //! [indicator]
     indicator: SwitchIndicatorLuneOS {
-        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
+        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) :
+                  control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
 
@@ -85,7 +86,7 @@ T.Switch {
         color: control._textColor
         elide: Text.ElideRight
         visible: control.text
-        horizontalAlignment: Text.AlignLeft
+        horizontalAlignment: control.mirrored ? Text.AlignLeft : Text.AlignRight
         verticalAlignment: Text.AlignVCenter
     }
     //! [contentItem]

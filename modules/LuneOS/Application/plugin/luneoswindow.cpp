@@ -57,19 +57,10 @@ LuneOSWindow::LuneOSWindow() :
     connect(this, SIGNAL(destroyed()), this, SLOT(onDestroyed()));
 }
 
-void LuneOSWindow::classBegin()
-{
-}
-
 void LuneOSWindow::setWindowProperty(const QString &name, const QVariant &value)
 {
     QPlatformNativeInterface *nativeInterface = QGuiApplication::platformNativeInterface();
     nativeInterface->setWindowProperty(handle(), name, value);
-}
-
-void LuneOSWindow::componentComplete()
-{
-    qDebug() << Q_FUNC_INFO << "type" << mType;
 }
 
 void LuneOSWindow::show()
@@ -145,7 +136,7 @@ bool LuneOSWindow::eventFilter(QObject *object, QEvent *event)
         break;
     }
 
-    return false;
+    return QQuickApplicationWindow::eventFilter(object, event);
 }
 
 void LuneOSWindow::cleanup()

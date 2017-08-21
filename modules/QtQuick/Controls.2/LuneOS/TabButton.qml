@@ -38,27 +38,46 @@ import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
 import QtQml.Models 2.2
 
+import QtQuick.Controls.LuneOS 2.0
+
 T.TabButton {
     id: control
 
-    implicitWidth: contentItem.contentWidth + leftPadding + rightPadding
-    implicitHeight: contentItem.contentHeight + topPadding + bottomPadding
+    implicitWidth: Math.max(textContent.contentWidth,imageContent.implicitWidth) + leftPadding + rightPadding
+    implicitHeight: Math.max(textContent.contentHeight,imageContent.implicitWidth) + topPadding + bottomPadding
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
 
-    readonly property int _index: ObjectModel.index
-    readonly property int _totalCount: ListView.view.model.count
+    readonly property url _image: LuneOSButton.image
 
     //! [contentItem]
-    contentItem: Text {
-        text: control.text + " " + _index + "/" + _totalCount
-        font: control.font
-        elide: Text.ElideRight
-        opacity: enabled ? 1 : 0.3
-        color: !control.checked ? "#ffffff" : control.down ? "#26282a" : "#353637"
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+    contentItem: Item {
+        Image {
+            id: imageContent
+            visible: _image.toString() !== ""
+            source: _image
+
+            height: parent.height
+            width: height
+            fillMode: Image.PreserveAspectCrop
+            clip: true
+            verticalAlignment: (control.checked||control.down) ? Image.AlignBottom : Image.AlignTop
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+        Text {
+            id: textContent
+            anchors.fill: parent
+            visible: !imageContent.visible
+
+            text: control.text
+            font: control.font
+            elide: Text.ElideRight
+            opacity: enabled ? 1 : 0.3
+            color: !control.checked ? "#ffffff" : control.down ? "#26282a" : "#353637"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
     }
     //! [contentItem]
 

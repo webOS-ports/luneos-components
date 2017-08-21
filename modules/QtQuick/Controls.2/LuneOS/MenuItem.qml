@@ -52,10 +52,10 @@ T.MenuItem {
 
     readonly property int _index: ObjectModel.index
     readonly property int _totalCount: ListView.view.model.count
+    readonly property bool _appMenuStyle: ListView.view._appMenuStyle
 
     font.family: "Prelude"
     font.pixelSize: FontUtils.sizeToPixels("medium")
-    font.weight: Font.Light
 
     //! [contentItem]
     contentItem: Text {
@@ -64,7 +64,7 @@ T.MenuItem {
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        color: (_appMenuStyle ? (!control.enabled) : control.enabled) ? "#26282a" : "#bdbebf"
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter

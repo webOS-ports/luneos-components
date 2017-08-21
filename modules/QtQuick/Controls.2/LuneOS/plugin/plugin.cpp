@@ -20,6 +20,7 @@
 #include "plugin.h"
 
 #include "luneosbutton.h"
+#include "luneosmenu.h"
 #include "luneosradiobutton.h"
 #include "luneosswitch.h"
 #include "luneosswipedelegate.h"
@@ -31,9 +32,10 @@ QtQuickControls2LuneOSStylePlugin::QtQuickControls2LuneOSStylePlugin(QObject *pa
 
 void QtQuickControls2LuneOSStylePlugin::registerTypes(const char *uri)
 {
-    qmlRegisterUncreatableType<LuneOSSwitch>(uri, 2, 0, "LuneOSSwitch", tr("LuneOSSwitch is an attached property"));
-    qmlRegisterUncreatableType<LuneOSRadioButton>(uri, 2, 0, "LuneOSRadioButton", tr("LuneOSRadioButton is an attached property"));
     qmlRegisterUncreatableType<LuneOSButton>(uri, 2, 0, "LuneOSButton", tr("LuneOSButton is an attached property"));
+    qmlRegisterUncreatableType<LuneOSMenu>(uri, 2, 0, "LuneOSMenu", tr("LuneOSMenu is an attached property"));
+    qmlRegisterUncreatableType<LuneOSRadioButton>(uri, 2, 0, "LuneOSRadioButton", tr("LuneOSRadioButton is an attached property"));
+    qmlRegisterUncreatableType<LuneOSSwitch>(uri, 2, 0, "LuneOSSwitch", tr("LuneOSSwitch is an attached property"));
     qmlRegisterUncreatableType<LuneOSSwipeDelegate>(uri, 2, 0, "LuneOSSwipeDelegate", tr("LuneOSSwipeDelegate is an attached property"));
 }
 

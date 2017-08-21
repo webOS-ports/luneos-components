@@ -1,6 +1,7 @@
 #include "luneosradiobuttonattachedtype.h"
 
-LuneOSRadioButtonAttachedType::LuneOSRadioButtonAttachedType(QObject *parent) : QObject(parent)
+LuneOSRadioButtonAttachedType::LuneOSRadioButtonAttachedType(QObject *parent) : QObject(parent),
+    mUseCollapsedLayout(false)
 {
 
 }

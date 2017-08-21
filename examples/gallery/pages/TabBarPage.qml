@@ -40,6 +40,7 @@
 
 import QtQuick 2.6
 import QtQuick.Controls 2.0
+import QtQuick.Controls.LuneOS 2.0
 
 Page {
     id: page
@@ -90,7 +91,7 @@ Page {
             height: parent.height
         }
         TabButton {
-            text: "Third"
+            LuneOSButton.image: Qt.resolvedUrl("../images/toaster-icon-history.png")
             height: parent.height
         }
     }
