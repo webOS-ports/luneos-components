@@ -82,8 +82,10 @@ T.TextField {
     }
 
     //! [background]
-    background: Item {
+    background: Rectangle {
+        color: "#343434"
         anchors.fill: control
+        radius: control.activeFocus ? 10 : 6
         BorderImage {
             source: "images/input-focus.png"
             anchors.fill: parent
