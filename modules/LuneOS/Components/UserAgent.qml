@@ -36,7 +36,7 @@ Item {
     // %1: form factor (Mobile, Tablet, Desktop)
     // %2: WebKit version
     //readonly property string _template: "Mozilla/5.0 (LuneOS; %1) WebKit/%2"
-    readonly property string _template: "Mozilla/5.0 (LuneOS, like webOS/3.0.5; %1) AppleWebKit/%2 (KHTML, like Gecko) QtWebEngine/5.6.2 Chrome/45.0.2454.103 Safari/%2"
+    readonly property string _template: "Mozilla/5.0 (LuneOS, like webOS/3.0.5; %1) AppleWebKit/%2 (KHTML, like Gecko) QtWebEngine/5.9.2 Chrome/56.0.2924.103 Safari/%2"
 
     // See Source/WebCore/Configurations/Version.xcconfig in QtWebKit’s source tree
     // TODO: determine this value at runtime
