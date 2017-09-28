@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.9
 
 Item {
     id: networkManager
@@ -14,11 +14,13 @@ Item {
     property bool servicesEnabled: false
     property bool technologiesEnabled: false
 
-    readonly property string WifiTechnology: "wifi"
-    readonly property string CellularTechnology: "cellular"
-    readonly property string BluetoothTechnology: "bluetooth"
-    readonly property string GpsTechnology: "positionning"
+    readonly property string WifiTechnology: "/net/connman/technology/wifi"
+    readonly property string CellularTechnology: "/net/connman/technology/cellular"
+    readonly property string BluetoothTechnology: "/net/connman/technology/bluetooth"
+    readonly property string GpsTechnology: "/net/connman/technology/gps"
 
+    /*NetworkTechnology**/ function getTechnology(type) {
+    }
     /*QStringList*/ function servicesList(tech) {
     }
     /*QStringList*/ function savedServicesList(tech) {
@@ -40,5 +42,9 @@ Item {
     function registerCounter(path, accuracy, period) {
     }
     function unregisterCounter(path) {
+    }
+    /*bool*/ function createService(/*QVariantMap*/ settings, tech, service, device) {
+    }
+    /*QString*/ function createServiceSync(/*QVariantMap*/ settings, tech, service, device) {
     }
 }

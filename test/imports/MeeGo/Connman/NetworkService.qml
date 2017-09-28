@@ -48,4 +48,19 @@ Item {
     readonly property bool saved: false
     readonly property bool connecting: false
     readonly property string lastConnectError: ""
+
+    /// signals
+    signal serviceConnectionStarted();
+    signal serviceDisconnectionStarted();
+    signal propertiesReady();
+
+    /// slots
+    function requestConnect() {
+    }
+    function requestDisconnect() {
+    }
+    function remove() {
+    }
+    function resetCounters() {
+    }
 }

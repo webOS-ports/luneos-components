@@ -14,9 +14,11 @@ Item {
     property string tetheringId: ""
     property string tetheringPassphrase: ""
 
+    /// signals
     signal  scanFinished();
     signal  propertiesReady();
 
+    /// slots
     function setPowered(powered) {
     }
     function scan() {
