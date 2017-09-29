@@ -55,7 +55,7 @@ T.TextField {
     topPadding: padding + 5
     bottomPadding: padding + 5
 
-    opacity: enabled ? 1 : 0.2
+    opacity: enabled ? 1 : 0.3
     color: "#353637"
     selectionColor: "#338fff"
     selectedTextColor: "white"
@@ -83,9 +83,9 @@ T.TextField {
 
     //! [background]
     background: Rectangle {
-        color: "#343434"
+        color: control.activeFocus ? "transparent" : "#ccc"
         anchors.fill: control
-        radius: control.activeFocus ? 10 : 6
+        radius: 6
         BorderImage {
             source: "images/input-focus.png"
             anchors.fill: parent
