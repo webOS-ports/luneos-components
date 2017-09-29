@@ -3,11 +3,11 @@ import QtQuick 2.9
 Item {
     id: networkTechnology
 
-    readonly property string name: ""
-    readonly property string type: ""
+    /*readonly*/ property string name: ""
+    /*readonly*/ property string type: ""
     property bool powered: false
-    readonly property bool connected: false
-    readonly property string path: "/"
+    /*readonly*/ property bool connected: false
+    /*readonly*/ property string path: "/"
     property int idleTimeout: 1000
 
     property bool tethering: false
