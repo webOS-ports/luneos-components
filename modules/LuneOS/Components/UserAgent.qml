@@ -52,7 +52,7 @@ Item {
     property var overrides: Overrides.overrides
 
     function getDomain(url) {
-        var domain = url.toString()
+        var domain = url.toString().toLowerCase()
         var indexOfScheme = domain.indexOf("://")
         if (indexOfScheme !== -1) {
             domain = domain.slice(indexOfScheme + 3)
