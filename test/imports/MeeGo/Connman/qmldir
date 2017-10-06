@@ -11,4 +11,8 @@ singleton NetworkManagerFactory 0.2 NetworkManagerFactory.qml
 NetworkTechnology 0.2 NetworkTechnology.qml
 NetworkCounter 0.2 OfonoSupplementaryServices.qml
 
+EapMethod 0.2 EapMethodEnum.js
+SecurityType 0.2 SecurityTypeEnum.js
+ServiceFilter 0.2 ServiceFilterEnum.js
+
 typeinfo MeeGo.Connman.qmltypes

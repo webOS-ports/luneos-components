@@ -1,6 +1,9 @@
 import QtQuick 2.9
 import QtQml.Models 2.3
 
+import "SecurityTypeEnum.js" as SecurityType;
+import "EapMethodEnum.js" as EapMethod;
+
 /*
  * Usage:
     TechnologyModel {
@@ -45,11 +48,25 @@ ListModel { // should it inherit something else ? it looks like it holds a list 
     property list<NetworkService> _wifiServices: [
         NetworkService {
             type: "wifi"
-            name: "wifi_1_xxxxxxx_managed_psk"
+            path: "/net/connman/service/wifi_009e959b585c_32xxxxx669_managed_psk"
+            name: "My Own Wifi"
+            securityType: SecurityType.SecurityPSK
+            strength: 90
+            connected: true
         },
         NetworkService {
             type: "wifi"
-            name: "wifi_2_xxxxxxx_managed_wep"
+            path: "/net/connman/service/wifi_009e959b585c_32xxxxx670_managed_psk"
+            name: "Someone else's wifi"
+            securityType: SecurityType.SecurityWEP
+            strength: 30
+        },
+        NetworkService {
+            type: "wifi"
+            path: "/net/connman/service/wifi_009e959b585c_32xxxxx670"
+            name: "OpenBar Wifi"
+            securityType: SecurityType.SecurityNone
+            strength: 50
         }
     ]
     property list<NetworkService> _cellularServices: [
