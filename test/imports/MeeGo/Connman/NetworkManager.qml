@@ -14,10 +14,10 @@ Item {
     property bool servicesEnabled: false
     property bool technologiesEnabled: false
 
-    /*readonly*/ property string WifiTechnology: "/net/connman/technology/wifi"
-    /*readonly*/ property string CellularTechnology: "/net/connman/technology/cellular"
-    /*readonly*/ property string BluetoothTechnology: "/net/connman/technology/bluetooth"
-    /*readonly*/ property string GpsTechnology: "/net/connman/technology/gps"
+    /*readonly*/ property string wifiTechnology: "/net/connman/technology/wifi"
+    /*readonly*/ property string cellularTechnology: "/net/connman/technology/cellular"
+    /*readonly*/ property string bluetoothTechnology: "/net/connman/technology/bluetooth"
+    /*readonly*/ property string gpsTechnology: "/net/connman/technology/gps"
 
     /*NetworkTechnology**/ function getTechnology(type) {
     }

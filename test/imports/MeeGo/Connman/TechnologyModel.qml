@@ -64,20 +64,28 @@ ListModel { // should it inherit something else ? it looks like it holds a list 
     ]
 
     Component.onCompleted: {
-        if(technologyModel.name === "wifi") {
-            for(var s in _wifiServices) {
-                technologyModel.append({ "object": _wifiServices[s] });
+        _fillScanResults
+    }
+    onPoweredChanged: _fillScanResults();
+
+    function _fillScanResults() {
+        technologyModel.clear();
+        if(technologyModel.powered) {
+            if(technologyModel.name === "wifi") {
+                for(var s in _wifiServices) {
+                    technologyModel.append({ "object": _wifiServices[s] });
+                }
             }
-        }
-        else if(technologyModel.name === "cellular") {
-            for(var s in _cellularServices) {
-                technologyModel.append({ "object": _cellularServices[s] });
+            else if(technologyModel.name === "cellular") {
+                for(var s in _cellularServices) {
+                    technologyModel.append({ "object": _cellularServices[s] });
+                }
+                technologyModel.append(cellularService1.createObject());
             }
-            technologyModel.append(cellularService1.createObject());
-        }
-        else if(technologyModel.name === "bluetooth") {
-            for(var s in _bluetoothServices) {
-                technologyModel.append({ "object": _bluetoothServices[s] });
+            else if(technologyModel.name === "bluetooth") {
+                for(var s in _bluetoothServices) {
+                    technologyModel.append({ "object": _bluetoothServices[s] });
+                }
             }
         }
     }
