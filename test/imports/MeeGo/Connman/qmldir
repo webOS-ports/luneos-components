@@ -1,0 +1,18 @@
+module MeeGo.Connman
+
+NetworkService 0.2 NetworkService.qml
+TechnologyModel 0.2 TechnologyModel.qml
+SavedServiceModel 0.2 SavedServiceModel.qml
+UserAgent 0.2 UserAgent.qml
+ClockModel 0.2 ClockModel.qml
+NetworkSession 0.2 NetworkSession.qml
+NetworkManager 0.2 NetworkManager.qml
+singleton NetworkManagerFactory 0.2 NetworkManagerFactory.qml
+NetworkTechnology 0.2 NetworkTechnology.qml
+NetworkCounter 0.2 OfonoSupplementaryServices.qml
+
+EapMethod 0.2 EapMethodEnum.js
+SecurityType 0.2 SecurityTypeEnum.js
+ServiceFilter 0.2 ServiceFilterEnum.js
+
+typeinfo MeeGo.Connman.qmltypes
