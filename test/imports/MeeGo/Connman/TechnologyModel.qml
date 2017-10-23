@@ -34,9 +34,6 @@ ListModel { // should it inherit something else ? it looks like it holds a list 
         else if(technologyModel.name === "cellular") {
             return _cellularServices[index];
         }
-        else if(technologyModel.name === "bluetooth") {
-            return _bluetoothServices[index];
-        }
     }
     function requestScan() {
     }
@@ -74,8 +71,6 @@ ListModel { // should it inherit something else ? it looks like it holds a list 
             type: "cellular"
         }
     ]
-    property list<NetworkService> _bluetoothServices: [
-    ]
 
     Component.onCompleted: {
         _fillScanResults
@@ -95,11 +90,6 @@ ListModel { // should it inherit something else ? it looks like it holds a list 
                     technologyModel.append({ "object": _cellularServices[s] });
                 }
                 technologyModel.append(cellularService1.createObject());
-            }
-            else if(technologyModel.name === "bluetooth") {
-                for(var s in _bluetoothServices) {
-                    technologyModel.append({ "object": _bluetoothServices[s] });
-                }
             }
         }
     }
