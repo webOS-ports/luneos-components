@@ -75,9 +75,6 @@ ListModel { // should it inherit something else ? it looks like it holds a list 
         }
     ]
     property list<NetworkService> _bluetoothServices: [
-        NetworkService {
-            type: "bluetooth"
-        }
     ]
 
     Component.onCompleted: {
