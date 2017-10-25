@@ -17,9 +17,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
+pragma Singleton
 
 import QtQuick 2.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import Nemo.DBus 2.0
 
 Item {
@@ -27,19 +28,12 @@ Item {
 
     property bool powered: bluetoothTech.available && bluetoothTech.powered
     property bool connected: bluetoothTech.available && bluetoothTech.connected
-    property var devicesList: []
     property bool isTurningOn: (bluetoothTech.available && bluetoothTech.powered) && (btAdapter.path === "/")
     property ListModel deviceModel: ListModel {}
-
-    signal clearBtList()
-    signal addBtEntry(string name, string address, int cod, string connStatus, bool connected)
-    signal updateBtEntry(string address, string connStatus, bool connected)
-    signal setBtState(bool isOn, bool turningOn, string state)
 
     TechnologyModel {
         id: bluetoothTech
         name: "bluetooth"
-        available: true
     }
     DBusInterface {
         id: btManager
@@ -63,7 +57,7 @@ Item {
         }
         function interfacesRemoved(path, interfaces) {
             if(typeof interfaces["org.bluez.Adapter1"] !== 'undefined' &&
-               btAdapter.path === adapter)
+               btAdapter.path === path)
             {
                 console.log("Adapter removed: " + path);
                 btAdapter.path = "/";
@@ -101,69 +95,13 @@ Item {
             bluetoothTech.powered = powered;
     }
 
-    function disconnectAllBtMenuProfiles(address) {
-        for (var i=0;i<deviceModel.count;i++) {
-            var device = deviceModel.get(i).device;
-            if (device.address === address) {
-                device.disconnectDevice();
-            }
-        }
+    function startDiscovery() {
+        if(powered && !isTurningOn)
+            btAdapter.call('StartDiscovery');
     }
 
-    function connectBtDevice(address, cod) {
-        for (var i=0;i<deviceModel.count;i++) {
-            var device = deviceModel.get(i).device;
-            if (device.address === address) {
-                device.connectDevice();
-            }
-        }
-    }
-
-    function createBtDevice(devicePath) {
-        var deviceComponent = Qt.createComponent("BluetoothDevice.qml");
-        if (deviceComponent.status === Component.Ready) {
-            var device = deviceComponent.createObject(bluetoothService, {path: devicePath});
-            deviceModel.append({device: device});
-        }
-        else {
-            console.error("Error during instantiation of BluetoothDevice.qml!");
-            console.error(deviceComponent.errorString());
-        }
-    }
-
-    function _clearBtList() {
-        for (var i=0;i<deviceModel.count;i++) {
-            var item = deviceModel.get(i).device;
-            item.destroy();
-        }
-        deviceModel.clear();
-        clearBtList();
-    }
-
-    onDevicesListChanged: {
-        _clearBtList();
-        for (var i=0;i<devicesList.length;i++) {
-            createBtDevice(devicesList[i]);
-        }
-    }
-
-    function updateBtState() {
-        var state = bluetoothService.powered?"ON":"OFF";
-        if (isTurningOn) state = "INIT";
-        setBtState(bluetoothService.powered, isTurningOn, state);
-    }
-
-    onIsTurningOnChanged: {
-        updateBtState();
-    }
-
-    onPoweredChanged: {
-        if (!powered)
-            _clearBtList();
-        updateBtState();
-    }
-
-    Component.onCompleted: {
-        updateBtState();
+    function stopDiscovery() {
+        if(powered && !isTurningOn)
+            btAdapter.call('StopDiscovery');
     }
 }

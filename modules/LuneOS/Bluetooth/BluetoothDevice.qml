@@ -27,6 +27,8 @@ Item {
     property string address: ""
     property int cod: 0
     property bool connected: false
+    property bool lastConnectFailed: false
+    property bool connecting: false
     property bool trusted: false
     property string path: "/"
 
@@ -53,7 +55,10 @@ Item {
     }
 
     function connectDevice() {
-        btDevice.call('Connect');
+        _device.connecting = true;
+        btDevice.call('Connect', undefined,
+                      function() {_device.lastConnectFailed = false; _device.connecting = false;},  /* success */
+                      function() {_device.lastConnectFailed = true;  _device.connecting = false;}); /* failed  */
     }
 
     function disconnectDevice() {
@@ -62,11 +67,11 @@ Item {
 
     function refreshProperties() {
         btDeviceIntrospection.typedCall('GetAll', [{type: 's', value: "org.bluez.Device1"}], function (result) {
-            name = result.Name;
-            address = result.Address;
-            cod = result.Class;
-            trusted = result.Trusted;
-            connected = result.Connected;
+            _device.name = result.Name;
+            _device.address = result.Address;
+            _device.cod = result.Class;
+            _device.trusted = result.Trusted;
+            _device.connected = result.Connected;
         });
     }
 
