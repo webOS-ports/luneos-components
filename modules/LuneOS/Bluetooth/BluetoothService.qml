@@ -44,6 +44,7 @@ Item {
         signalsEnabled: true
 
         function interfacesAdded(path, interfaces) {
+            console.log("interfacesAdded ! path = " + path);
             if(typeof interfaces["org.bluez.Adapter1"] !== 'undefined')
             {
                 console.log("New adapter found: " + path);
@@ -52,31 +53,31 @@ Item {
             else if(typeof interfaces["org.bluez.Device1"] !== 'undefined')
             {
                 console.log("New device found: " + path);
-                createBtDevice(path)
+                _createBtDevice(path)
             }
         }
         function interfacesRemoved(path, interfaces) {
-            if(typeof interfaces["org.bluez.Adapter1"] !== 'undefined' &&
+            console.log("interfacesRemoved ! path = " + path);
+            if(interfaces.indexOf("org.bluez.Adapter1")>=0 &&
                btAdapter.path === path)
             {
-                console.log("Adapter removed: " + path);
                 btAdapter.path = "/";
+                console.log("Adapter removed: " + path);
             }
-            else if(typeof interfaces["org.bluez.Device1"] !== 'undefined')
+            else if(interfaces.indexOf("org.bluez.Device1")>=0)
             {
-                console.log("Device removed: " + path);
-                removeBtDevice(path)
+                _removeBtDevice(path)
             }
         }
+    }
 
-        Component.onCompleted: {
-            console.log("calling GetManagedObjects...");
-            btManager.typedCall('GetManagedObjects', [], function (result) {
-                for(path in result) {
-                    interfacesAdded(path, result[path]);
-                }
-            });
-        }
+    Component.onCompleted:  {
+        console.log("calling GetManagedObjects...");
+        btManager.typedCall('GetManagedObjects', [], function (result) {
+            for(var newPath in result) {
+                btManager.interfacesAdded(newPath, result[newPath]);
+            }
+        });
     }
 
     DBusInterface {
@@ -103,5 +104,38 @@ Item {
     function stopDiscovery() {
         if(powered && !isTurningOn)
             btAdapter.call('StopDiscovery');
+    }
+
+    function _createBtDevice(path) {
+        var device;
+        for (var i=0;i<deviceModel.count;i++) {
+            device = deviceModel.get(i).device;
+            if (device.path === path) {
+                console.log("Device already registered, skipping.");
+                return;
+            }
+        }
+
+        var deviceComponent = Qt.createComponent("BluetoothDevice.qml");
+        if (deviceComponent.status === Component.Ready) {
+            device = deviceComponent.createObject(bluetoothService, {path: path});
+            deviceModel.append({device: device});
+        }
+        else {
+            console.error("Error during instantiation of BluetoothDevice.qml!");
+            console.error(deviceComponent.errorString());
+        }
+    }
+
+    function _removeBtDevice(path) {
+        for (var i=0;i<deviceModel.count;i++) {
+            var device = deviceModel.get(i).device;
+            if (device.path === path) {
+                deviceModel.remove(i);
+                device.destroy(1000); // give a delay to the UI before destroying the object
+                console.log("Device removed: " + path);
+                break;
+            }
+        }
     }
 }
