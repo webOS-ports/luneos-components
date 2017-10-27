@@ -7,6 +7,7 @@ SUBDIRS += \
     LuneOS/Components/components.pro \
     LuneOS/Application/application.pro \
     LuneOS/Telephony/telephony.pro \
+    LuneOS/Bluetooth/bluetooth.pro \
 
 
 win32|mac {
