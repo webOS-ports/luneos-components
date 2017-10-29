@@ -36,6 +36,7 @@
 
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
+import QtGraphicalEffects 1.0
 
 import LunaNext.Common 0.1
 
@@ -82,23 +83,18 @@ T.TextField {
     }
 
     //! [background]
-    background: Rectangle {
-        color: control.activeFocus ? "transparent" : "#ccc"
+    background: ColorOverlay {
         anchors.fill: control
-        radius: 6
+        source: bgImage
+        color: control.activeFocus? "transparent" : "#60000000";
+
         BorderImage {
+            id: bgImage
             source: "images/input-focus.png"
             anchors.fill: parent
             border.left: 10; border.top: 10
             border.right: 10; border.bottom: 10
-            visible: control.activeFocus
-        }
-        BorderImage {
-            source: "images/input-tool.png"
-            anchors.fill: parent
-            border.left: 6; border.top: 6
-            border.right: 6; border.bottom: 6
-            visible: !control.activeFocus && showBg
+            visible: false
         }
     }
     //! [background]
