@@ -18,9 +18,9 @@ ListModel { // should it inherit something else ? it looks like it holds a list 
     id: technologyModel
 
     property string name: ""
-    /*readonly*/ property bool available: false
+    /*readonly*/ property bool available: name==="wifi" || name==="bluetooth" || name==="cellular"
     /*readonly*/ property bool connected: false
-    property bool powered: false
+    property bool powered: name==="wifi" || name==="bluetooth" || name==="cellular"
     /*readonly*/ property bool scanning: false
     /*readonly*/ property bool changesInhibited: false
     property int filter: 0
