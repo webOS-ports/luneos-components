@@ -37,8 +37,13 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
 
+import LunaNext.Common 0.1
+
 T.Label {
     id: control
+
+    font.family: "Prelude"
+    font.pixelSize: FontUtils.sizeToPixels("medium")
 
     color: "#26282a"
     linkColor: "#45a7d7" // TODO
