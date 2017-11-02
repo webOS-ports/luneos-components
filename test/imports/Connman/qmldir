@@ -1,4 +1,4 @@
-module MeeGo.Connman
+module Connman
 
 NetworkService 0.2 NetworkService.qml
 TechnologyModel 0.2 TechnologyModel.qml

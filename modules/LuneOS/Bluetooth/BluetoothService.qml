@@ -26,10 +26,12 @@ import Nemo.DBus 2.0
 Item {
     id: bluetoothService
 
-    property bool powered: bluetoothTech.available && bluetoothTech.powered
-    property bool connected: bluetoothTech.available && bluetoothTech.connected
-    property bool isTurningOn: (bluetoothTech.available && bluetoothTech.powered) && (btAdapter.path === "/")
+    readonly property bool powered: bluetoothTech.available && bluetoothTech.powered
+    readonly property bool connected: bluetoothTech.available && bluetoothTech.connected
+    readonly property bool isTurningOn: (bluetoothTech.available && bluetoothTech.powered) && (btAdapter.path === "/")
     property ListModel deviceModel: ListModel {}
+
+    signal ready();
 
     TechnologyModel {
         id: bluetoothTech
@@ -49,6 +51,8 @@ Item {
             {
                 console.log("New adapter found: " + path);
                 btAdapter.path = path;
+
+                bluetoothService.ready();
             }
             else if(typeof interfaces["org.bluez.Device1"] !== 'undefined')
             {
