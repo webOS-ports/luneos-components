@@ -1,4 +1,6 @@
 module LuneOS.Bluetooth
 
-BluetoothDevice 0.1 BluetoothDevice.qml
-singleton BluetoothService 0.1 BluetoothService.qml
+plugin LuneOSBluetooth
+
+BluetoothDevicesModel 0.2 BluetoothDevicesModel.qml
+singleton BluetoothManager 0.2 BluetoothManager.qml
