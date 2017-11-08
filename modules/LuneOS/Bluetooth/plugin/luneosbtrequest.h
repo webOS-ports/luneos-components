@@ -17,9 +17,9 @@
 #ifndef LUNEOSBTREQUEST_H
 #define LUNEOSBTREQUEST_H
 
-#include <BluezQt/Agent>
-#include <BluezQt/Device>
-#include <BluezQt/Request>
+#include <bluezqt/agent.h>
+#include <bluezqt/device.h>
+#include <bluezqt/request.h>
 
 #include <QVariant>
 

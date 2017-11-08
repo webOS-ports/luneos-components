@@ -17,9 +17,11 @@
 #include <QDebug>
 #include <QDBusObjectPath>
 
-#include <BluezQt/Agent>
-#include <BluezQt/Device>
-#include <BluezQt/Request>
+#include <bluezqt/agent.h>
+#include <bluezqt/device.h>
+#include <bluezqt/request.h>
+#include <bluezqt/manager.h>
+#include <bluezqt/pendingcall.h>
 
 #include "luneosbtagent.h"
 #include "luneosbtrequest.h"

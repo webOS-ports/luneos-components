@@ -19,11 +19,11 @@
 
 #include <QSharedPointer>
 
-#include <BluezQt/Agent>
-#include <BluezQt/Device>
-#include <BluezQt/Request>
-#include <BluezQt/Manager>
-#include <BluezQt/PendingCall>
+#include <bluezqt/agent.h>
+#include <bluezqt/device.h>
+#include <bluezqt/request.h>
+#include <bluezqt/manager.h>
+#include <bluezqt/pendingcall.h>
 
 #include "luneosbtrequest.h"
 

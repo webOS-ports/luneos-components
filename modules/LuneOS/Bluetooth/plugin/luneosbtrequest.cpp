@@ -18,9 +18,9 @@
 #include <QDBusObjectPath>
 #include <QVariant>
 
-#include <BluezQt/Agent>
-#include <BluezQt/Device>
-#include <BluezQt/Request>
+#include <bluezqt/agent.h>
+#include <bluezqt/device.h>
+#include <bluezqt/request.h>
 
 #include "luneosbtrequest.h"
 
