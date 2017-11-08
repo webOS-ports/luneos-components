@@ -112,7 +112,9 @@ T.ComboBox {
     popup: T.Popup {
         y: control.height - (control.visualFocus ? 0 : 1)
         width: control.width
-        implicitHeight: Math.min(listview.contentHeight, Math.max(T.ApplicationWindow.overlay.height/2,control.parent.height))
+        implicitHeight: Math.min(listview.contentHeight,
+                                 Math.max(T.ApplicationWindow.overlay ? T.ApplicationWindow.overlay.height/2 : 0,
+                                          control.parent.height))
         topMargin: 6
         bottomMargin: 6
 
