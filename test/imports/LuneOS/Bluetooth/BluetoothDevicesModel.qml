@@ -19,4 +19,21 @@ import QtQuick 2.0
 
 // Just a simple namespace wrapper
 ListModel {
+    Component.onCompleted: {
+        append({
+            "Address": "22-BB-CC-00-11-22", "Name": "", "Paired": false, "Connected": false
+        });
+        append({
+            "Address": "22-BB-CC-00-11-22", "Name": "Fake", "Paired": false, "Connected": false
+        });
+        append({
+            "Address": "11-BB-CC-00-11-22", "Name": "Fake Paired", "Paired": true, "Connected": false
+        });
+        append({
+            "Address": "44-BB-CC-00-11-22", "Name": "Fake Connected", "Paired": false, "Connected": true
+        });
+        append({
+            "Address": "33-BB-CC-00-11-22", "Name": "Fake Paired Connected", "Paired": true, "Connected": true
+        });
+    }
 }

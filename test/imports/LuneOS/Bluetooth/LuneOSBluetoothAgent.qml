@@ -18,11 +18,13 @@
 import QtQuick 2.0
 
 QtObject {
+    id: agentId
     property string path: "/"
     property int capability;
 
     function registerToManager(btManager) {
         console.log("==> registerToManager()");
+        btManager.registerAgent(agentId);
     }
 
     signal requestPinCodeFromUser(string device, variant request)

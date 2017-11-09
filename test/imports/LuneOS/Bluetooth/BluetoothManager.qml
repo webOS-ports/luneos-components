@@ -42,50 +42,27 @@ Item {
         }
         function deviceForAddress(btDeviceAddress) {
         }
+        property QtObject _currentAgent
+        function registerAgent(agent) {
+            _currentAgent = agent;
+        }
     }
     property QtObject connectingDevice;
 
     function connectDeviceAddress(btDeviceAddress)
     {
+        // test pairing
+        // test connect
     }
 
     function disconnectDeviceAddress(btDeviceAddress)
     {
+        // disconnect
+        // unpair
     }
 
     TechnologyModel {
         id: bluetoothTech
         name: "bluetooth"
-    }
-
-    /* Bindings to keep the discovering mode updated */
-    Connections {
-        target: btManager
-        onUsableAdapterChanged: {
-            if(btManager.usableAdapter && root.discoveringMode)
-                btManager.usableAdapter.startDiscovery();
-        }
-    }
-    onDiscoveringModeChanged: {
-        if(btManager.usableAdapter && root.discoveringMode && !btManager.usableAdapter.discovering) {
-            console.log("Starting bluetooth discovery.");
-            btManager.usableAdapter.startDiscovery();
-        }
-        else if(btManager.usableAdapter && !root.discoveringMode && btManager.usableAdapter.discovering) {
-            console.log("Stopping bluetooth discovery.");
-            btManager.usableAdapter.stopDiscovery();
-        }
-    }
-    Component.onCompleted: {
-        if(btManager.usableAdapter && root.discoveringMode && !btManager.usableAdapter.discovering) {
-            console.log("Starting bluetooth discovery.");
-            btManager.usableAdapter.startDiscovery();
-        }
-    }
-    Component.onDestruction: {
-        if(btManager.usableAdapter && btManager.usableAdapter.discovering) {
-            console.log("Stopping bluetooth discovery.");
-            btManager.usableAdapter.stopDiscovery();
-        }
     }
 }
