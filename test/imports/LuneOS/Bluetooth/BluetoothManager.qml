@@ -30,29 +30,43 @@ Item {
     readonly property bool bluetoothOperational: btManager.bluetoothOperational
     readonly property bool initializing: powered && !bluetoothOperational
     property bool discoveringMode: false
+    readonly property bool discoverable: bluetoothOperational && btManager.usableAdapter.discoverable
     readonly property bool connected: bluetoothOperational && btManager.usableAdapter.connected /*remark: connected is specific to Mer's version*/
 
     property QtObject btManager: QtObject {
-        property bool bluetoothOperational: true
+        property bool bluetoothOperational: false
         property QtObject usableAdapter: QtObject {
             property bool connected: false
             property bool discovering: false
+            property bool discoverable: false
             function startDiscovery() { discovering = true; }
             function stopDiscovery() { discovering = false; }
         }
         function deviceForAddress(btDeviceAddress) {
         }
-        property QtObject _currentAgent
+        property LuneOSBluetoothAgent _currentAgent
         function registerAgent(agent) {
             _currentAgent = agent;
         }
     }
     property QtObject connectingDevice;
 
+    function newLuneosRequestComponent(iRequestType, acceptFct) {
+        var luneosRequestComponent = Qt.createComponent(Qt.resolvedUrl("LuneOSBluetoothRequest.qml"));
+        var newRequestObj = luneosRequestComponent.createObject(root, {requestType: iRequestType});
+        if(typeof acceptFct !== 'undefined') newRequestObj.onAccept.connect(acceptFct);
+
+        return newRequestObj;
+    }
+
     function connectDeviceAddress(btDeviceAddress)
     {
+        if(!btManager._currentAgent) return;
         // test pairing
-        // test connect
+        btManager._currentAgent.requestPasskeyFromUser({name: btDeviceAddress}, newLuneosRequestComponent(1, __passKeyEntered));
+        function __passKeyEntered(acceptedValue) {
+            btManager._currentAgent.displayPasskeyToUser({name: btDeviceAddress}, acceptedValue, acceptedValue);
+        }
     }
 
     function disconnectDeviceAddress(btDeviceAddress)
@@ -61,8 +75,21 @@ Item {
         // unpair
     }
 
+    function setDiscoverable(isDiscoverable)
+    {
+        if(btManager && btManager.usableAdapter) {
+            btManager.usableAdapter.discoverable = isDiscoverable;
+        }
+    }
+
     TechnologyModel {
         id: bluetoothTech
         name: "bluetooth"
+    }
+    Timer {
+        running: true
+        repeat: false
+        interval: 200
+        onTriggered: btManager.bluetoothOperational = true;
     }
 }

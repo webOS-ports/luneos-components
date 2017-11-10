@@ -32,33 +32,43 @@ LuneOSBluetoothAgent::LuneOSBluetoothAgent():
 {
 }
 
+void LuneOSBluetoothAgent::displayPinCode(DevicePtr device, const QString &pinCode)
+{
+    displayPinCodeToUser(device.data(), pinCode);
+}
+
+void LuneOSBluetoothAgent::displayPasskey(DevicePtr device, const QString &passkey, const QString &entered)
+{
+    displayPasskeyToUser(device.data(), passkey, entered);
+}
+
 void LuneOSBluetoothAgent::requestPinCode(DevicePtr device, const Request<QString> &request)
 {
     mPinCodeRequestPtr.reset(new LuneOSBluetoothRequest(request));
-    requestPinCodeFromUser(device, mPinCodeRequestPtr.data());
+    requestPinCodeFromUser(device.data(), mPinCodeRequestPtr.data());
 }
 
 void LuneOSBluetoothAgent::requestPasskey(DevicePtr device, const Request<quint32> &request)
 {
     mPasskeyRequestPtr.reset(new LuneOSBluetoothRequest(request));
-    requestPasskeyFromUser(device, mPasskeyRequestPtr.data()); // that'll leak, isn't it
+    requestPasskeyFromUser(device.data(), mPasskeyRequestPtr.data()); // that'll leak, isn't it
 }
 
 void LuneOSBluetoothAgent::requestConfirmation(DevicePtr device, const QString &passkey, const Request<> &request)
 {
     mConfirmationRequestPtr.reset(new LuneOSBluetoothRequest(request));
-    requestConfirmationFromUser(device, passkey, mConfirmationRequestPtr.data()); // that'll leak, isn't it
+    requestConfirmationFromUser(device.data(), passkey, mConfirmationRequestPtr.data()); // that'll leak, isn't it
 }
 void LuneOSBluetoothAgent::requestAuthorization(DevicePtr device, const Request<> &request)
 {
     mAuthorizationRequestPtr.reset(new LuneOSBluetoothRequest(request));
-    requestAuthorizationFromUser(device, mAuthorizationRequestPtr.data()); // that'll leak, isn't it
+    requestAuthorizationFromUser(device.data(), mAuthorizationRequestPtr.data()); // that'll leak, isn't it
 }
 
 void LuneOSBluetoothAgent::authorizeService(DevicePtr device, const QString &uuid, const Request<> &request)
 {
     mServiceRequestPtr.reset(new LuneOSBluetoothRequest(request));
-    authorizeServiceFromUser(device, uuid, mServiceRequestPtr.data()); // that'll leak, isn't it
+    authorizeServiceFromUser(device.data(), uuid, mServiceRequestPtr.data()); // that'll leak, isn't it
 }
 
 QDBusObjectPath LuneOSBluetoothAgent::objectPath() const

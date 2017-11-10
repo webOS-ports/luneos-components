@@ -3,3 +3,4 @@ module LuneOS.Bluetooth
 BluetoothDevicesModel 0.2 BluetoothDevicesModel.qml
 singleton BluetoothManager 0.2 BluetoothManager.qml
 LuneOSBluetoothAgent 0.2 LuneOSBluetoothAgent.qml
+LuneOSBluetoothRequest 0.2 LuneOSBluetoothRequest.qml

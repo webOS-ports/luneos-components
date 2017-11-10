@@ -18,22 +18,13 @@
 import QtQuick 2.0
 
 QtObject {
-    id: agentId
-    property string path: "/"
-    property int capability;
-
-    function registerToManager(btManager) {
-        console.log("==> registerToManager()");
-        btManager.registerAgent(agentId);
-    }
-
-    signal requestPinCodeFromUser(variant device, variant request);
-    signal requestPasskeyFromUser(variant device, variant request);
-    signal requestConfirmationFromUser(variant device, string passkey, variant request);
-    signal requestAuthorizationFromUser(variant device, variant request);
-    signal authorizeServiceFromUser(variant device, string uuid, variant request);
-    signal displayPasskeyToUser(variant device, string passkey, string entered);
-    signal displayPinCodeToUser(variant device, variant pinCode);
+    id: luneosRequest
+    property int requestType: 0 // 0=void, 1=uint32, 2=string
+    signal accept(variant returnValue);
+    signal reject();
     signal cancel();
-    signal release();
+
+    onAccept: { console.log("bluetooth request accepted (value="+returnValue+")."); }
+    onReject: { console.log("bluetooth request rejected."); }
+    onCancel: { console.log("bluetooth request canceled."); }
 }
