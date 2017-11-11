@@ -32,6 +32,7 @@ Item {
     readonly property bool bluetoothOperational: btManager.bluetoothOperational
     readonly property bool initializing: powered && !bluetoothOperational
     property bool discoveringMode: false
+    readonly property bool discoverable: bluetoothOperational && btManager.usableAdapter.discoverable
     readonly property bool connected: bluetoothOperational && btManager.usableAdapter.connected /*remark: connected is specific to Mer's version*/
 
     property QtObject btManager: BluezQt.Manager
@@ -40,6 +41,13 @@ Item {
     function connectDeviceAddress(btDeviceAddress)
     {
         var pendingCall;
+
+        function __doConnect(device) {
+            pendingCall = device.connectToDevice();
+            pendingCall.finished.connect(function(call) {
+                connectingDevice = null;
+            });
+        }
 
         if (btManager.bluetoothOperational) {
             var device = btManager.deviceForAddress(btDeviceAddress);
@@ -53,10 +61,21 @@ Item {
                 }
 
                 connectingDevice = device;
-                pendingCall = device.connectToDevice();
-                pendingCall.finished.connect(function(call) {
-                    connectingDevice = null;
-                });
+                if(!device.paired) {
+                    device.onPairedChanged.connect(function() {
+                        if(connectingDevice === device && device.paired) {
+                            console.log("Pairing has succeeded, connecting now...");
+                            __doConnect(device);
+                        }
+                    });
+                    pendingCall = device.pair();
+                    pendingCall.finished.connect(function(call) {
+                        console.log("Pairing call is now finished.");
+                    });
+                }
+                else {
+                    __doConnect(device);
+                }
             }
         }
 
@@ -74,6 +93,13 @@ Item {
         pendingCall = device.disconnectFromDevice();
 
         return pendingCall;
+    }
+
+    function setDiscoverable(isDiscoverable)
+    {
+        if(btManager && btManager.usableAdapter) {
+            btManager.usableAdapter.discoverable = isDiscoverable;
+        }
     }
 
     TechnologyModel {

@@ -47,6 +47,9 @@ public:
 
     virtual QDBusObjectPath objectPath() const;
 
+    virtual void displayPinCode(DevicePtr device, const QString &pinCode);
+    virtual void displayPasskey(DevicePtr device, const QString &passkey, const QString &entered);
+
     virtual void requestPinCode(DevicePtr device, const Request<QString> &request);
     virtual void requestPasskey(DevicePtr device, const Request<quint32> &request);
 
@@ -63,16 +66,16 @@ Q_SIGNALS:
     void capabilityChanged();
     void pathChanged();
 
-    void displayPinCode(DevicePtr device, const QString &pinCode);
-    void displayPasskey(DevicePtr device, const QString &passkey, const QString &entered);
+    void displayPinCodeToUser(Device* device, const QString &pinCode);
+    void displayPasskeyToUser(Device* device, const QString &passkey, const QString &entered);
 
-    void requestPinCodeFromUser(DevicePtr device, LuneOSBluetoothRequest *request);
-    void requestPasskeyFromUser(DevicePtr device, LuneOSBluetoothRequest *request);
+    void requestPinCodeFromUser(Device* device, LuneOSBluetoothRequest* request);
+    void requestPasskeyFromUser(Device* device, LuneOSBluetoothRequest* request);
 
-    void requestConfirmationFromUser(DevicePtr device, const QString &passkey, LuneOSBluetoothRequest *request);
-    void requestAuthorizationFromUser(DevicePtr device, LuneOSBluetoothRequest *request);
+    void requestConfirmationFromUser(Device* device, const QString &passkey, LuneOSBluetoothRequest* request);
+    void requestAuthorizationFromUser(Device* device, LuneOSBluetoothRequest* request);
 
-    void authorizeServiceFromUser(DevicePtr device, const QString &uuid, LuneOSBluetoothRequest *request);
+    void authorizeServiceFromUser(Device* device, const QString &uuid, LuneOSBluetoothRequest* request);
 
     void cancel();
     void release();

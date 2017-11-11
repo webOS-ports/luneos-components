@@ -25,20 +25,20 @@
 #include "luneosbtrequest.h"
 
 LuneOSBluetoothRequest::LuneOSBluetoothRequest(const Request<> &request, QObject *parent): QObject(parent),
-    mRequestVoid(request),
-    mRequestType(LuneOSBluetoothRequest::Void)
+    mRequestType(LuneOSBluetoothRequest::Void),
+    mRequestVoid(request)
 {
 }
 
 LuneOSBluetoothRequest::LuneOSBluetoothRequest(const Request<quint32> &request, QObject *parent): QObject(parent),
-    mRequestUInt32(request),
-    mRequestType(LuneOSBluetoothRequest::UInt32)
+    mRequestType(LuneOSBluetoothRequest::UInt32),
+    mRequestUInt32(request)
 {
 }
 
 LuneOSBluetoothRequest::LuneOSBluetoothRequest(const Request<QString> &request, QObject *parent): QObject(parent),
-    mRequestString(request),
-    mRequestType(LuneOSBluetoothRequest::String)
+    mRequestType(LuneOSBluetoothRequest::String),
+    mRequestString(request)
 {
 }
 
