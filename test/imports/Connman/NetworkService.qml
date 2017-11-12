@@ -56,11 +56,22 @@ Item {
 
     /// slots
     function requestConnect() {
+        networkService.connecting = true;
+        connectionTimer.start();
     }
     function requestDisconnect() {
     }
     function remove() {
     }
     function resetCounters() {
+    }
+
+    Timer {
+        id: connectionTimer
+        repeat: false; running: false; interval: 2000
+        onTriggered: {
+            networkService.connected = true;
+            networkService.connecting = false;
+        }
     }
 }
