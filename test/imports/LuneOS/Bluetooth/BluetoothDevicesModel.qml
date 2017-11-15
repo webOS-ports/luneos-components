@@ -19,6 +19,9 @@ import QtQuick 2.0
 
 // Just a simple namespace wrapper
 ListModel {
+    property int filterRole
+    property var filterRegExp
+
     Component.onCompleted: {
         append({
             "Address": "22-BB-CC-00-11-22", "Name": "", "Paired": false, "Connected": false
