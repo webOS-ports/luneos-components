@@ -125,6 +125,9 @@ QtObject {
         {
             getConnectionManagerStatus_call(args, returnFct, handleError);
         }
+        else if (serviceURI === "luna://com.palm.connectionmanager/getinfo") {
+            getConnectionManagerInfo_call(args, returnFct, handleError);
+        }
         else if(serviceURI ==="luna://com.palm.db/find")
         {
             findDb_call(args, returnFct, handleError);
@@ -150,6 +153,12 @@ QtObject {
         }
 		else if (serviceURI === "luna://com.palm.universalsearch/getUniversalSearchList") {
             getUniversalSearch_call(args, returnFct, handleError);
+        }
+        else if (serviceURI === "palm://org.webosports.service.update/retrieveVersion") {
+            retrieveVersion_call(args, returnFct, handleError);
+        }
+        else if (serviceURI === "palm://com.android.properties/getProperty") {
+            androidGetProperty_call(args, returnFct, handleError);
         }
 
 
@@ -519,6 +528,15 @@ QtObject {
         console.log("Herrie get connectionmanagerstatus");
     }
 
+    function getConnectionManagerInfo_call(args, returnFct, handleError)
+    {
+        var message = {
+            "returnValue": true,
+            "wifiInfo": {"macAddress": "00:11:22:33:44:55"}
+        };
+        returnFct({payload: JSON.stringify(message)});
+    }
+
     function findDb_call(args, returnFct, handleError)
     {
         var message = {}
@@ -747,6 +765,43 @@ QtObject {
 	
 	function getUniversalSearch_call(args, returnFct, handleError) {
         var message = { "returnValue": true, "UniversalSearchList": [ { "id": "google", "displayName": "Google", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-google.png", "url": "https:\/\/www.google.com\/search?q=#{searchTerms}", "suggestURL": "https:\/\/encrypted.google.com\/complete\/search?hl=en&output=firefox&q=#{searchTerms}", "launchParam": "", "type": "web", "enabled": true }, { "id": "wikipedia", "displayName": "Wikipedia", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-wikipedia.png", "url": "https:\/\/en.wikipedia.org\/wiki\/Special:Search?search=#{searchTerms}", "suggestURL": "https:\/\/en.wikipedia.org\/w\/api.php?action=opensearch&search=#{searchTerms}&limit=8&namespace=0&format=json", "launchParam": "", "type": "web", "enabled": true }, { "id": "duckduckgo", "displayName": "DuckDuckGo", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-duckduckgo.png", "url": "https:\/\/www.duckduckgo.com\/?q=#{searchTerms}", "suggestURL": "", "launchParam": "", "type": "web", "enabled": true }, { "id": "cnn", "displayName": "CNN", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-cnn.png", "url": "http:\/\/www.cnn.com\/search\/?query=#{searchTerms}", "suggestURL": "", "launchParam": "", "type": "web", "enabled": false }, { "id": "amazon", "displayName": "Amazon", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-amazon.png", "url": "https:\/\/www.amazon.com\/s\/?k=#{searchTerms}", "suggestURL": "", "launchParam": "", "type": "web", "enabled": false }, { "id": "imdb", "displayName": "IMDb", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-imdb.png", "url": "http:\/\/www.imdb.com\/find?q=#{searchTerms}", "suggestURL": "", "launchParam": "", "type": "web", "enabled": false } ], "ActionList": [ { "id": "com.palm.app.email", "displayName": "New Email", "iconFilePath": "\/usr\/palm\/applications\/com.palm.app.email\/icon.png", "url": "com.palm.app.email", "launchParam": "text", "enabled": true }, { "id": "com.palm.app.calendar", "displayName": "New Event", "iconFilePath": "\/usr\/palm\/applications\/com.palm.app.calendar\/images\/icon-256x256.png", "url": "com.palm.app.calendar", "launchParam": "quickLaunchText", "enabled": true }, { "id": "org.webosports.app.messaging", "displayName": "New Message", "iconFilePath": "\/usr\/palm\/applications\/org.webosports.app.messaging\/icon.png", "url": "org.webosports.app.messaging", "launchParam": "{ \"compose\": { \"messageText\": \"#{searchTerms}\" } }", "enabled": true } ], "DBSearchItemList": [ { "id": "com.palm.app.email", "displayName": "Email", "iconFilePath": "\/usr\/palm\/applications\/com.palm.app.email\/icon.png", "launchParam": "emailId", "launchParamDbField": "_id", "dbQuery": { "from": "com.palm.email:1", "where": [ { "prop": "flags.visible", "op": "=", "val": true }, { "prop": "searchText", "op": "?", "val": "", "collate": "primary" } ], "orderBy": "timestamp", "desc": true, "limit": 20 }, "displayFields": [ "from.name", "subject" ], "batchQuery": false, "enabled": true }, { "id": "com.palm.app.calendar", "displayName": "Calendar Events", "iconFilePath": "\/usr\/palm\/applications\/com.palm.app.calendar\/images\/icon-256x256.png", "launchParam": "showEventDetail", "launchParamDbField": "_id", "dbQuery": { "from": "com.palm.calendarevent:1", "where": [ { "prop": "searchText", "op": "?", "val": "", "collate": "primary" } ], "orderBy": "subject", "desc": false, "limit": 20 }, "displayFields": [ "subject", { "name": "dtstart", "type": "timestamp" } ], "batchQuery": false, "enabled": true } ], "defaultSearchEngine": "google", "subscribed": false };
+        returnFct({payload: JSON.stringify(message)});
+    }
+
+    function retrieveVersion_call(args, returnFct, handleError)
+    {
+        var message = {
+            "returnValue": true,
+            "localVersion": "2017.11",
+            "codename": "Doppio",
+            "buildTree": "testing",
+            "buildNumber": "0"
+        };
+        returnFct({payload: JSON.stringify(message)});
+    }
+
+    function androidGetProperty_call(args, returnFct, handleError)
+    {
+        var supportedProperties = {
+            "ro.serialno": "01234567890abde",
+            "ro.product.model": "Model X",
+            "ro.product.manufacturer": "Lune",
+            "ro.build.version.release": "5.1.1"
+        };
+        var propertiesValues = [];
+
+        for (var i in args.keys) {
+            var obj = {};
+            if(supportedProperties.hasOwnProperty(args.keys[i])) {
+                obj[args.keys[i]] = supportedProperties[args.keys[i]];
+                propertiesValues.push(obj);
+            }
+        }
+
+        var message = {
+            "returnValue": true,
+            "properties": propertiesValues
+        };
         returnFct({payload: JSON.stringify(message)});
     }
 }
