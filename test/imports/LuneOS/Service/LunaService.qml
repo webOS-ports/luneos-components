@@ -121,31 +121,25 @@ QtObject {
         else if (serviceURI === "luna://com.palm.power/com/palm/power/chargerStatusQuery") {
             getChargerStatusQuery_call(args, returnFct, handleError);
         }
-        else if(serviceURI ==="luna://com.palm.connectionmanager/getstatus")
-        {
+        else if(serviceURI ==="luna://com.palm.connectionmanager/getstatus") {
             getConnectionManagerStatus_call(args, returnFct, handleError);
         }
-        else if (serviceURI === "luna://com.palm.connectionmanager/getinfo") {
+        else if(serviceURI === "luna://com.palm.connectionmanager/getinfo") {
             getConnectionManagerInfo_call(args, returnFct, handleError);
         }
-        else if(serviceURI ==="luna://com.palm.db/find")
-        {
+        else if(serviceURI ==="luna://com.palm.db/find") {
             findDb_call(args, returnFct, handleError);
         }
-        else if(serviceURI ==="luna://com.palm.db/merge")
-        {
+        else if(serviceURI ==="luna://com.palm.db/merge") {
             mergeDb_call(args, returnFct, handleError);
         }
-        else if(serviceURI ==="luna://com.palm.db/search")
-        {
+        else if(serviceURI ==="luna://com.palm.db/search") {
             findDb_call(args, returnFct, handleError);
         }
-        else if (serviceURI === "luna://org.webosinternals.ipkgservice/getConfigs")
-        {
+        else if (serviceURI === "luna://org.webosinternals.ipkgservice/getConfigs") {
             getConfigs_call(args, returnFct, handleError);
         }
-        else if (serviceURI === "luna://org.webosinternals.ipkgservice/setConfigState")
-        {
+        else if (serviceURI === "luna://org.webosinternals.ipkgservice/setConfigState") {
             setConfigState_call(args, returnFct, handleError);
         }
         else if (serviceURI === "luna://org.webosinternals.tweaks.prefs/get") {
@@ -154,10 +148,10 @@ QtObject {
 		else if (serviceURI === "luna://com.palm.universalsearch/getUniversalSearchList") {
             getUniversalSearch_call(args, returnFct, handleError);
         }
-        else if (serviceURI === "palm://org.webosports.service.update/retrieveVersion") {
+        else if (serviceURI === "luna://org.webosports.service.update/retrieveVersion") {
             retrieveVersion_call(args, returnFct, handleError);
         }
-        else if (serviceURI === "palm://com.android.properties/getProperty") {
+        else if (serviceURI === "luna://com.android.properties/getProperty") {
             androidGetProperty_call(args, returnFct, handleError);
         }
 
