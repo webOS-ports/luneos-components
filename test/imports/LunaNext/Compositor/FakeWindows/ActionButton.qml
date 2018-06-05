@@ -30,7 +30,7 @@ Item {
     property string affirmativeButtonImage: Qt.resolvedUrl("../images/palm-notification-button-affirmative.png");
     property string affirmativeButtonImagePressed: Qt.resolvedUrl("../images/palm-notification-button-affirmative-press.png");
     property string negativeButtonImage: Qt.resolvedUrl("../images/palm-notification-button-negative.png");
-    property string negativeButtonImagePressed: Qt.resolvedUrl("../imagespalm-notification-button-negative-press.png");
+    property string negativeButtonImagePressed: Qt.resolvedUrl("../images/palm-notification-button-negative-press.png");
     property string alternativeButtonImage: Qt.resolvedUrl("../images/palm-notification-button-alternate.png");
     property string alternativeButtonImagePressed: Qt.resolvedUrl("../images/palm-notification-button-alternate-press.png");
     property string neutralButtonImage: Qt.resolvedUrl("../images/palm-notification-button.png");
