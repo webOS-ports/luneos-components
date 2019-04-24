@@ -17,8 +17,8 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-import QtQuick 2.6
-import QtWebEngine 1.4
+import QtQuick 2.9
+import QtWebEngine 1.6
 import Qt.labs.settings 1.0
 
 WebEngineView {
@@ -53,7 +53,6 @@ WebEngineView {
     settings.javascriptCanAccessClipboard: true
     settings.localContentCanAccessRemoteUrls: true
     settings.pluginsEnabled: true
-    settings.fullScreenSupportEnabled: true
     
     profile.httpUserAgent: userAgent.defaultUA
 
