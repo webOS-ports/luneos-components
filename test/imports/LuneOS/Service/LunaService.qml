@@ -185,7 +185,10 @@ QtObject {
             console.log("bootmgr status: normal");
             returnFct({"payload": JSON.stringify({"subscribed":true, "state": "normal"})}); // simulate subscription answer
         }
-        else if((serviceURI === "palm://com.palm.systemservice/getPreferences" || serviceURI === "luna://com.palm.systemservice/getPreferences") && args.subscribe) {
+        else if((serviceURI === "palm://com.palm.systemservice/getPreferences" ||
+                 serviceURI === "luna://com.palm.systemservice/getPreferences" ||
+                 serviceURI === "luna://com.webos.service.systemservice/getPreferences" )
+                && args.subscribe) {
             returnFct({"payload": JSON.stringify({"subscribed": true, "wallpaper": { "wallpaperFile": "images/background.jpg"}, "timeFormat":"HH24", "locale": { "languageCode": "en", "countryCode": "us", "phoneRegion": { "countryName": "United States", "countryCode": "us" } }})});
         }
         else if(serviceURI === "luna://org.webosports.audio/getStatus") {
