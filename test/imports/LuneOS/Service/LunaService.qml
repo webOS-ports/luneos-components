@@ -217,7 +217,7 @@ QtObject {
         }
         else if(serviceURI === "luna://com.palm.wifi/findnetworks") {
             //return WiFi networks
-            var message = {"returnValue":true, "foundNetworks":[{"networkInfo":{"signalLevel":25,"profileId":777,"ssid":"Test WiFi 1 Bar","signalBars":1,"supported":true,"availableSecurityTypes":["psk","wps"],"connectState":"ipConfigured"}},{"networkInfo":{"signalLevel":50,"ssid":"Test WiFi 2 Bars","signalBars":2,"supported":true,"availableSecurityTypes":["psk","wps"]}},{"networkInfo":{"signalLevel":75,"ssid":"Test WiFi 3 Bars","signalBars":3,"supported":true,"availableSecurityTypes":[]}}]};
+            var message = {"returnValue":true, "foundNetworks":[{"networkInfo":{"signalLevel":25,"profileId":777,"ssid":"Test WiFi 1 Bar Security: psk","signalBars":1,"supported":true,"availableSecurityTypes":["psk"],"connectState":"ipConfigured"}},{"networkInfo":{"signalLevel":50,"ssid":"Test WiFi 2 Bars Security: wps","signalBars":2,"supported":true,"availableSecurityTypes":["wps"]}},{"networkInfo":{"signalLevel":75,"ssid":"Test WiFi 3 Bars Security: wep","signalBars":3,"supported":true,"availableSecurityTypes":["wep"]}},{"networkInfo":{"signalLevel":75,"ssid":"Test WiFi 3 Bars Security: ieee8021x","signalBars":3,"supported":true,"availableSecurityTypes":["ieee8021x"]}},{"networkInfo":{"signalLevel":75,"ssid":"Test WiFi 3 Bars Security: none","signalBars":3,"supported":true,"availableSecurityTypes":[]}}]};
             returnFct({payload: JSON.stringify(message)});
         }
     }
