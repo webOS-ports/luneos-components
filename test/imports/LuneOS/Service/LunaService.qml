@@ -132,13 +132,13 @@ QtObject {
         else if(serviceURI ==="luna://com.palm.db/search") {
             findDb_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "luna://org.webosinternals.ipkgservice/getConfigs") {
+        else if(serviceURI === "luna://org.webosports.service.ipkgservice/getConfigs") {
             getConfigs_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "luna://org.webosinternals.ipkgservice/setConfigState") {
+        else if(serviceURI === "luna://org.webosports.service/setConfigState") {
             setConfigState_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "luna://org.webosinternals.tweaks.prefs/get") {
+        else if(serviceURI === "luna://org.webosports.service.tweaks.prefs/get") {
             getTweaks_call(args, returnFct, handleError);
         }
         else if(serviceURI === "luna://com.palm.universalsearch/getUniversalSearchList") {
