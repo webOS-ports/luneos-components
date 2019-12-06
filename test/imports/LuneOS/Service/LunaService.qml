@@ -138,7 +138,7 @@ QtObject {
         else if(serviceURI === "luna://org.webosinternals.ipkgservice/setConfigState") {
             setConfigState_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "luna://org.webosinternals.tweaks.prefs/get") {
+        else if(serviceURI === "luna://org.webosports.service.tweaks.prefs/get") {
             getTweaks_call(args, returnFct, handleError);
         }
         else if(serviceURI === "luna://com.palm.universalsearch/getUniversalSearchList") {
