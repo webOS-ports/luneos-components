@@ -34,7 +34,7 @@ Item {
     LunaService {
         id: service
         onInitialized: {
-            service.call("luna://org.webosinternals.tweaks.prefs/get",
+            service.call("luna://org.webosports.service.tweaks.prefs/get",
                          JSON.stringify({owner: tweak.owner, keys: [tweak.key]}),
                          handleResult, handleError)
         }
