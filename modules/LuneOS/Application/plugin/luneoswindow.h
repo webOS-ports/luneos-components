@@ -28,6 +28,7 @@ class LuneOSWindow : public QQuickApplicationWindow
     Q_PROPERTY(unsigned int parentWindowId READ parentWindowId WRITE setParentWindowId NOTIFY parentWindowIdChanged)
     Q_PROPERTY(bool keepAlive READ keepAlive WRITE setKeepAlive NOTIFY keepAliveChanged)
     Q_PROPERTY(bool loadingAnimationDisabled READ loadingAnimationDisabled WRITE setLoadingAnimationDisabled NOTIFY loadingAnimationDisabledChanged)
+    QML_ELEMENT
 
 public:
     explicit LuneOSWindow();
@@ -89,5 +90,7 @@ private:
     void configure();
     void reset();
 };
+    
+QML_DECLARE_TYPEINFO(LuneOSWindow, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // APPLICATIONWINDOW_H

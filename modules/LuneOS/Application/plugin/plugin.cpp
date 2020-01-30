@@ -28,7 +28,7 @@ Plugin::Plugin(QObject *parent) :
 void Plugin::registerTypes(const char *uri)
 {
     Q_ASSERT(uri == QLatin1String("LuneOS.Application"));
-    qmlRegisterType<LuneOSWindow>(uri, 1, 0, "LuneOSWindow");
+    qmlRegisterTypesAndRevisions<LuneOSWindow>(uri, 1);
 }
 
 void Plugin::initializeEngine(QQmlEngine *engine, const char *uri)

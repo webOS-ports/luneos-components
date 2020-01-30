@@ -4,6 +4,10 @@ TARGET = ../LuneOSComponents
 QT += core-private qml qml-private quick quick-private
 CONFIG += qt plugin
 
+CONFIG += qmltypes
+QML_IMPORT_NAME = "LuneOS.Components"
+QML_IMPORT_MAJOR_VERSION = "1"
+
 TARGET = $$qtLibraryTarget($$TARGET)
 uri = LuneOS.Components
 
