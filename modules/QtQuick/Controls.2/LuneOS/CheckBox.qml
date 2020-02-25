@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls 2.0
-import QtQuick.Controls.impl 2.0
+import QtQuick 2.12
+import QtQuick.Templates 2.4 as T
+import QtQuick.Controls 2.4
+import QtQuick.Controls.impl 2.4
 
 import LunaNext.Common 0.1
 

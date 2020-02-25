@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
+import QtQuick 2.12
 import QtQuick.Window 2.2
-import QtQuick.Templates 2.0 as T
+import QtQuick.Templates 2.4 as T
 import LuneOS.Application 1.0
 
 LuneOSWindow {
