@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
+import QtQuick 2.12
+import QtQuick.Templates 2.4 as T
 
 import QtQuick.Controls.LuneOS 2.0
 import LunaNext.Common 0.1
@@ -60,15 +60,33 @@ T.Button {
     readonly property color _mainColor: LuneOSButton.mainColor
     readonly property color _textColor: LuneOSButton.textColor
 
+    Component {
+        id: textButton
+        Text {
+                text: control.text
+                font: control.font
+                opacity: enabled || control.highlighted || control.checked ? 1 : 0.4
+                color: control._textColor
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                elide: Text.ElideRight
+        }
+    }
+    Component {
+        id: iconButton
+        Image {
+            fillMode: Image.Pad
+            width: control.icon.width
+            height: control.icon.height
+            horizontalAlignment: Image.AlignHCenter
+            verticalAlignment: Image.AlignVCenter
+            source: control.icon.source
+        }
+    }
+
     //! [contentItem]
-    contentItem: Text {
-        text: control.text
-        font: control.font
-        opacity: enabled || control.highlighted || control.checked ? 1 : 0.4
-        color: control._textColor
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
+    contentItem: Loader {
+        sourceComponent: control.display === T.AbstractButton.IconOnly ? iconButton : textButton
     }
     //! [contentItem]
 

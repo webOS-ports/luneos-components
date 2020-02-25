@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
+import QtQuick 2.12
+import QtQuick.Templates 2.4 as T
 
 T.ToolButton {
     id: control
@@ -46,14 +46,32 @@ T.ToolButton {
 
     padding: 6
 
+    Component {
+        id: textButton
+        Text {
+            text: control.text
+            font: control.font
+            color: "white"
+            elide: Text.ElideRight
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+    }
+    Component {
+        id: iconButton
+        Image {
+            fillMode: Image.Pad
+            width: control.icon.width
+            height: control.icon.height
+            horizontalAlignment: Image.AlignHCenter
+            verticalAlignment: Image.AlignVCenter
+            source: control.icon.source
+        }
+    }
+
     //! [contentItem]
-    contentItem: Text {
-        text: control.text
-        font: control.font
-        color: "white"
-        elide: Text.ElideRight
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+    contentItem: Loader {
+        sourceComponent: control.display === T.AbstractButton.IconOnly ? iconButton : textButton
     }
     //! [contentItem]
 
