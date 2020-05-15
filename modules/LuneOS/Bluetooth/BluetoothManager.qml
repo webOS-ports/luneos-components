@@ -110,7 +110,7 @@ Item {
     /* Bindings to keep the discovering mode updated */
     Connections {
         target: btManager
-        onUsableAdapterChanged: {
+        function onUsableAdapterChanged() {
             if(btManager.usableAdapter && root.discoveringMode)
                 btManager.usableAdapter.startDiscovery();
         }
