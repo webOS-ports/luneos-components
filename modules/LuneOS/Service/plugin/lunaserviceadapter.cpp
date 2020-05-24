@@ -241,7 +241,7 @@ LunaServiceAdapter::~LunaServiceAdapter()
         delete call;
     }
 
-    QString serviceHandleName = mName + (mUsePrivateBus ? "-priv" : "-pub");
+    QString serviceHandleName = mName;
     LunaServiceHandle *handle = serviceHandles.value(serviceHandleName);
 
     if (handle && !handle->unref()) {
@@ -262,7 +262,7 @@ void LunaServiceAdapter::componentComplete()
         mName = QCoreApplication::applicationName();
 
     // check wether we have the handle for the same service already cached
-    QString serviceHandleName = mName + (mUsePrivateBus ? "-priv" : "-pub");
+    QString serviceHandleName = mName;
     if (serviceHandles.contains(serviceHandleName)) {
         LunaServiceHandle *serviceHandle = serviceHandles.value(serviceHandleName);
         serviceHandle->ref();
@@ -271,7 +271,7 @@ void LunaServiceAdapter::componentComplete()
     else {
         LSErrorInit(&error);
 
-        if (!LSRegisterPubPriv(mName.toUtf8().constData(), &mServiceHandle, !mUsePrivateBus, &error)) {
+        if (!LSRegister(mName.toUtf8().constData(), &mServiceHandle, &error)) {
             qWarning("Could not register ls2 service handle!");
             goto error;
         }
