@@ -27,6 +27,8 @@
 
 #include "lunaserviceadapter.h"
 
+#define LUNA_QML_LAUNCHER_PATH "/usr/sbin/luna-qml-launcher"
+
 class LunaServiceHandle
 {
 public:
@@ -260,6 +262,11 @@ void LunaServiceAdapter::componentComplete()
 
     if (mName.length() == 0)
         mName = QCoreApplication::applicationName();
+
+    // If the app is a QML app launched with luna-qml-launcher, we want to follow the naming logic of web apps: appId-pid
+    if (QCoreApplication::applicationFilePath() == LUNA_QML_LAUNCHER_PATH) {
+        mName += "-" + QString::number(QCoreApplication::applicationPid());
+    }
 
     // check wether we have the handle for the same service already cached
     QString serviceHandleName = mName;
