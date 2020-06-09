@@ -26,6 +26,9 @@
 #include <QJsonObject>
 
 #include "lunaserviceadapter.h"
+#include "webos_application.h"
+
+#define LUNA_QML_LAUNCHER_PATH "/usr/sbin/luna-qml-launcher"
 
 class LunaServiceHandle
 {
@@ -128,19 +131,11 @@ bool LunaServiceCall::execute(const QString& uri, const QString& arguments)
     LSErrorInit(&error);
     QString errorMessage;
 
-    if (mResponseLimit == 1) {
-        if (!LSCallFromApplicationOneReply(mServiceHandle, uri.toUtf8().constData(), arguments.toUtf8().constData(),
-                            LSHandleGetName(mServiceHandle),
-                            &LunaServiceCall::responseCallback, this, &mToken, &error)) {
-            qWarning("Failed to call remote service %s", uri.toUtf8().constData());
-            errorMessage = QString("Failed to call remote service: %0").arg(error.message);
-            goto error;
-        }
-    }
-    else {
-        if (!LSCallFromApplication(mServiceHandle, uri.toUtf8().constData(), arguments.toUtf8().constData(),
-                            LSHandleGetName(mServiceHandle),
-                            &LunaServiceCall::responseCallback, this, &mToken, &error)) {
+    {
+        auto funcLSCall = (mResponseLimit == 1) ? LSCallOneReply : LSCall;
+        
+        if (!funcLSCall(mServiceHandle, uri.toUtf8().constData(), arguments.toUtf8().constData(),
+                        &LunaServiceCall::responseCallback, this, &mToken, &error)) {
             qWarning("Failed to call remote service %s", uri.toUtf8().constData());
             errorMessage = QString("Failed to call remote service: %0").arg(error.message);
             goto error;
@@ -241,7 +236,7 @@ LunaServiceAdapter::~LunaServiceAdapter()
         delete call;
     }
 
-    QString serviceHandleName = mName + (mUsePrivateBus ? "-priv" : "-pub");
+    QString serviceHandleName = mName;
     LunaServiceHandle *handle = serviceHandles.value(serviceHandleName);
 
     if (handle && !handle->unref()) {
@@ -261,29 +256,78 @@ void LunaServiceAdapter::componentComplete()
     if (mName.length() == 0)
         mName = QCoreApplication::applicationName();
 
+    // There are two main use-cases for LunaService:
+    // 1. QML app is started via luna-qml-launcher
+    //     -> luna-qml-launcher will register an application handle with the name "luna-qml-launcher-<pid>"
+    //     -> the app therefore needs to register its own applicative service, and do LS2 calls under its usual appId name
+    //     -> if the app does LS2 calls under a specific name, LSCall will be used with a dedicated applicative service. 
+    //        `--- Note that the app needs to be able to allow these names in the role json file !
+    // 2. Standalone executable app using QML (luna-next, maliit-server...)
+    //     -> The app may (or may not) register a handle using webos_application_init
+    //     -> if the app does LS2 under the same name as webos_application_init, the handle is reused
+    //     -> if the app does LS2 calls under a specific name, a new service is registered and LSCall will be used.
+    //        `--- Note that the app needs to allow these names in the role json file
+
     // check wether we have the handle for the same service already cached
-    QString serviceHandleName = mName + (mUsePrivateBus ? "-priv" : "-pub");
-    if (serviceHandles.contains(serviceHandleName)) {
-        LunaServiceHandle *serviceHandle = serviceHandles.value(serviceHandleName);
+    
+    if (serviceHandles.contains(mName)) {
+        LunaServiceHandle *serviceHandle = serviceHandles.value(mName);
         serviceHandle->ref();
         mServiceHandle = serviceHandle->handle();
     }
     else {
         LSErrorInit(&error);
 
-        if (!LSRegisterPubPriv(mName.toUtf8().constData(), &mServiceHandle, !mUsePrivateBus, &error)) {
-            qWarning("Could not register ls2 service handle!");
-            goto error;
-        }
+        // If the app is a QML app launched with luna-qml-launcher, we want to follow the naming logic of web apps: appId-pid
+        if (QCoreApplication::applicationFilePath() == LUNA_QML_LAUNCHER_PATH) {
+            QString serviceHandleName = mName + "-" + QString::number(QCoreApplication::applicationPid());
+            if (!LSRegisterApplicationService(serviceHandleName.toUtf8().constData(), mName.toUtf8().constData(), &mServiceHandle, &error)) {
+                qWarning("Could not register ls2 applicative service handle!");
+                goto error;
+            }
 
-        if(!LSGmainAttach(mServiceHandle, mainLoop(), &error)) {
-            qWarning("Could not attach to glib main loop!");
-            goto error;
-        }
+            if(!LSGmainAttach(mServiceHandle, mainLoop(), &error)) {
+                qWarning("Could not attach to glib main loop!");
+                goto error;
+            }
 
-        LunaServiceHandle *handle = new LunaServiceHandle(mServiceHandle);
-        handle->ref();
-        serviceHandles.insert(serviceHandleName, handle);
+            LunaServiceHandle *handle = new LunaServiceHandle(mServiceHandle);
+            handle->ref();
+            serviceHandles.insert(mName, handle);
+        }
+        else {
+            // Standalone QML app
+            
+            // Using main appId name, and webos_application_init has already been used ? reuse the handle.
+            if (mName == QCoreApplication::applicationName()) {
+                char *app_id = NULL;
+                LSHandle *service_handle = NULL;
+                if (webos_application_get_handle(&app_id, &service_handle) && service_handle)
+                {
+                    mServiceHandle = service_handle;
+                }
+                g_free(app_id);
+            }
+            
+            // if that didn't work, or if the name is custom, register the name
+            if (!mServiceHandle) {
+                // Standalone QML app: let's suppose the app knows what it is doing and is priviledged.
+                // If not, it'll fail.
+                if (!LSRegister(mName.toUtf8().constData(), &mServiceHandle, &error)) {
+                    qWarning("Could not register ls2 service handle!");
+                    goto error;
+                }
+
+                if(!LSGmainAttach(mServiceHandle, mainLoop(), &error)) {
+                    qWarning("Could not attach to glib main loop!");
+                    goto error;
+                }
+
+                LunaServiceHandle *handle = new LunaServiceHandle(mServiceHandle);
+                handle->ref();
+                serviceHandles.insert(mName, handle);
+            }
+        }
     }
 
     mInitialized = true;

@@ -1,6 +1,6 @@
 unix {
     CONFIG += link_pkgconfig
-    PKGCONFIG += luna-service2
+    PKGCONFIG += luna-service2 webos-application
 }
 
 TEMPLATE = lib
