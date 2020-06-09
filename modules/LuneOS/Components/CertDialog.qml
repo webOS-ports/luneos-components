@@ -48,7 +48,9 @@ Dialog {
 
         Connections {
             target: certDialog
-            onViewCertificate: notImplemented.visible = true;
+            function onViewCertificate() {
+                notImplemented.visible = true;
+            }
         }
     }
 

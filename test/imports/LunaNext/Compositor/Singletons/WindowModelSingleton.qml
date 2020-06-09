@@ -39,7 +39,7 @@ Item {
     Connections {
         target: _compositor
 
-        onWindowAddedInListModel: {
+        function onWindowAddedInListModel(window) {
             if( window.windowType === 0 )
                 windowModelSingleton.appendValue(cardListModel, {"window": window});
             else if( window.windowType === 1 )
@@ -55,7 +55,7 @@ Item {
             else if( window.windowType === 6 )
                 windowModelSingleton.appendValue(pinListModel, {"window": window});
         }
-        onWindowRemovedFromListModel: {
+        function onWindowRemovedFromListModel(window) {
             if( window.windowType === 0 )
                 windowModelSingleton.removeValue(cardListModel,window);
             else if( window.windowType === 1 )
