@@ -6,7 +6,7 @@ Item {
     property string name: "Stub Network"
     property string modemPath
     signal scanError
-    readonly property variant networkOperators: ["LuneOperator"]
+    readonly property variant networkOperators: ["LuneOperator 1", "LuneOperator 2"]
     readonly property string currentOperatorPath: ""
     readonly property string mode: "auto"
     readonly property string technology: "umts"
