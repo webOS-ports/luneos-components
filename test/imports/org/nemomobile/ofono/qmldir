@@ -1,0 +1,5 @@
+module org.nemomobile.ofono 
+
+OfonoModemListModel 1.0 OfonoModemListModel.qml
+
+typeinfo org.nemomobile.ofono.qmltypes

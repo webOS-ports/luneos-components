@@ -87,7 +87,7 @@ QtObject {
         else if(serviceURI === "luna://com.palm.systemmanager/getDeviceLockMode") {
             getDeviceLockMode_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "luna://com.palm.systemservice/getPreferences") {
+        else if(serviceURI === "luna://com.palm.systemservice/getPreferences" || serviceURI === "luna://com.webos.service.systemservice/getPreferences") {
             getPreferences_call(args, returnFct, handleError);
         }
         else if(serviceURI === "luna://com.palm.systemservice/deviceInfo/query") {
@@ -149,6 +149,9 @@ QtObject {
         }
         else if(serviceURI === "luna://com.android.properties/getProperty") {
             androidGetProperty_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.palm.telephony/powerQuery") {
+            telephonyPowerQuery_call(args, returnFct, handleError);
         }
         else {
             // Embed the jsonArgs into a payload message
@@ -271,6 +274,10 @@ QtObject {
 
     function getDisplayProperty_call(args, returnFct, handleError) {
         returnFct({"payload": JSON.stringify({"returnValue": true, "maximumBrightness": 70 })});
+    }
+
+    function telephonyPowerQuery_call(args, returnFct, handleError) {
+        returnFct({"payload": JSON.stringify({"returnValue":true,"extended":{"powerState":"on"}})});
     }
 
     function launchApp_call(jsonArgs, returnFct, handleError) {
@@ -497,7 +504,20 @@ QtObject {
     }
 
     function getConnectionManagerStatus_call(args, returnFct, handleError) {
-        console.log("GetConnectionManagerStatus is called");
+        //console.log("GetConnectionManagerStatus is called");
+        var message = {
+            "returnValue":true,
+            "wifiDirect":{"state":"disconnected"},
+            "wifi":{"tetheringEnabled":false,"state":"disconnected"},
+            "wan":{"onInternet":true,"connectedContexts":[],"connected":true},
+            "subscribed":false,
+            "offlineMode":"disabled",
+            "wired":{"plugged":false,"state":"disconnected"},
+            "cellular":{"enabled":true},
+            "bluetooth":{"tetheringEnabled":false,"state":"disconnected"},
+            "isInternetConnectionAvailable":false
+        };
+        returnFct({payload: JSON.stringify(message)});
     }
 
     function getConnectionManagerInfo_call(args, returnFct, handleError) {
