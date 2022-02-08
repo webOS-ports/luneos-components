@@ -132,10 +132,10 @@ QtObject {
         else if(serviceURI ==="luna://com.palm.db/search") {
             findDb_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "luna://org.webosports.service.ipkgservice/getConfigs") {
+        else if(serviceURI === "luna://org.webosports.service.ipkg/getConfigs") {
             getConfigs_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "luna://org.webosports.service/setConfigState") {
+        else if(serviceURI === "luna://org.webosports.service.ipkg/setConfigState") {
             setConfigState_call(args, returnFct, handleError);
         }
         else if(serviceURI === "luna://org.webosports.service.tweaks.prefs/get") {
@@ -304,6 +304,9 @@ QtObject {
             // start a FakePopupWindow
             // Simulate the attachement of a new window to the stub Wayland compositor
             compositor.createFakeWindow("FakePopupWindow", jsonArgs);
+        }
+        else if(jsonArgs.id === "com.palm.app.accounts") {
+            console.log("Succesfully launched com.palm.app.accounts");
         }
         else {
             handleError("Error: parameter 'id' not specified");
@@ -581,8 +584,8 @@ QtObject {
         var message
         message = {
             "returnValue":true,
-            "configs": [{"config": "feedspider.conf", "enabled": false, "contents": "src/gz FeedSpider2 http://feedspider.net/luneos"}, {"config": "hominid-software.conf", "enabled": false, "contents": "src Hominid-Software http://hominidsoftware.com/preware"}, {"config": "macaw-enyo.conf", "enabled": false, "contents": "src Macaw-enyo http://minego.net/preware/macaw-enyo"}, {"config": "pivotce.conf", "enabled": false, "contents": "src PivotCE http://feed.pivotce.com"}, {"config": "webos-ports.conf", "enabled": true, "contents": "src/gz webosports http://feeds.webos-ports.org/webos-ports/all"}]
-        };
+            "configs": [{"config": "feedspider.conf", "enabled": false, "contents": "src/gz FeedSpider2 https://www.hunternet.ca/fs/luneos"}, {"config": "hominid-software.conf", "enabled": false, "contents": "src Hominid-Software https://hominidsoftware.com/preware"}, {"config": "macaw-enyo.conf", "enabled": false, "contents": "src Macaw-enyo https://minego.net/preware/macaw-enyo"}, {"config": "pivotce.conf", "enabled": false, "contents": "src PivotCE https://feed.pivotce.com"}, {"config": "webos-ports.conf", "enabled": true, "contents": "src/gz webosports http://feeds.webos-ports.org/webos-ports/all"}]
+        }
         returnFct({payload: JSON.stringify(message)});
     }
 
