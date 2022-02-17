@@ -12,14 +12,10 @@ Dialog 1.0 Dialog.qml
 FilePicker 1.0 FilePicker.qml
 ItemSelector 1.0 ItemSelector.qml
 ListDelegateSeparator 1.0 ListDelegateSeparator.qml
-LunaWebEngineView 1.0 LunaWebEngineView.qml
 LunaWebView 1.0 LunaWebView.qml
 Page 1.0 Page.qml
 PageStackWindow 1.0 PageStackWindow.qml
-PermissionDialog 1.0 PermissionDialog.qml
 PromptDialog 1.0 PromptDialog.qml
 ProxyAuthenticationDialog 1.0 ProxyAuthenticationDialog.qml
 Tweak 1.0 Tweak.qml
 UserAgent 1.0 UserAgent.qml
-WebEngineDialog 1.0 WebEngineDialog.qml
-WebEngineDialogButton 1.0 WebEngineDialogButton.qml
