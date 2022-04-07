@@ -28,7 +28,8 @@
 #include "lunaserviceadapter.h"
 #include "webos_application.h"
 
-#define LUNA_QML_LAUNCHER_PATH "/usr/sbin/luna-qml-launcher"
+#define LUNA_QML_LAUNCHER_PATH        "/usr/bin/qml-runner"
+#define LUNA_QML_LAUNCHER_PATH_LUNEOS "/usr/sbin/luna-qml-launcher"
 
 class LunaServiceHandle
 {
@@ -257,8 +258,8 @@ void LunaServiceAdapter::componentComplete()
         mName = QCoreApplication::applicationName();
 
     // There are two main use-cases for LunaService:
-    // 1. QML app is started via luna-qml-launcher
-    //     -> luna-qml-launcher will register an application handle with the name "luna-qml-launcher-<pid>"
+    // 1. QML app is started via luna-qml-launcher or qml-runner
+    //     -> the qml launcher will register an application handle with the name "luna-qml-launcher-<pid>"
     //     -> the app therefore needs to register its own applicative service, and do LS2 calls under its usual appId name
     //     -> if the app does LS2 calls under a specific name, LSCall will be used with a dedicated applicative service. 
     //        `--- Note that the app needs to be able to allow these names in the role json file !
@@ -279,7 +280,8 @@ void LunaServiceAdapter::componentComplete()
         LSErrorInit(&error);
 
         // If the app is a QML app launched with luna-qml-launcher, we want to follow the naming logic of web apps: appId-pid
-        if (QCoreApplication::applicationFilePath() == LUNA_QML_LAUNCHER_PATH) {
+        if (QCoreApplication::applicationFilePath() == LUNA_QML_LAUNCHER_PATH ||
+            QCoreApplication::applicationFilePath() == LUNA_QML_LAUNCHER_PATH_LUNEOS) {
             QString serviceHandleName = mName + "-" + QString::number(QCoreApplication::applicationPid());
             if (!LSRegisterApplicationService(serviceHandleName.toUtf8().constData(), mName.toUtf8().constData(), &mServiceHandle, &error)) {
                 qWarning("Could not register ls2 applicative service handle!");
