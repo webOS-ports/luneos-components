@@ -1,0 +1,6 @@
+module Eos.Window
+WebOSWindow 0.1 WebOSWindow.qml
+EosRect 0.1 EosRect.qml
+EosRegion 0.1 EosRegion.qml
+
+typeinfo Eos.Window.qmltypes
