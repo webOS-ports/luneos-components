@@ -356,9 +356,9 @@ QEvent *InverseMouseAreaType::mapEventToArea(QObject *target, QEvent *event, QPo
     case QEvent::Wheel:
         if (targetItem != this) {
             QWheelEvent *ev = static_cast<QWheelEvent*>(event);
-            QWheelEvent *wev = new QWheelEvent(mapFromScene(ev->globalPos()), ev->globalPos(),
-                                               ev->delta(), ev->buttons(), ev->modifiers(), ev->orientation());
-            point = wev->pos();
+            QWheelEvent *wev = new QWheelEvent(mapFromScene(ev->globalPosition()), ev->globalPosition(),
+                                               ev->pixelDelta(), ev->angleDelta(), ev->buttons(), ev->modifiers(), ev->phase(), ev->inverted());
+            point = wev->position().toPoint();
             return wev;
         }
         break;

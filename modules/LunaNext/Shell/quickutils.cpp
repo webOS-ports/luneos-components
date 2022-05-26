@@ -113,9 +113,9 @@ QString QuickUtils::inputMethodProvider() const
 bool QuickUtils::touchScreenAvailable() const
 {
     // publish internal context property to detect whether we have touch device or not
-    QList<const QTouchDevice*> touchDevices = QTouchDevice::devices();
-    Q_FOREACH(const QTouchDevice *device, touchDevices) {
-        if (device->type() == QTouchDevice::TouchScreen) {
+    QList<const QInputDevice*> inputDevices = QInputDevice::devices();
+    Q_FOREACH(const QInputDevice *device, inputDevices) {
+        if (device->type() == QInputDevice::DeviceType::TouchScreen) {
             return true;
         }
     }

@@ -21,8 +21,8 @@
 #include <QtCore/QObject>
 #include <QtCore/QPointer>
 #include <QtQuick/QQuickView>
+#include <QtQuick/QQuickItem>
 
-class QQuickItem;
 class QQmlEngine;
 class QQmlComponent;
 class QuickUtils : public QObject
