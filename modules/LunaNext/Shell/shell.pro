@@ -32,4 +32,8 @@ SOURCES += \
 
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 target.path = $$installPath
-INSTALLS += target
+
+qmldir_file.path = $$installPath
+qmldir_file.files = qmldir
+
+INSTALLS += target qmldir_file
