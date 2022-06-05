@@ -35,22 +35,32 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import QtQuick.Window 2.2
 import QtQuick.Templates 2.4 as T
-import LuneOS.Application 1.0
 
-LuneOSWindow {
+import Eos.Window 0.1
+
+WebOSWindow {
     id: window
-
-    type: LuneOSWindow.Card
 
     color: "#D8D8D8"
 
-    overlay.modal: Rectangle {
+    property alias header: _internalPage.header
+    property alias footer: _internalPage.footer
+    default property alias _data: _internalPage.data
+
+    Page {
+        id: _internalPage
+        width: window.width
+        height: window.height
+    }
+
+    /*
+    Overlay.modal: Rectangle {
         color: "#7f28282a"
     }
 
-    overlay.modeless: Rectangle {
+    Overlay.modeless: Rectangle {
         color: "#1f28282a"
     }
+    */
 }

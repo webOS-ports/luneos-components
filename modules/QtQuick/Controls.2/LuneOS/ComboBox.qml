@@ -35,12 +35,11 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import QtQuick.Window 2.2
-import QtQuick.Controls 2.4
 import QtQuick.Templates 2.4 as T
 
+import QtQuick.Controls.LuneOS 2.0
+
 import LunaNext.Common 0.1
-import LuneOS.Components 1.0
 
 T.ComboBox {
     id: control

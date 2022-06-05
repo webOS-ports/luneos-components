@@ -35,8 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import QtQuick.Controls 2.4
-import QtQuick.Controls.impl 2.4
 import QtQuick.Templates 2.4 as T
 
 T.Dial {
@@ -44,7 +42,7 @@ T.Dial {
 
     implicitWidth: 184
     implicitHeight: 184
-
+/*
     //! [background]
     background: DialRing {
         width: control.availableWidth
@@ -54,7 +52,7 @@ T.Dial {
         opacity: control.enabled ? 1 : 0.3
     }
     //! [background]
-
+*/
     //! [handle]
     handle: Image {
         id: handleItem
