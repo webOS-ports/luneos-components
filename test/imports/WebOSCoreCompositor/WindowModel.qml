@@ -1,12 +1,13 @@
 import QtQuick 2.0
 
-import "WindowTypeStub.js" as WindowType
 import "Singletons"
 
 ListModel {
     id: windowModel
 
-    property int windowTypeFilter: 0;
+    property ListModel surfaceSource
+    property string windowType: "_WEBOS_WINDOW_TYPE_CARD"
+
     property ListModel _referenceModel
 
     signal rowsAboutToBeInserted(variant index, int first, int last)
@@ -35,20 +36,8 @@ ListModel {
     }
 
     Component.onCompleted: {
-        if( windowTypeFilter === WindowType.Card )
+        if( windowTypeFilter === "_WEBOS_WINDOW_TYPE_CARD" )
             _referenceModel = WindowModelSingleton.cardListModel;
-        else if( windowTypeFilter === WindowType.Launcher )
-            _referenceModel = WindowModelSingleton.launcherListModel;
-        else if( windowTypeFilter === WindowType.Dashboard )
-            _referenceModel = WindowModelSingleton.dashboardListModel;
-        else if( windowTypeFilter === WindowType.PopupAlert )
-            _referenceModel = WindowModelSingleton.popupAlertListModel;
-        else if( windowTypeFilter === WindowType.BannerAlert )
-            _referenceModel = WindowModelSingleton.bannerAlertListModel;
-        else if( windowTypeFilter === WindowType.Overlay )
-            _referenceModel = WindowModelSingleton.overlayListModel;
-        else if( windowTypeFilter === WindowType.Pin )
-            _referenceModel = WindowModelSingleton.pinListModel;
 
         // windowModel.count = Qt.binding(function() { return _referenceModel.count });
         _referenceModel.rowsAboutToBeInserted.connect(rowsAboutToBeInserted);

@@ -9,30 +9,6 @@ Item {
         signal actualRowsAboutToBeRemoved(variant index, int first, int last);
         signal actualRowsInserted(variant index, int first, int last);
     }
-    property ListModel launcherListModel: ListModel {
-        signal actualRowsAboutToBeRemoved(variant index, int first, int last);
-        signal actualRowsInserted(variant index, int first, int last);
-    }
-    property ListModel overlayListModel: ListModel {
-        signal actualRowsAboutToBeRemoved(variant index, int first, int last);
-        signal actualRowsInserted(variant index, int first, int last);
-    }
-    property ListModel dashboardListModel: ListModel {
-        signal actualRowsAboutToBeRemoved(variant index, int first, int last);
-        signal actualRowsInserted(variant index, int first, int last);
-    }
-    property ListModel popupAlertListModel: ListModel {
-        signal actualRowsAboutToBeRemoved(variant index, int first, int last);
-        signal actualRowsInserted(variant index, int first, int last);
-    }
-    property ListModel bannerAlertListModel: ListModel {
-        signal actualRowsAboutToBeRemoved(variant index, int first, int last);
-        signal actualRowsInserted(variant index, int first, int last);
-    }
-    property ListModel pinListModel: ListModel {
-        signal actualRowsAboutToBeRemoved(variant index, int first, int last);
-        signal actualRowsInserted(variant index, int first, int last);
-    }
 
     property Item _compositor;
 
