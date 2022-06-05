@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import QtQuick.Templates 2.4 as T
+import QtQuick.Templates 2.12 as T
 // import QtGraphicalEffects 1.0
 
 import LunaNext.Common 0.1
