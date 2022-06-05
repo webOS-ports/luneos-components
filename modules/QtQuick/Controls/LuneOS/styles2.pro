@@ -15,6 +15,7 @@ QML_FILES = \
     Frame.qml \
     GroupBox.qml \
     ItemDelegate.qml \
+    ListDelegateSeparator.qml \
     Label.qml \
     MenuItem.qml \
     Menu.qml \
@@ -51,7 +52,7 @@ QMLDIR_FILE = qmldir
 
 OTHER_FILES += $$QML_FILES $$JS_FILES $$QMLDIR_FILE images/*
 
-installPath = $$[QT_INSTALL_QML]/QtQuick/Controls.2/LuneOS
+installPath = $$[QT_INSTALL_QML]/QtQuick/Controls/LuneOS
 
 other_files.path = $$installPath
 other_files.files = qmldir *.qml *.js
