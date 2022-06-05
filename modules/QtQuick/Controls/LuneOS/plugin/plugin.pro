@@ -32,7 +32,7 @@ SOURCES += \
     luneosswipedelegate.cpp \
     luneosswipedelegateattachedtype.cpp
 
-installPath = $$[QT_INSTALL_QML]/QtQuick/Controls.2/LuneOS
+installPath = $$[QT_INSTALL_QML]/QtQuick/Controls/LuneOS
 target.path = $$installPath
 
 INSTALLS += target qmldir_file qml_files js_files
