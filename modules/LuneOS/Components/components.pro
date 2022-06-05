@@ -16,7 +16,6 @@ QML_FILES = AlertDialog.qml \
             FilePicker.qml \
             ItemSelector.qml \
             ListDelegateSeparator.qml \
-            LunaWebView.qml \
             Page.qml \
             PageStackWindow.qml \
             PromptDialog.qml \

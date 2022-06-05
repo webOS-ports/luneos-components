@@ -19,9 +19,9 @@
  */
 
 import QtQuick 2.0
-import QtQuick.Controls 1.1
-import QtQuick.Controls.Styles 1.1
+import QtQuick.Controls 2.0
 import Qt.labs.folderlistmodel 2.1
+
 import "js/MultiSelect.js" as MultiSelect
 import LunaNext.Common 0.1
 
