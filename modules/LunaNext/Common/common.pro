@@ -32,6 +32,6 @@ installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 target.path = $$installPath
 
 qmldir_file.path = $$installPath
-qmldir_file.files = qmldir
+qmldir_file.files = qml/qmldir
 
 INSTALLS += target qmldir_file
