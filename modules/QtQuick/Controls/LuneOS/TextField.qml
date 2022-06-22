@@ -36,7 +36,7 @@
 
 import QtQuick 2.12
 import QtQuick.Templates 2.12 as T
-// import QtGraphicalEffects 1.0
+import Qt5Compat.GraphicalEffects
 
 import LunaNext.Common 0.1
 
@@ -81,7 +81,7 @@ T.TextField {
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         elide: Text.ElideRight
     }
-/*
+
     //! [background]
     background: ColorOverlay {
         anchors.fill: control
@@ -98,5 +98,4 @@ T.TextField {
         }
     }
     //! [background]
-    */
 }
