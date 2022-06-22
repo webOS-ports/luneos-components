@@ -63,7 +63,7 @@ T.ItemDelegate {
         font: control.font
         color: control.enabled ? "#333333" : "#646464"
         elide: Text.ElideRight
-        visible: control.text
+        visible: control.text.length>0
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
