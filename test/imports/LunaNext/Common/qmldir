@@ -4,5 +4,6 @@ Units 0.1 UnitsStub.js
 FontUtils 0.1 FontUtilsStub.js
 FileUtils 0.1 FileUtilsStub.js
 Leds 0.1 LedsAdapterStub.js
+EventType 0.1 EventTypeStub.js
 
 typeinfo LunaNext.Common.qmltypes
