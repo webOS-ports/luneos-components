@@ -44,7 +44,7 @@ T.TabButton {
     id: control
 
     implicitWidth: Math.max(textContent.contentWidth,imageContent.implicitWidth) + leftPadding + rightPadding
-    implicitHeight: Math.max(textContent.contentHeight,imageContent.implicitWidth) + topPadding + bottomPadding
+    implicitHeight: Math.max(textContent.contentHeight,imageContent.implicitHeight) + topPadding + bottomPadding
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
