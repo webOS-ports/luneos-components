@@ -1,2 +1,3 @@
-module WebOSCompositor
+module WebOSCompositorBase
 
+KeyboardWindowModel 1.0 models/KeyboardWindowModel.qml

@@ -20,7 +20,7 @@ import QtQuick 2.0
 // Just a simple namespace wrapper
 ListModel {
     property int filterRole
-    property var filterRegExp
+    property var filterRegularExpression
 
     Component.onCompleted: {
         append({
