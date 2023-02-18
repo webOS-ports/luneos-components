@@ -1,0 +1,4 @@
+module WebOSCoreCompositor
+Compositor 1.0 Compositor.qml
+WindowModel 1.0 WindowModel.qml
+

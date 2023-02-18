@@ -16,17 +16,12 @@ QML_FILES = AlertDialog.qml \
             FilePicker.qml \
             ItemSelector.qml \
             ListDelegateSeparator.qml \
-            LunaWebView.qml \
-            LunaWebEngineView.qml \
             Page.qml \
             PageStackWindow.qml \
-            PermissionDialog.qml \
             PromptDialog.qml \
             ProxyAuthenticationDialog.qml \
             Tweak.qml \
-            UserAgent.qml \
-            WebEngineDialog.qml \
-            WebEngineDialogButton.qml
+            UserAgent.qml
 
 JS_FILES =  js/MultiSelect.js \
             js/ua-overrides.js

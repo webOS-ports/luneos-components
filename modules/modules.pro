@@ -1,13 +1,10 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    QtQuick/Controls/Styles/LuneOS/styles.pro \
-    QtQuick/Controls.2/LuneOS/styles2.pro \
-    QtWebEngine/UIDelegates/webengineviewdelegates.pro \
+    QtQuick/Controls/LuneOS/styles2.pro \
     LuneOS/Components/components.pro \
-    LuneOS/Application/application.pro \
     LuneOS/Telephony/telephony.pro
-
+    
 qtHaveModule(BluezQt): SUBDIRS += LuneOS/Bluetooth/bluetooth.pro
 
 win32|mac {
@@ -15,5 +12,8 @@ win32|mac {
 }
 
 !CONFIG(desktop) {
-    SUBDIRS += LuneOS/Service/service.pro
+    SUBDIRS += LuneOS/Service/service.pro \
+               LunaNext/Common/common.pro \
+               LunaNext/Shell/notifications/notifications.pro \
+               LunaNext/Shell/shell.pro
 }

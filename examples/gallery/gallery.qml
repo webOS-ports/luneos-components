@@ -129,7 +129,7 @@ ApplicationWindow {
                 anchors.bottom: handleToolbar.top
 
                 delegate: ItemDelegate {
-                    width: parent.width
+                    width: listView.width
                     text: model.title
                     highlighted: ListView.isCurrentItem
                     onClicked: {

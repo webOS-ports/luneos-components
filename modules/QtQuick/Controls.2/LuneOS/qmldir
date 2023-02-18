@@ -1,9 +1,0 @@
-module QtQuick.Controls.LuneOS
-plugin luneosstyleplugin
-classname QtQuickControls2LuneOSStylePlugin
-depends QtQuick.Controls 2.0
-
-internal SwitchIndicatorLuneOS SwitchIndicatorLuneOS.qml
-internal ScrollIndicatorLuneOS ScrollIndicatorLuneOS.qml
-internal CheckIndicatorLuneOS CheckIndicatorLuneOS.qml
-internal RadioIndicatorLuneOS RadioIndicatorLuneOS.qml

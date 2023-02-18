@@ -18,9 +18,8 @@
  */
 
 import QtQuick 2.0
-import LuneOS.Components 1.0
-import LuneOS.Service 1.0
 
+import LuneOS.Service 1.0
 
 Item {
     id: tweak
