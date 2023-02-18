@@ -28,6 +28,12 @@ var _listLaunchPoints = [
             { "title": "Test6", "id": "org.webosports.tests.noWindow", "icon": "../images/default-app-icon.png" },
             { "title": "End Of All Tests", "id": "org.webosports.tests.noWindow", "icon": "../images/default-app-icon.png" }
         ];
+_listLaunchPoints.forEach((elt) => {
+    // initialize missing properties
+    if(typeof elt.removable === 'undefined') elt.removable = false;
+    if(typeof elt.launchPointId === 'undefined') elt.launchPointId = elt.id;
+    if(typeof elt.appId === 'undefined') elt.appId = elt.id;
+});
 
 function addRegisteredMethod(name, fct) {
     _listRegisteredMethods.push({"name": name, "fct": fct});

@@ -9,9 +9,5 @@ OTHER_FILES += $$QML_FILES $$JS_FILES $$IMAGES_FILES $$QMLDIR_FILE
 
 DISTFILES += \
     imports/WebOSCompositorBase/Compositor.qml \
-    imports/WebOSCompositorBase/qmldir \
-    imports/WebOSCoreCompositor/Singletons/WindowModelSingleton.qml \
-    imports/WebOSCoreCompositor/Singletons/WindowModelSingleton.qmlc \
-    imports/WebOSCoreCompositor/Singletons/qmldir
-
+    imports/WebOSCompositorBase/qmldir
 

@@ -60,13 +60,15 @@ QtObject {
         console.log("LunaService::call called with serviceURI=" + serviceURI + ", args=" + jsonArgs);
 
         var args = JSON.parse(jsonArgs) ;
-        if(serviceURI === "luna://com.palm.applicationManager/listLaunchPoints") {
+        if(serviceURI === "luna://com.palm.applicationManager/listLaunchPoints" ||
+           serviceURI === "luna://com.webos.service.applicationManager/listLaunchPoints") {
             listLaunchPoints_call(args, returnFct, handleError);
         }
         else if(serviceURI === "palm://com.palm.appinstaller/remove" || serviceURI === "luna://com.palm.appinstaller/remove") {
             removeApp_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "luna://com.palm.applicationManager/launch" ) {
+        else if(serviceURI === "luna://com.palm.applicationManager/launch" ||
+                serviceURI === "luna://com.webos.service.applicationManager/launch") {
             launchApp_call(args, returnFct, handleError);
         }
         else if(serviceURI === "palm://com.palm.applicationManager/getAppInfo" || serviceURI === "luna://com.palm.applicationManager/getAppInfo") {

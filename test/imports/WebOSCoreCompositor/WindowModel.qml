@@ -1,14 +1,14 @@
 import QtQuick 2.0
+import QtQml.Models 2.1
 
 import "Singletons"
 
-ListModel {
+ObjectModel {
     id: windowModel
 
     property ListModel surfaceSource
     property string windowType: "_WEBOS_WINDOW_TYPE_CARD"
-
-    property ListModel _referenceModel
+    property string acceptFunction;
 
     signal rowsAboutToBeInserted(variant index, int first, int last)
     signal rowsAboutToBeRemoved(variant index, int first, int last)
@@ -16,35 +16,36 @@ ListModel {
     signal rowsRemoved(variant index, int first, int last)
     signal dataChanged(variant topLeft, variant bottomRight, variant roles)
 
-    function get(index) {
-        return _referenceModel.get(index);
+    function getByIndex(index) {
+        return windowModel.get(index);
     }
 
-    function getByIndex(i) {
-        if( i<0 || i>=_referenceModel.count ) {
-            console.log("index "+ i +" out of range !");
+    property Connections cnx: Connections {
+        target: surfaceSource
+
+        // TODO: apply filter acceptFunction
+
+        function onRowsInserted(index, first, last) {
+            let window = surfaceSource.get(last).obj;
+            if(window.type === windowModel.windowType) {
+                let creationIndex = windowModel.count;
+                windowModel.rowsAboutToBeInserted(null, creationIndex, creationIndex);
+                windowModel.append(window);
+                windowModel.rowsInserted(null, creationIndex, creationIndex);
+            }
         }
 
-        return get(i).window;
-    }
-
-    onRowsInserted: {
-        windowModel.append( _referenceModel.get(last) );
-    }
-    onRowsRemoved: {
-        windowModel.remove( last );
-    }
-
-    Component.onCompleted: {
-        if( windowTypeFilter === "_WEBOS_WINDOW_TYPE_CARD" )
-            _referenceModel = WindowModelSingleton.cardListModel;
-
-        // windowModel.count = Qt.binding(function() { return _referenceModel.count });
-        _referenceModel.rowsAboutToBeInserted.connect(rowsAboutToBeInserted);
-        _referenceModel.actualRowsAboutToBeRemoved.connect(rowsAboutToBeRemoved);
-        _referenceModel.actualRowsInserted.connect(rowsInserted);
-        _referenceModel.rowsRemoved.connect(rowsRemoved);
-        _referenceModel.dataChanged.connect(dataChanged);
-        // _referenceModel.countChanged.connect(updateCount);
+        function onRowsAboutToBeRemoved(index, first, last) {
+            let window = surfaceSource.get(last).obj;
+            if(window.type === windowModel.windowType) {
+                for(var i=0; i<windowModel.count; ++i) {
+                    if(windowModel.get(i) === window) {
+                        windowModel.rowsAboutToBeRemoved(null, i, i);
+                        windowModel.remove(window);
+                        windowModel.rowsRemoved(null, i, i);
+                    }
+                }
+            }
+        }
     }
 }
