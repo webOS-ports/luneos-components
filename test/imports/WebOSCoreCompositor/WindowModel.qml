@@ -7,7 +7,7 @@ ObjectModel {
     id: windowModel
 
     property ListModel surfaceSource
-    property string windowType: "_WEBOS_WINDOW_TYPE_CARD"
+    property string windowType: "NONE"
     property string acceptFunction;
 
     signal rowsAboutToBeInserted(variant index, int first, int last)
@@ -23,11 +23,19 @@ ObjectModel {
     property Connections cnx: Connections {
         target: surfaceSource
 
-        // TODO: apply filter acceptFunction
-
         function onRowsInserted(index, first, last) {
             let window = surfaceSource.get(last).obj;
-            if(window.type === windowModel.windowType) {
+            let filterAccept = false;
+
+            // apply filter acceptFunction
+            if(acceptFunction) {
+                if (typeof windowModel[acceptFunction] == 'function') {
+                    filterAccept = windowModel[acceptFunction](window);
+                }
+            }
+
+            if(filterAccept ||
+               window.type === windowModel.windowType) {
                 let creationIndex = windowModel.count;
                 windowModel.rowsAboutToBeInserted(null, creationIndex, creationIndex);
                 windowModel.append(window);
@@ -37,13 +45,12 @@ ObjectModel {
 
         function onRowsAboutToBeRemoved(index, first, last) {
             let window = surfaceSource.get(last).obj;
-            if(window.type === windowModel.windowType) {
-                for(var i=0; i<windowModel.count; ++i) {
-                    if(windowModel.get(i) === window) {
-                        windowModel.rowsAboutToBeRemoved(null, i, i);
-                        windowModel.remove(window);
-                        windowModel.rowsRemoved(null, i, i);
-                    }
+            for(var i=0; i<windowModel.count; ++i) {
+                if(windowModel.get(i) === window) {
+                    windowModel.rowsAboutToBeRemoved(null, i, i);
+                    windowModel.remove(i);
+                    windowModel.rowsRemoved(null, i, i);
+                    break;
                 }
             }
         }

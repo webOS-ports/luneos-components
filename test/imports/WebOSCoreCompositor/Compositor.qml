@@ -18,4 +18,16 @@ QtObject {
         surfaceModel.append({ obj: newWindow });
         surfaceMapped(newWindow);
     }
+
+    function closeWindow(window)
+    {
+        for(var i=0; i<surfaceModel.count; ++i) {
+            if(surfaceModel.get(i).obj === window) {
+                surfaceModel.remove(i);
+                surfaceUnmapped(window);
+
+                window.destroy();
+            }
+        }
+    }
 }
