@@ -50,10 +50,4 @@ Item {
         window.width = newSize.width;
         window.height = newSize.height;
     }
-
-    Rectangle {
-        color: "green"
-        opacity: 0.3
-        anchors.fill: parent
-    }
 }
