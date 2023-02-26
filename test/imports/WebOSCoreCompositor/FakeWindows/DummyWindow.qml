@@ -79,7 +79,7 @@ FakeWindowBase {
                 onAction: {
                     lunaNextLS2Service.call("luna://org.webosports.notifications/create",
                                             JSON.stringify({"title": "Test title", "body": "Test notification",
-                                                            "iconUrl": Qt.resolvedUrl("../images/default-app-icon.png"), "soundClass":"", "soundFile":"", "duration": 3, "doNotSuppress": false, "expireTimeout": 60}),
+                                                            "iconUrl": Qt.resolvedUrl("default-app-icon.png"), "soundClass":"", "soundFile":"", "duration": 3, "doNotSuppress": false, "expireTimeout": 60}),
                                             undefined, undefined)
                 }
             }
