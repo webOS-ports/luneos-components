@@ -7,16 +7,25 @@ QtObject {
     id: compositorRoot
 
     property ListModel surfaceModel: ListModel {}
-    property Component windowComp: WebOSWindow {}
 
     signal surfaceMapped(variant window);
     signal surfaceUnmapped(variant window);
 
     function createFakeWindow(windowKind, jsonArgs)
     {
-        let newWindow = windowComp.createObject(compositorRoot, { title: windowKind, appId: jsonArgs.id });
-        surfaceModel.append({ obj: newWindow });
-        surfaceMapped(newWindow);
+        console.log("createFakeWindow: Creating " + windowKind + " window");
+        let windowComp = Qt.createComponent("FakeWindows/" + windowKind + ".qml");
+
+        if (windowComp.status === Component.Ready) {
+            let newWindow = windowComp.createObject(compositorRoot, { compositor: compositorRoot, title: windowKind, appId: jsonArgs.id });
+            surfaceModel.append({ obj: newWindow });
+            surfaceMapped(newWindow);
+
+            newWindow.Component.onDestruction.connect(() => { closeWindow(newWindow); });
+        } else if (windowComp.status === Component.Error) {
+            // Error Handling
+            console.log("TestCompositor: Error loading component: ", windowComp.errorString());
+        }
     }
 
     function closeWindow(window)

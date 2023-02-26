@@ -71,10 +71,10 @@ QtObject {
                 serviceURI === "luna://com.webos.service.applicationManager/launch") {
             launchApp_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "palm://com.palm.applicationManager/getAppInfo" || serviceURI === "luna://com.palm.applicationManager/getAppInfo") {
+        else if(serviceURI === "palm://com.palm.applicationManager/getAppInfo" || serviceURI === "luna://com.webos.service.applicationManager/getAppInfo") {
             giveFakeAppInfo_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "palm://com.palm.applicationManager/getAppBasePath" || serviceURI === "luna://com.palm.applicationManager/getAppBasePath") {
+        else if(serviceURI === "palm://com.palm.applicationManager/getAppBasePath" || serviceURI === "luna://com.webos.service.applicationManager/getAppBasePath") {
             giveFakeAppBasePath_call(args, returnFct, handleError);
         }
         else if(serviceURI === "luna://com.palm.display/control/setLockStatus") {
@@ -264,11 +264,14 @@ QtObject {
     }
 
     function giveFakeAppInfo_call(args, returnFct, handleError) {
-        returnFct({"payload": JSON.stringify({"returnValue": true, "appInfo": { "appmenu": "Fake App" } })});
+        returnFct({"payload": JSON.stringify({"returnValue": true, "appInfo":
+            { "title": "Fake App", "appmenu": "Fake App", "requiredPermissions":[],
+              "folderPath": Qt.resolvedUrl("../../WebOSCoreCompositor/FakeWindows").toString(), "icon": "default-app-icon.png"}
+                 })});
     }
 
     function giveFakeAppBasePath_call(args, returnFct, handleError) {
-        returnFct({"payload": JSON.stringify({ "returnValue": true, "appId": "org.webosports.tests.fakeDashboardWindow", "basePath": "" })});
+        returnFct({"payload": JSON.stringify({ "returnValue": true, "appId": "org.webosports.tests.fakeDashboardWindow", "basePath": Qt.resolvedUrl("../../WebOSCoreCompositor/FakeWindows").toString() })});
     }
 
     function getDisplayProperty_call(args, returnFct, handleError) {
