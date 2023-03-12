@@ -1,3 +1,4 @@
 module WebOSCompositorBase
 
-KeyboardWindowModel 1.0 models/KeyboardWindowModel.qml
+NotificationService 1.0 NotificationService.qml
+singleton ModelSingletons 1.0 ModelSingletons.qml

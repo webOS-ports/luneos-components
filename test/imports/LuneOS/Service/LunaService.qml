@@ -17,6 +17,7 @@
  */
 
 import QtQuick 2.0
+import WebOSCompositorBase 1.0
 
 import "LunaServiceRegistering.js" as LSRegisteredMethods
 
@@ -35,6 +36,8 @@ QtObject {
     property string polcyState: "none"
     property int retriesLeft: 3
     property string configuredPasscode: "4242"
+
+    property NotificationService notifService: NotificationService {}
 
     signal response
     signal initialized
@@ -151,6 +154,12 @@ QtObject {
         }
         else if(serviceURI === "luna://com.android.properties/getProperty") {
             androidGetProperty_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.webos.notification/createToast") {
+            createToast_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.webos.notification/closeToast") {
+            closeToast_call(args, returnFct, handleError);
         }
         else {
             // Embed the jsonArgs into a payload message
@@ -318,14 +327,42 @@ QtObject {
         }
     }
 
-    function createNotification_call(jsonArgs, returnFct, handleError) {
-        if(jsonArgs) {
-            var callerAppId = "org.webosports.tests.dummyWindow"; // hard-coded
-            
-        replyToSubscribers("/createNotification", callerAppId, jsonArgs);
-        }
-        else {
-            handleError("Error: parameter 'id' not specified");
+    function createToast_call(jsonArgs, returnFct, handleError) {
+        notifService.toastModel.append(
+           {
+                          "message": jsonArgs.message || "",
+                          "type": jsonArgs.type || "standard",
+                          "sourceId": jsonArgs.sourceId || name,
+                          "timestamp": String(Date.now()),
+                          "onlyToast": true,
+                          "isSysReq": jsonArgs.isSysReq || false,
+                          "schedule": jsonArgs.schedule || {
+                              "expire": Date.now()/1000 + 5 /* 5 seconds by default */
+                          },
+                          "iconUrl": jsonArgs.iconUrl || "file:///usr/palm/notificationmgr/images/toast-notification-icon.png",
+                          "action": {
+                              "launchParams": {
+                                  "id": "com.webos.app.notification"
+                              },
+                              "serviceMethod": "launch",
+                              "serviceURI": "luna://com.webos.service.applicationmanager/"
+                          },
+                          "user": "guest",
+                          "title": "",
+                          "isCradleReq": false,
+                          "returnValue": true
+                      });
+    }
+
+    function closeToast_call(jsonArgs, returnFct, handleError) {
+        for(var i=0; i<notifService.toastModel.count; ++i) {
+            let toast = notifService.toastModel.get(i);
+            let toastId = toast.sourceId + "-" + toast.timestamp;
+
+            if (toastId === jsonArgs.toastId) {
+                notifService.toastModel.remove(i);
+                break;
+            }
         }
     }
 
