@@ -18,17 +18,33 @@
 import QtQuick 2.0
 
 import LuneOS.Service 1.0
-import Eos.Window 0.1
 
-WebOSWindow {
+Item {
     id: fakeWindowBase
-    appId: "org.webosports.tests.fakewindowbase"
+    property string title: ""
+    property string type: "_WEBOS_WINDOW_TYPE_CARD"
+    property string appId: "org.webosports.tests.fakewindowbase"
+    property var windowProperties
+    property string launchParams: ""
+    property int parentWinId: 0
+    property var userData;
 
     property variant compositor
+
+    signal exposedChanged(bool exposed)
 
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
         name: "org.webosports.luna"
+    }
+
+    function takeFocus() {
+        fakeWindowBase.focus = true;
+    }
+
+    function changeSize(newSize) {
+        fakeWindowBase.width = newSize.width;
+        fakeWindowBase.height = newSize.height;
     }
 
     Component.onDestruction: if(compositor) compositor.closeWindow(fakeWindowBase);

@@ -20,11 +20,11 @@ import QtQuick.Window 2.12
 
 import Eos.Window 0.1
 
-Item {
+Window {
     id: window
     property string title: ""
     property string subtitle: ""
-    property string type: "_WEBOS_WINDOW_TYPE_CARD"
+    property string windowType: "_WEBOS_WINDOW_TYPE_CARD"
     property point mousePosition: Qt.point(-1,-1)
     property string appId: ""
     property int displayAffinity: 0
@@ -38,16 +38,10 @@ Item {
     property string addon: ""
     property string launchParams: ""
     property int parentWinId: 0
-    property var userData;
 
     signal exposedChanged(bool exposed)
 
     function takeFocus() {
         window.focus = true;
-    }
-
-    function changeSize(newSize) {
-        window.width = newSize.width;
-        window.height = newSize.height;
     }
 }
