@@ -77,9 +77,10 @@ FakeWindowBase {
                 height: 50
 
                 onAction: {
-                    lunaNextLS2Service.call("luna://org.webosports.notifications/create",
-                                            JSON.stringify({"title": "Test title", "body": "Test notification",
-                                                            "iconUrl": Qt.resolvedUrl("default-app-icon.png"), "soundClass":"", "soundFile":"", "duration": 3, "doNotSuppress": false, "expireTimeout": 60}),
+                    lunaNextLS2Service.call("luna://com.webos.notification/createToast",
+                                            JSON.stringify({"title": "Test title", "message": "Test notification",
+                                                            "iconUrl": Qt.resolvedUrl("default-app-icon.png"),
+                                                            "schedule": {"expire": Date.now()/1000+15}}),
                                             undefined, undefined)
                 }
             }
@@ -90,9 +91,10 @@ FakeWindowBase {
                 height: 50
 
                 onAction: {
-                    lunaNextLS2Service.call("luna://org.webosports.notifications/create",
-                                            JSON.stringify({"title": "Test title", "body": "Test notification",
-                                                            "iconUrl": Qt.resolvedUrl("../images/default-app-icon.png"), "soundClass":"", "soundFile":"", "duration": 3, "doNotSuppress": false, "expireTimeout": -1}),
+                    lunaNextLS2Service.call("luna://com.webos.notification/createToast",
+                                            JSON.stringify({"title": "Test banner", "message": "Test banner",
+                                                            "iconUrl": Qt.resolvedUrl("default-app-icon.png"),
+                                                            "type": "light"}),
                                             undefined, undefined)
                 }
             }
