@@ -23,8 +23,7 @@ FakeWindowBase {
     id: fakePopupWindow
 
     appId: "org.webosports.tests.fakePopupWindow"
-    windowType: WindowType.Overlay
-    isPopup: true;
+    windowType: "_WEBOS_WINDOW_TYPE_KEYBOARD"
 
     height: 50 + Math.random()*50
     width: 100 + Math.random()*50
