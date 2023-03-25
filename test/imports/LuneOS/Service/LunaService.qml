@@ -294,10 +294,10 @@ QtObject {
             // Simulate the attachement of a new window to the stub Wayland compositor
             compositor.createFakeWindow("DummyWindow", jsonArgs);
         }
-        else if(jsonArgs.id === "org.webosports.tests.fakeOverlayWindow") {
+        else if(jsonArgs.id === "org.webosports.tests.fakeKeyboardWindow") {
             // start a FakeOverlayWindow
             // Simulate the attachement of a new window to the stub Wayland compositor
-            compositor.createFakeWindow("FakeOverlayWindow", jsonArgs);
+            compositor.createFakeWindow("FakeKeyboardWindow", jsonArgs);
         }
         else if(jsonArgs.id === "org.webosports.tests.fakeDashboardWindow") {
             // start a FakeDashboardWindow
@@ -313,11 +313,6 @@ QtObject {
             // start a FakeSIMPinWindow
             // Simulate the attachement of a new window to the stub Wayland compositor
             compositor.createFakeWindow("FakeSIMPinWindow", jsonArgs);
-        }
-        else if(jsonArgs.id === "org.webosports.tests.fakePopupWindow") {
-            // start a FakePopupWindow
-            // Simulate the attachement of a new window to the stub Wayland compositor
-            compositor.createFakeWindow("FakePopupWindow", jsonArgs);
         }
         else if(jsonArgs.id === "com.palm.app.accounts") {
             console.log("Succesfully launched com.palm.app.accounts");

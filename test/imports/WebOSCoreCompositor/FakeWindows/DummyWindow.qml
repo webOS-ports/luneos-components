@@ -141,7 +141,7 @@ FakeWindowBase {
 
                 onAction: {
                     lunaNextLS2Service.call("luna://com.palm.applicationManager/launch",
-                        JSON.stringify({"id": "org.webosports.tests.fakePopupWindow", "params": {}}), undefined, undefined)
+                        JSON.stringify({"id": "org.webosports.tests.fakePopupAlertWindow", "params": {}}), undefined, undefined)
                 }
             }
             ActionButton {

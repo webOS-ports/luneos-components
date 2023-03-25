@@ -31,7 +31,7 @@ Window {
     property bool keepAlive: false
     property int locationHint: 0
     property int windowState: 0
-    property var windowProperties
+    readonly property var windowProperties: __windowProperties
     property EosRegion inputRegion: EosRegion {}
     property int keyMask: 0
     property bool cursorVisible: false
@@ -44,4 +44,10 @@ Window {
     function takeFocus() {
         window.focus = true;
     }
+
+    function setWindowProperty(key, value) {
+        __windowProperties[key] = value;
+    }
+
+    property var __windowProperties: ({})
 }

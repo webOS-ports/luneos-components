@@ -20,10 +20,10 @@ import QtQuick.Controls 2.0
 import LunaNext.Compositor 0.1
 
 FakeWindowBase {
-    id: fakeOverlayWindow
+    id: fakeKeyboardWindow
 
-    appId: "org.webosports.tests.fakeOverlayWindow"
-    windowType: WindowType.Overlay
+    appId: "org.webosports.tests.fakeKeyboardWindow"
+    windowType: "_WEBOS_WINDOW_TYPE_KEYBOARD"
 
     x: Math.random()*200
     y: parent.height - height
@@ -47,14 +47,14 @@ FakeWindowBase {
             Button {
                 text: "Hide me"
                 onClicked: {
-                    fakeOverlayWindow.visible = false;
+                    fakeKeyboardWindow.visible = false;
                     showTimer.start();
                 }
 
                 Timer {
                     id: showTimer
                     interval: 3000
-                    onTriggered: fakeOverlayWindow.visible = true
+                    onTriggered: fakeKeyboardWindow.visible = true
                 }
             }
             Button {
