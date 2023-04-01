@@ -16,39 +16,38 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-import QtQuick 2.0
-import QtQml.Models 2.2
+import QtQuick 2.15
+import QtQml.Models 2.15
 
 import "VoiceCallStatusStub.js" as VoiceCall;
 
 Item {
     id: testVoiceCallMgr
-    // oh boy, waiting for the ObjectModel improvements in Qt 5.6 !
-    property ObjectModel voiceCalls: ObjectModel {
-        id: _voiceCalls
-        signal rowsInserted(int first, int last);
+
+    Component {
+        id: compTestVoiceCall
         VoiceCall {
-            id: testVoiceCall1
             isIncoming: true
             onStatusChanged: {
-                if(status===VoiceCall.STATUS_ACTIVE) activeVoiceCall = testVoiceCall1;
-                else if(activeVoiceCall===testVoiceCall1) activeVoiceCall = null;
+                if(status!==VoiceCall.STATUS_ACTIVE)
+                {
+                    if(testVoiceCallMgr.activeVoiceCall===this) testVoiceCallMgr.activeVoiceCall = null;
+//                    if(status === STATUS_NULL) this.destroy();
+                }
             }
         }
-        VoiceCall {
-            id: testVoiceCall2
-            onStatusChanged: {
-                if(status===VoiceCall.STATUS_ACTIVE) activeVoiceCall = testVoiceCall2;
-                else if(activeVoiceCall===testVoiceCall2) activeVoiceCall = null;
-            }
-        }
+    }
 
-        function instance(idx) {
-            if(idx===1) return testVoiceCall1;
-            if(idx===2) return testVoiceCall2;
-            return null;
+    property ObjectModel voiceCalls: ObjectModel {
+        id: _voiceCalls
+        signal rowsInserted(var parent, int first, int last);
+
+        onCountChanged: {
+            rowsInserted(null, _voiceCalls.count-1, _voiceCalls.count-1);
         }
-        Component.onCompleted: rowsInserted(1,2);
+        function instance(idx) {
+            return get(idx);
+        }
     }
     property ListModel providers: ListModel {}
 
@@ -73,19 +72,18 @@ Item {
     {
         // hard-code some dial numbers to cover other UI functionalities
         if(msisdn==="111" || msisdn==="999") {
-            testVoiceCall1.lineId = msisdn;
-            if( testVoiceCall1.status === VoiceCall.STATUS_NULL )
-                testVoiceCall1.status = VoiceCall.STATUS_INCOMING;
+            voiceCalls.append(compTestVoiceCall.createObject(null,
+                       { isIncoming: true,
+                         lineId: msisdn,
+                         status: VoiceCall.STATUS_INCOMING } ));
         }
         else
         {
             console.log("--> dial: providerId=" + providerId + " msisdn=" + msisdn);
-            if( testVoiceCall2.status === VoiceCall.STATUS_NULL )
-            {
-                testVoiceCall2.providerId = providerId;
-                testVoiceCall2.lineId = msisdn;
-                testVoiceCall2.status = VoiceCall.STATUS_DIALING;
-            }
+            voiceCalls.append(compTestVoiceCall.createObject(null,
+                       { providerId: providerId,
+                         lineId: msisdn,
+                         status: VoiceCall.STATUS_DIALING } ));
         }
     }
 
