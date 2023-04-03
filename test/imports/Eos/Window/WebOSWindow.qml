@@ -20,25 +20,24 @@ import QtQuick.Window 2.12
 
 import Eos.Window 0.1
 
-Item {
+Window {
     id: window
     property string title: ""
     property string subtitle: ""
-    property string type: "_WEBOS_WINDOW_TYPE_CARD"
+    property string windowType: "_WEBOS_WINDOW_TYPE_CARD"
     property point mousePosition: Qt.point(-1,-1)
     property string appId: ""
     property int displayAffinity: 0
     property bool keepAlive: false
     property int locationHint: 0
     property int windowState: 0
-    property var windowProperties
+    readonly property var windowProperties: __windowProperties
     property EosRegion inputRegion: EosRegion {}
     property int keyMask: 0
     property bool cursorVisible: false
     property string addon: ""
     property string launchParams: ""
     property int parentWinId: 0
-    property var userData;
 
     signal exposedChanged(bool exposed)
 
@@ -46,8 +45,9 @@ Item {
         window.focus = true;
     }
 
-    function changeSize(newSize) {
-        window.width = newSize.width;
-        window.height = newSize.height;
+    function setWindowProperty(key, value) {
+        __windowProperties[key] = value;
     }
+
+    property var __windowProperties: ({})
 }

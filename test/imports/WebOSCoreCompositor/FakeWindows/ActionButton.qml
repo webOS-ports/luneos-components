@@ -70,7 +70,7 @@ Item {
         enabled: true;
         anchors.fill: parent
         onPressAndHold:  setPressed(true);
-        onPressed: { mouse.accepted = true; setPressed(true); }
+        onPressed: (mouse) => { mouse.accepted = true; setPressed(true); }
         onReleased: {setPressed(false);}
         onExited: {setPressed(false);}
         onCanceled: {setPressed(false);}
