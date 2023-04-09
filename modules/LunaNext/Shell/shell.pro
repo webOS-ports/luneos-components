@@ -18,7 +18,8 @@ HEADERS += \
     devicekeyhandler.h \
     volumekeys.h \
     quickutils.h \
-    inversemouseareatype.h
+    inversemouseareatype.h \
+    screenshooter.h
 
 SOURCES += \
     plugin.cpp \
@@ -28,7 +29,8 @@ SOURCES += \
     devicekeyhandler.cpp \
     volumekeys.cpp \
     quickutils.cpp \
-    inversemouseareatype.cpp
+    inversemouseareatype.cpp \
+    screenshooter.cpp
 
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 target.path = $$installPath
