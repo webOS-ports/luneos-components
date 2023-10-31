@@ -42,11 +42,6 @@ qreal SettingsAdapter::dpi() const
     return Settings::LunaSettings()->dpi;
 }
 
-qreal SettingsAdapter::compatDpi() const
-{
-    return Settings::LunaSettings()->compatDpi;
-}
-
 int SettingsAdapter::displayWidth() const
 {
     return Settings::LunaSettings()->displayWidth;

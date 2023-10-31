@@ -30,7 +30,6 @@ class SettingsAdapter : public QObject
     Q_PROPERTY(bool tabletUi READ tabletUi CONSTANT)
     Q_PROPERTY(bool showNotificationsAtTop READ showNotificationsAtTop CONSTANT)
     Q_PROPERTY(qreal dpi READ dpi CONSTANT)
-    Q_PROPERTY(qreal compatDpi READ compatDpi CONSTANT)
     Q_PROPERTY(int displayWidth READ displayWidth CONSTANT)
     Q_PROPERTY(int displayHeight READ displayHeight CONSTANT)
     Q_PROPERTY(int displayFps READ displayFps CONSTANT)
@@ -60,7 +59,6 @@ public:
     bool tabletUi() const;
     bool showNotificationsAtTop () const;
     qreal dpi() const;
-    qreal compatDpi() const;
     int displayWidth() const;
     int displayHeight() const;
     bool displayFps() const;

@@ -25,7 +25,6 @@ var displayWidth = 1280;
 var displayHeight = 800;
 var dpi = 149;
 var gridUnit = 10;
-var compatDpi = 149;
 /**/
 /*GNex alike
 var tabletUi = false;
@@ -33,7 +32,6 @@ var displayWidth = 720;
 var displayHeight = 1280;
 var dpi = 264;
 var gridUnit = 18;
-var compatDpi = 180;
 /**/
 /* N7 alike
 var tabletUi = true;
@@ -41,14 +39,12 @@ var displayWidth = 1280;
 var displayHeight = 800;
 var dpi = 216;
 var gridUnit = 14;
-var compatDpi = 180;
 /**/
 /* TP alike
 var tabletUi = true;
 var displayWidth = 1024;
 var displayHeight = 768;
 var dpi = 132;
-var compatDpi = 132;
 var gridUnit = 10;
 /**/
 /* N4 alike
@@ -57,7 +53,6 @@ var displayWidth = 768;
 var displayHeight = 1280;
 var dpi = 264;
 var gridUnit = 18;
-var compatDpi = 180;
 /**/
 /* N5 alike
 var tabletUi = false;
@@ -65,7 +60,6 @@ var displayWidth = 1080;
 var displayHeight = 1920;
 var dpi = 445;
 var gridUnit = 26;
-var compatDpi = 260;
 /**/
 /* For desktop debug */
 var tabletUi = false;
@@ -73,7 +67,6 @@ var displayWidth = 600;
 var displayHeight = 800;
 var dpi = 148;
 var gridUnit = 10;
-var compatDpi = 180;
 /**/
 
 var displayFps = true;
