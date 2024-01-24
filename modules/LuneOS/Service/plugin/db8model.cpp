@@ -155,10 +155,14 @@ void Db8Model::processResults(const QJsonValue &results)
     if (!results.isArray())
         return;
 
+    int oldCount = rowCount();
+
     beginResetModel();
     mResults = results.toArray();
     resetRoles();
     endResetModel();
+
+    if (rowCount() != oldCount) { Q_EMIT countChanged(); }
 }
 
 void Db8Model::resetRoles()
