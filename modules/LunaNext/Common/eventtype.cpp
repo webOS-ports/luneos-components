@@ -22,20 +22,20 @@ namespace luna
 
 int EventType::toKey(EventType::Event event)
 {
-	int key = -1;
+    int key = -1;
 
-	/* See include/public/messages/SysMgrDeviceKeydefs.h of lun-sysmgr-ipc-messages */
-	switch (event) {
-		case CoreNaviBack:
-			key = Qt::Key_Escape; // will be translated into 0x1B by QtWebEngine (see windowsKeyCodeForKeyEvent in web_event_factory.cpp)
-			break;
-		case CoreNaviNext:
-			key = 0xE0E3;
-		default:
-			break;
-	}
+    /* See include/public/messages/SysMgrDeviceKeydefs.h of lun-sysmgr-ipc-messages */
+    switch (event) {
+        case CoreNaviBack:
+            key = Qt::Key_Escape; // will be translated into 0x1B by QtWebEngine (see windowsKeyCodeForKeyEvent in web_event_factory.cpp)
+            break;
+        case CoreNaviNext:
+            key = 0xE0E3;
+        default:
+            break;
+    }
 
-	return key;
+    return key;
 }
 
 } // namespace luna

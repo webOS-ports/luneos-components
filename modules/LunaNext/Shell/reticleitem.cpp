@@ -34,13 +34,13 @@ ReticleItem::ReticleItem(QQuickItem *parent)
       mInitialScale(1),
       mReady(false)
 {
-	setVisible(false);
+    setVisible(false);
 
 }
 
 ReticleItem::~ReticleItem()
 {
-	delete mAnimation;
+    delete mAnimation;
 }
 
 void ReticleItem::componentComplete()
@@ -73,49 +73,49 @@ void ReticleItem::startAt(const QPoint& pos)
     if (!mReady)
         return;
 
-	if (mAnimation)
-		mAnimation->stop();
+    if (mAnimation)
+        mAnimation->stop();
 
-	setX(pos.x() - width() / 2);
-	setY(pos.y() - height() / 2);
-	setVisible(true);
-	setOpacity(1);
-	setScale(mInitialScale);
+    setX(pos.x() - width() / 2);
+    setY(pos.y() - height() / 2);
+    setVisible(true);
+    setOpacity(1);
+    setScale(mInitialScale);
 
-	QPropertyAnimation* opacityAnimation = new QPropertyAnimation(this, "opacity");
-	opacityAnimation->setDuration(AS(reticleDuration));
-	opacityAnimation->setStartValue(1.0);
-	opacityAnimation->setEndValue(0.0);
-	opacityAnimation->setEasingCurve(AS_CURVE(reticleCurve));
+    QPropertyAnimation* opacityAnimation = new QPropertyAnimation(this, "opacity");
+    opacityAnimation->setDuration(AS(reticleDuration));
+    opacityAnimation->setStartValue(1.0);
+    opacityAnimation->setEndValue(0.0);
+    opacityAnimation->setEasingCurve(AS_CURVE(reticleCurve));
 
-	QPropertyAnimation* scaleAnimation = new QPropertyAnimation(this, "scale");
-	scaleAnimation->setDuration(AS(reticleDuration));
-	scaleAnimation->setStartValue(mInitialScale);
-	scaleAnimation->setEndValue(1.5*mInitialScale);
-	scaleAnimation->setEasingCurve(AS_CURVE(reticleCurve));
+    QPropertyAnimation* scaleAnimation = new QPropertyAnimation(this, "scale");
+    scaleAnimation->setDuration(AS(reticleDuration));
+    scaleAnimation->setStartValue(mInitialScale);
+    scaleAnimation->setEndValue(1.5*mInitialScale);
+    scaleAnimation->setEasingCurve(AS_CURVE(reticleCurve));
 
-	QParallelAnimationGroup* reticleAnimation = new QParallelAnimationGroup;
-	reticleAnimation->addAnimation(opacityAnimation);
-	reticleAnimation->addAnimation(scaleAnimation);
+    QParallelAnimationGroup* reticleAnimation = new QParallelAnimationGroup;
+    reticleAnimation->addAnimation(opacityAnimation);
+    reticleAnimation->addAnimation(scaleAnimation);
 
-	QPropertyAnimation* visibility = new QPropertyAnimation(this, "visible");
-	visibility->setEndValue(false);
-	visibility->setDuration(0);
+    QPropertyAnimation* visibility = new QPropertyAnimation(this, "visible");
+    visibility->setEndValue(false);
+    visibility->setDuration(0);
 
-	mAnimation = new QSequentialAnimationGroup;
-	mAnimation->addAnimation(reticleAnimation);
-	mAnimation->addAnimation(visibility);
-	mAnimation->start(QAbstractAnimation::DeleteWhenStopped);
+    mAnimation = new QSequentialAnimationGroup;
+    mAnimation->addAnimation(reticleAnimation);
+    mAnimation->addAnimation(visibility);
+    mAnimation->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 void ReticleItem::animationFinished()
 {
-	setVisible(false);
+    setVisible(false);
 }
 
 void ReticleItem::paint(QPainter* painter)
 {
-	painter->drawPixmap(0, 0, mPixmap);
+    painter->drawPixmap(0, 0, mPixmap);
 }
 
 } // namespace luna

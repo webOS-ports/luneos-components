@@ -30,74 +30,74 @@ class ScreenEdgeFlickGestureRecognizer;
 
 class GestureHandler: public QQuickItem
 {
-	Q_OBJECT
-	Q_PROPERTY(qreal fingerSize WRITE setFingerSize MEMBER mFingerSize)
-	Q_PROPERTY(qreal minimalFlickLength WRITE setMinimalFlickLength MEMBER mMinFlick)
-	Q_PROPERTY(int timeout WRITE setTimeout MEMBER mTimeout)
+    Q_OBJECT
+    Q_PROPERTY(qreal fingerSize WRITE setFingerSize MEMBER mFingerSize)
+    Q_PROPERTY(qreal minimalFlickLength WRITE setMinimalFlickLength MEMBER mMinFlick)
+    Q_PROPERTY(int timeout WRITE setTimeout MEMBER mTimeout)
 
 public:
-	enum GestureType { TapGesture, ScreenEdgeFlickGesture, OtherGesture};
-	Q_ENUM(GestureType)
+    enum GestureType { TapGesture, ScreenEdgeFlickGesture, OtherGesture};
+    Q_ENUM(GestureType)
 
-	explicit GestureHandler(QQuickItem *parent = 0);
-	~GestureHandler();
-	void setFingerSize(qreal size);
-	void setTimeout(int timeout);
-	void setMinimalFlickLength(qreal length);
+    explicit GestureHandler(QQuickItem *parent = 0);
+    ~GestureHandler();
+    void setFingerSize(qreal size);
+    void setTimeout(int timeout);
+    void setMinimalFlickLength(qreal length);
 
 signals:
-	void touchBegin();
-	void touchEnd();
-	void gestureEvent(GestureType gestureType, QPoint pos, bool timeout);
+    void touchBegin();
+    void touchEnd();
+    void gestureEvent(GestureType gestureType, QPoint pos, bool timeout);
 
 private:
-	TapGestureRecognizer *mTapRecognizer;
-	ScreenEdgeFlickGestureRecognizer *mScreenEdgeFlickRecognizer;
-	qreal mFingerSize;
-	qreal mMinFlick;
-	int mTimeout;
+    TapGestureRecognizer *mTapRecognizer;
+    ScreenEdgeFlickGestureRecognizer *mScreenEdgeFlickRecognizer;
+    qreal mFingerSize;
+    qreal mMinFlick;
+    int mTimeout;
 };
 
 class TapGestureRecognizer: public QQuickItem
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	explicit TapGestureRecognizer(QQuickItem *parent = 0);
-	virtual bool eventFilter(QObject *watched, QEvent *event);
-	void setFingerSize(qreal fingerSize) {mFingerSize = fingerSize;};
+    explicit TapGestureRecognizer(QQuickItem *parent = 0);
+    virtual bool eventFilter(QObject *watched, QEvent *event);
+    void setFingerSize(qreal fingerSize) {mFingerSize = fingerSize;};
 
 signals:
-	void tapGesture(GestureHandler::GestureType gestureType, QPoint pos, bool timeout);
+    void tapGesture(GestureHandler::GestureType gestureType, QPoint pos, bool timeout);
 
 private: 
-	qreal mFingerSize;
+    qreal mFingerSize;
 };
 
 class ScreenEdgeFlickGestureRecognizer: public QQuickItem
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	explicit ScreenEdgeFlickGestureRecognizer(QQuickItem *parent = 0);
-	virtual bool eventFilter(QObject *watched, QEvent *event);
-	void setFingerSize(qreal fingerSize) {mFingerSize = fingerSize;};
-	void setTimeout(int timeout) {mTimer.setInterval(timeout);};
-	void setMinimalFlickLength(qreal length) {mMinFlick = length;};
+    explicit ScreenEdgeFlickGestureRecognizer(QQuickItem *parent = 0);
+    virtual bool eventFilter(QObject *watched, QEvent *event);
+    void setFingerSize(qreal fingerSize) {mFingerSize = fingerSize;};
+    void setTimeout(int timeout) {mTimer.setInterval(timeout);};
+    void setMinimalFlickLength(qreal length) {mMinFlick = length;};
 
 signals:
-	void screenEdgeFlickGesture(GestureHandler::GestureType gestureType, QPoint pos, bool timeout);
-	void touchBegin();
-	void touchEnd();
+    void screenEdgeFlickGesture(GestureHandler::GestureType gestureType, QPoint pos, bool timeout);
+    void touchBegin();
+    void touchEnd();
 
 private slots:
-	void slotTimeout();
+    void slotTimeout();
 
 private:
-	QTimer mTimer;
-	qreal mFingerSize;
-	qreal mMinFlick;
-	QPoint mStartPos;
+    QTimer mTimer;
+    qreal mFingerSize;
+    qreal mMinFlick;
+    QPoint mStartPos;
 };
 
 } // namespace luna

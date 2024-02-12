@@ -68,7 +68,7 @@ MouseArea {
                     anchors.fill: parent
                     enabled: model.enabled
                     onClicked:          selectorModel.accept(model.index)
-					}
+                    }
             }
 
             section.property: "group"
@@ -84,12 +84,8 @@ MouseArea {
                     color: "#333333"
                     font.pixelSize: FontUtils.sizeToPixels("12pt")
                     font.family: "Prelude"
-
                 }
             }
         }
-
-        }
-
-
+    }
 }

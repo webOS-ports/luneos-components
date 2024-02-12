@@ -115,7 +115,7 @@ var overrides = {
 
     // http://pad.lv/1223937
     "huffpost.com": ["Mobile)", "Mobile) Firefox"],
-	
+    
     "web.whatsapp.com": "Mozilla/5.0 (LuneOS; Desktop) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.103 Safari/537.36",
     "netflix.com": "Mozilla/5.0 (X11; CrOS armv7l 6946.63.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.103 Safari/537.36"
 };

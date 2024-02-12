@@ -25,17 +25,17 @@ namespace luna
 
 class EventType : public QObject
 {
-	Q_OBJECT
-	Q_ENUMS(Event)
+    Q_OBJECT
+    Q_ENUMS(Event)
 
 public:
 
-	enum Event {
-		CoreNaviNext,
-		CoreNaviBack,
-	};
+    enum Event {
+        CoreNaviNext,
+        CoreNaviBack,
+    };
 
-	static int toKey(EventType::Event event);
+    static int toKey(EventType::Event event);
 };
 
 } // namespace luna
