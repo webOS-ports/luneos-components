@@ -58,7 +58,7 @@ public:
      * \param soundClass sound class for the notification
      * \param soundFile sound file url for the notification, only local urls (file://) are allowed
      * \param duration duration for the notification sound in seconds
-     * \param doNotSuppress to determine if banner can be suppressed or not	 
+     * \param doNotSuppress to determine if banner can be suppressed or not
      * \param priority priority of the notification
      * \param expireTimeout expiration timeout for the notification
      * \param parent the parent QObject
@@ -140,7 +140,7 @@ public:
 
     //! Sets the doNotSuppress for the notification
     void setDoNotSuppress(bool doNotSuppress);
-	
+    
     //! Returns the priority of the notification
     int priority() const;
 
@@ -207,7 +207,7 @@ signals:
 
     //! Sent when doNotSuppress has been modified
     void doNotSuppressChanged();
-	
+    
     //! Sent when the priority has been modified
     void priorityChanged();
 
@@ -232,14 +232,14 @@ private:
 
     //! icon url for the notification
     QUrl iconUrl_;
-	
-	//! sound class for the notification
+    
+    //! sound class for the notification
     QString soundClass_;
 
-	//! sound file for the notification
+    //! sound file for the notification
     QUrl soundFile_;
 
-	//! sound duration for the notification
+    //! sound duration for the notification
     int duration_;
 
     //! determine if allow suppression for the notification

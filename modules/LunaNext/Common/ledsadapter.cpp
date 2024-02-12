@@ -24,27 +24,27 @@ namespace luna
 
 LedsAdapter::LedsAdapter()
 {
-	m_leds = CoreNaviLeds::instance();
-	if (!m_leds)
-		qWarning() << "CoreNaviLeds were not successfully opened";
+    m_leds = CoreNaviLeds::instance();
+    if (!m_leds)
+        qWarning() << "CoreNaviLeds were not successfully opened";
 }
 
 void LedsAdapter::stopAll() const
 {
-	if (!m_leds) return;
-	m_leds->stopAll();
+    if (!m_leds) return;
+    m_leds->stopAll();
 }
 
 void LedsAdapter::ledPulsate(int led, int brightness, int startDelay, int FadeIn, int FadeOut, int FadeOutDelay, int RepeatDelay, int repeat) const
 {
-	if (!m_leds) return;
-	m_leds->ledPulsate(led, brightness, startDelay, FadeIn, FadeOut, FadeOutDelay, RepeatDelay, repeat);
+    if (!m_leds) return;
+    m_leds->ledPulsate(led, brightness, startDelay, FadeIn, FadeOut, FadeOutDelay, RepeatDelay, repeat);
 }
 
 void LedsAdapter::ledSet(int brightness) const
 {
-	if (!m_leds) return;
-	m_leds->ledSet(m_leds->Center(), brightness);
+    if (!m_leds) return;
+    m_leds->ledSet(m_leds->Center(), brightness);
 }
 
 } // namespace luna

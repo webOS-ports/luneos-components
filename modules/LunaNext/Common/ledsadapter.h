@@ -27,15 +27,15 @@ namespace luna
 
 class LedsAdapter : public QObject
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	LedsAdapter();
-	Q_INVOKABLE void stopAll() const;
-	Q_INVOKABLE void ledPulsate(int led, int brightness, int startDelay, int FadeIn, int FadeOut, int FadeOutDelay, int RepeatDelay, int repeat) const;
-	Q_INVOKABLE void ledSet(int brightness) const;
+    LedsAdapter();
+    Q_INVOKABLE void stopAll() const;
+    Q_INVOKABLE void ledPulsate(int led, int brightness, int startDelay, int FadeIn, int FadeOut, int FadeOutDelay, int RepeatDelay, int repeat) const;
+    Q_INVOKABLE void ledSet(int brightness) const;
 private:
-	CoreNaviLeds* m_leds;
+    CoreNaviLeds* m_leds;
 };
 
 } // namespace luna

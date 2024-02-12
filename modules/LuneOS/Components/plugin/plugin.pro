@@ -12,10 +12,10 @@ TARGET = $$qtLibraryTarget($$TARGET)
 uri = LuneOS.Components
 
 HEADERS += \
-	plugin.h
+    plugin.h
 
 SOURCES += \
-	plugin.cpp
+    plugin.cpp
 
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 target.path = $$installPath
