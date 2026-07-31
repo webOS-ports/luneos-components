@@ -3,7 +3,15 @@ import QtQml.Models 2.1
 
 import Eos.Window 0.1
 
-QtObject {
+// Item (not QtObject): createFakeWindow() below parents freshly-created
+// visual windows onto this root via createObject(compositorRoot, ...).
+// A QtObject has no place in the Qt Quick scene graph, so those windows
+// were being created "outside" the graphics scene (QML would warn
+// "Created graphical object was not placed in the graphics scene");
+// they only ever became visible once CardView's own delegate machinery
+// reparented them into the real visual tree moments later. Item fixes
+// that at the source without depending on that reparenting timing.
+Item {
     id: compositorRoot
 
     property ListModel surfaceModel: ListModel {}
