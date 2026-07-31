@@ -24,7 +24,6 @@ FakeWindowBase {
     appId: "org.webosports.tests.fakePopupAlertWindow"
     windowType: "_WEBOS_WINDOW_TYPE_SYSTEM_UI"
     windowProperties: { "LuneOS_window": "popupalert" }
-    color: "transparent"
 
     height: 50 + Math.random()*50
 
