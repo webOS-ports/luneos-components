@@ -810,6 +810,12 @@ QtObject {
                 "infiniteCardCycling": false
             };
         }
+        else if(args.keys == "showDebugDotGrid") {
+            var message = {
+                "returnValue": true,
+                "showDebugDotGrid": false
+            };
+        }
         else if(args.keys == "showDateTime") {
             var message = {
                 "returnValue": true,
