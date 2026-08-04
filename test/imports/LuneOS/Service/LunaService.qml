@@ -807,7 +807,7 @@ QtObject {
         else if(args.keys == "infiniteCardCycling") {
             var message = {
                 "returnValue": true,
-                "infiniteCardCycling": false
+                "infiniteCardCycling": true
             };
         }
         else if(args.keys == "showDebugDotGrid") {
