@@ -21,6 +21,7 @@ import WebOSCompositorBase 1.0
 
 import "LunaServiceRegistering.js" as LSRegisteredMethods
 import "dualsim.js" as DualSim
+import "db8content.js" as DB8
 
 QtObject {
     property string name
@@ -144,6 +145,20 @@ QtObject {
         }
         else if(serviceURI ==="luna://com.palm.db/merge") {
             mergeDb_call(args, returnFct, handleError);
+        }
+        else if(serviceURI ==="luna://com.palm.db/put") {
+            putDb_call(args, returnFct, handleError);
+        }
+        else if(serviceURI ==="luna://com.palm.db/del") {
+            delDb_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.palm.service.accounts/listAccountTemplates") {
+            listAccountTemplates_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://org.webosports.service.audio/setCallMode") {
+            console.log("Mock audio: call mode " + JSON.stringify(args));
+            if(typeof returnFct !== 'undefined')
+                returnFct({"payload": JSON.stringify({"returnValue": true})});
         }
         else if(serviceURI ==="luna://com.palm.db/search") {
             findDb_call(args, returnFct, handleError);
@@ -273,7 +288,30 @@ QtObject {
                  serviceURI === "luna://com.palm.systemservice/getPreferences" ||
                  serviceURI === "luna://com.webos.service.systemservice/getPreferences" )
                 && args.subscribe) {
-            returnFct({"payload": JSON.stringify({"subscribed": true, "wallpaper": { "wallpaperFile": "images/background.jpg"}, "timeFormat":"HH24", "locale": { "languageCode": "en", "countryCode": "us", "phoneRegion": { "countryName": "United States", "countryCode": "us" } }})});
+            var prefs = {"subscribed": true, "wallpaper": { "wallpaperFile": "images/background.jpg"}, "timeFormat":"HH24", "locale": { "languageCode": "en", "countryCode": "us", "phoneRegion": { "countryName": "United States", "countryCode": "us" } }};
+            var requested = args.keys || [];
+
+            // Phone preferences. Left unset on purpose where the app is meant
+            // to ask the user -- the preferred calling service is the one that
+            // makes the "which service?" chooser appear.
+            if(requested.indexOf("ringtone") >= 0)
+                prefs.ringtone = { "fullPath": "" };
+            if(requested.indexOf("region") >= 0)
+                prefs.region = { "countryName": "Netherlands", "countryCode": "NL" };
+            if(requested.indexOf("4DigitNumber") >= 0)
+                prefs["4DigitNumber"] = "+312055512";
+
+            returnFct({"payload": JSON.stringify(prefs)});
+        }
+        // In-call audio routing: no bluetooth or headset, not docked.
+        else if(serviceURI === "luna://com.palm.bluetooth/hfg/monitorstatus" && returnFct) {
+            returnFct({"payload": JSON.stringify({"returnValue": true, "connected": false})});
+        }
+        else if(serviceURI === "luna://com.palm.keys/audio/status" && returnFct) {
+            returnFct({"payload": JSON.stringify({"returnValue": true, "headset": false, "headsetMic": false})});
+        }
+        else if(serviceURI === "luna://com.palm.power/com/palm/power/chargerStatus" && returnFct) {
+            returnFct({"payload": JSON.stringify({"returnValue": true, "connected": false, "type": "none"})});
         }
         else if((serviceURI === "luna://org.webosports.audio/getStatus" ||
                  serviceURI === "luna://org.webosports.service.audio/getStatus") && returnFct) {
@@ -530,6 +568,17 @@ QtObject {
 
     function getPreferences_call(args, returnFct, handleError) {
 
+        //return preference value for the phone app's own keys
+        if (args.keys && args.keys.indexOf && args.keys.indexOf("region") === 0 && args.keys.length === 1) {
+            var phoneMessage = {
+                "returnValue": true,
+                "region": { "countryName": "Netherlands", "countryCode": "NL" }
+            };
+            if(typeof returnFct !== 'undefined')
+                returnFct({"payload": JSON.stringify(phoneMessage)});
+            return;
+        }
+
         //return preference value for locale
         if (args.keys == "locale") {
             var message = {
@@ -708,11 +757,18 @@ QtObject {
                 "results":[{"_id":"browserbookmarkstest1","_kind":"com.palm.browserbookmarks:1","_rev":599,"_sync":true,"date":1439655155269,"title":"WebOS Internals","url":"http://www.webos-internals.org/"},{"_id":"browserbookmarkstest2","_kind":"com.palm.browserbookmarks:1","_rev":600,"_sync":true,"date":1439655173937,"title":"WebOS Nation","url":"http://www.webosnation.com/"},{"_id":"browserbookmarkstest3","_kind":"com.palm.browserbookmarks:1","_rev":1629,"_sync":true,"date":1439894450703,"title":"LG SVL","url":"http://www.lgsvl.com/"}]
             };
         }
-        else if(args.query.from ==="com.palm.phonecallgroup:1") {
-            message = {
-                "returnValue":true, 
-                "results":[]
-            };
+        else if(args.query.from ==="com.palm.phonecallgroup:1" ||
+                args.query.from ==="com.palm.phonecall:1" ||
+                args.query.from ==="com.palm.person:1" ||
+                args.query.from ==="com.palm.account:1") {
+            // Answer from the same in-memory store the Db8Models read, so a
+            // call written to the log can be found again and updated.
+            var found = DB8.getDb(args.query.from).filter(function(elt) {
+                return DB8.matchesWhere(elt, args.query.where);
+            });
+            if(args.query.limit) found = found.slice(0, args.query.limit);
+
+            message = { "returnValue": true, "results": found };
         }
         else if(args.query.from ==="com.palm.browserpreferences:1") {
             message = {
@@ -747,15 +803,98 @@ QtObject {
         returnFct({payload: JSON.stringify(message)});
     }
 
+    function putDb_call(args, returnFct, handleError) {
+        var objects = args.objects || [];
+        var byKind = {};
+
+        objects.forEach(function(object) {
+            var kind = object._kind;
+            if(!kind) return;
+            if(!byKind[kind]) byKind[kind] = [];
+            byKind[kind].push(object);
+        });
+
+        for(var kind in byKind) {
+            DB8.initDb8Kind(kind, function() {});
+            DB8.put(kind, byKind[kind]);
+        }
+
+        if(typeof returnFct !== 'undefined')
+            returnFct({"payload": JSON.stringify({"returnValue": true, "results": objects})});
+    }
+
+    function delDb_call(args, returnFct, handleError) {
+        var count = 0;
+
+        if(args.ids) {
+            // Without a kind the id could be in any of them, so try each.
+            count += DB8.del("com.palm.phonecall:1", args.ids, undefined);
+            count += DB8.del("com.palm.phonecallgroup:1", args.ids, undefined);
+        }
+        if(args.query && args.query.from) {
+            count += DB8.del(args.query.from, undefined, args.query.where);
+        }
+
+        if(typeof returnFct !== 'undefined')
+            returnFct({"payload": JSON.stringify({"returnValue": true, "count": count})});
+    }
+
+    function listAccountTemplates_call(args, returnFct, handleError) {
+        // Templates for the mock Synergy accounts. The phone app reads the
+        // display name, icon and PHONE capability off these.
+        var message = {
+            "returnValue": true,
+            "results": [
+                {
+                    "templateId": "com.palm.whatsapp",
+                    "name": "WhatsApp",
+                    "icon": { "loc_32x32": "" },
+                    "capabilityProviders": [
+                        { "id": "whatsapp-phone", "capability": "PHONE",
+                          "implementation": "luna://com.palm.whatsapp",
+                          "serviceName": "type_whatsapp", "videoFormat": "both" }
+                    ]
+                },
+                {
+                    "templateId": "com.palm.telegram",
+                    "name": "Telegram",
+                    "icon": { "loc_32x32": "" },
+                    "capabilityProviders": [
+                        { "id": "telegram-phone", "capability": "PHONE",
+                          "implementation": "luna://com.palm.telegram",
+                          "serviceName": "type_telegram", "videoFormat": "both" }
+                    ]
+                },
+                {
+                    "templateId": "com.palm.signal",
+                    "name": "Signal",
+                    "icon": { "loc_32x32": "" },
+                    "capabilityProviders": [
+                        { "id": "signal-phone", "capability": "PHONE",
+                          "implementation": "luna://com.palm.signal",
+                          "serviceName": "type_signal", "videoFormat": "none" }
+                    ]
+                }
+            ]
+        };
+
+        if(typeof returnFct !== 'undefined')
+            returnFct({"payload": JSON.stringify(message)});
+    }
+
     function mergeDb_call(args, returnFct, handleError) {
         var message = {}
-        if(args.query.from ==="com.palm.browserpreferences:1") {
+        if(args.query && args.query.from ==="com.palm.browserpreferences:1") {
             message = {
                 "returnValue":true
             }
         }
+        else if(args.objects) {
+            var merged = DB8.merge(args.objects[0] ? args.objects[0]._kind : "", args.objects);
+            message = { "returnValue": true, "count": merged };
+        }
         else {
-            console.log("Others: "+args.query.from)
+            console.log("Others: "+(args.query ? args.query.from : "?"))
         }
         if(typeof returnFct !== 'undefined') {
             returnFct({"payload": JSON.stringify(message)});

@@ -57,6 +57,24 @@ Item {
     function hold(isOn)
     {
         console.log("VoiceCall -> hold("+isOn+")");
+        if(isOn && status === VoiceCall.STATUS_ACTIVE)
+            status = VoiceCall.STATUS_HELD;
+        else if(!isOn && status === VoiceCall.STATUS_HELD)
+            status = VoiceCall.STATUS_ACTIVE;
+    }
+
+    /// Joining two calls makes both of them part of the conference.
+    function merge(otherHandlerId)
+    {
+        console.log("VoiceCall -> merge("+otherHandlerId+")");
+        isMultiparty = true;
+        status = VoiceCall.STATUS_ACTIVE;
+    }
+
+    function split()
+    {
+        console.log("VoiceCall -> split()");
+        isMultiparty = false;
     }
     function deflect(target)
     {

@@ -29,11 +29,12 @@ Item {
         VoiceCall {
             isIncoming: true
             onStatusChanged: {
-                if(status!==VoiceCall.STATUS_ACTIVE)
-                {
-                    if(testVoiceCallMgr.activeVoiceCall===this) testVoiceCallMgr.activeVoiceCall = null;
-//                    if(status === STATUS_NULL) this.destroy();
-                }
+                testVoiceCallMgr._refreshActiveCall();
+
+                // A call that has fully gone away leaves the list, so anything
+                // counting live calls settles back to zero.
+                if(status === VoiceCall.STATUS_NULL)
+                    testVoiceCallMgr._removeCall(this);
             }
         }
     }
@@ -41,13 +42,45 @@ Item {
     property ObjectModel voiceCalls: ObjectModel {
         id: _voiceCalls
         signal rowsInserted(var parent, int first, int last);
+        signal rowsRemoved(var parent, int first, int last);
+
+        property int _lastCount: 0
 
         onCountChanged: {
-            rowsInserted(null, _voiceCalls.count-1, _voiceCalls.count-1);
+            if(count > _lastCount)
+                rowsInserted(null, count-1, count-1);
+            else if(count < _lastCount)
+                rowsRemoved(null, count, count);
+
+            _lastCount = count;
         }
         function instance(idx) {
             return get(idx);
         }
+    }
+
+    /// Drops a finished call out of the list, the way the real manager does.
+    function _removeCall(call) {
+        for(var i = 0; i < _voiceCalls.count; ++i) {
+            if(_voiceCalls.get(i) !== call) continue;
+
+            _voiceCalls.remove(i);
+            if(activeVoiceCall === call) activeVoiceCall = null;
+            call.destroy();
+            return;
+        }
+    }
+
+    /// Keeps activeVoiceCall pointing at whichever call is connected.
+    function _refreshActiveCall() {
+        for(var i = 0; i < _voiceCalls.count; ++i) {
+            var call = _voiceCalls.get(i);
+            if(call.status === VoiceCall.STATUS_ACTIVE) {
+                activeVoiceCall = call;
+                return;
+            }
+        }
+        activeVoiceCall = null;
     }
     property ListModel providers: ListModel {}
 
@@ -95,6 +128,8 @@ Item {
     function setAudioMode(mode)
     {
         console.log("--> setAudioMode mode="+mode);
+        audioMode = mode;
+        return true;
     }
     function setAudioRouted(isOn)
     {
@@ -103,10 +138,14 @@ Item {
     function setMuteMicrophone(isOn)
     {
         console.log("--> setMuteMicrophone on="+isOn);
+        isMicrophoneMuted = isOn;
+        return true;
     }
     function setMuteSpeaker(isOn)
     {
         console.log("--> setMuteSpeaker on="+isOn);
+        isSpeakerMuted = isOn;
+        return true;
     }
 
     function startDtmfTone(tone)
