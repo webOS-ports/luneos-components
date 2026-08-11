@@ -92,13 +92,15 @@ QtObject {
         else if(serviceURI === "luna://com.palm.systemmanager/getDeviceLockMode") {
             getDeviceLockMode_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "luna://com.palm.systemservice/getPreferences") {
+        else if(serviceURI === "luna://com.palm.systemservice/getPreferences" ||
+                serviceURI === "luna://com.webos.service.systemservice/getPreferences") {
             getPreferences_call(args, returnFct, handleError);
         }
         else if(serviceURI === "luna://com.palm.systemservice/deviceInfo/query") {
             deviceInfoQuery_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "luna://com.palm.systemservice/setPreferences") {
+        else if(serviceURI === "luna://com.palm.systemservice/setPreferences" ||
+                serviceURI === "luna://com.webos.service.systemservice/setPreferences") {
             setPreferences_call(args, returnFct, handleError);
         }
         else if(serviceURI === "luna://com.palm.wifi/connect") {
@@ -116,10 +118,12 @@ QtObject {
         else if(serviceURI === "luna://com.palm.systemmanager/matchDevicePasscode") {
             matchDevicePasscode_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "luna://com.palm.power/com/palm/power/batteryStatusQuery") {
+        else if(serviceURI === "luna://com.palm.power/com/palm/power/batteryStatusQuery" ||
+                serviceURI === "luna://com.webos.service.battery/com/palm/power/batteryStatusQuery") {
             getBatteryStatusQuery_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "luna://com.palm.power/com/palm/power/chargerStatusQuery") {
+        else if(serviceURI === "luna://com.palm.power/com/palm/power/chargerStatusQuery" ||
+                serviceURI === "luna://com.webos.service.battery/com/palm/power/chargerStatusQuery") {
             getChargerStatusQuery_call(args, returnFct, handleError);
         }
         else if(serviceURI ==="luna://com.palm.connectionmanager/getstatus") {
@@ -160,6 +164,28 @@ QtObject {
         }
         else if(serviceURI === "luna://com.webos.notification/closeToast") {
             closeToast_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.palm.display/control/setProperty") {
+            setDisplayProperty_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.palm.display/control/setState") {
+            setDisplayState_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.palm.vibrate/vibrate") {
+            vibrate_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.webos.appInstallService/remove") {
+            removeAppInstallService_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.webos.applicationManager/running") {
+            applicationManagerRunning_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://org.webosports.service.audio/volumeUp" ||
+                serviceURI === "luna://org.webosports.service.audio/volumeDown" ||
+                serviceURI === "luna://org.webosports.service.audio/setMute" ||
+                serviceURI === "luna://org.webosports.service.audio/setVolume" ||
+                serviceURI === "luna://org.webosports.service.audio/playFeedback") {
+            audioService_call(serviceURI, args, returnFct, handleError);
         }
         else {
             // Embed the jsonArgs into a payload message
@@ -202,8 +228,27 @@ QtObject {
                 && args.subscribe) {
             returnFct({"payload": JSON.stringify({"subscribed": true, "wallpaper": { "wallpaperFile": "images/background.jpg"}, "timeFormat":"HH24", "locale": { "languageCode": "en", "countryCode": "us", "phoneRegion": { "countryName": "United States", "countryCode": "us" } }})});
         }
-        else if(serviceURI === "luna://org.webosports.audio/getStatus") {
+        else if((serviceURI === "luna://org.webosports.audio/getStatus" ||
+                 serviceURI === "luna://org.webosports.service.audio/getStatus") && returnFct) {
             returnFct({"payload": JSON.stringify({"volume":54,"mute":false})});
+        }
+        else if(serviceURI === "luna://com.palm.connectionmanager/getStatus" && returnFct) {
+            returnFct({"payload": JSON.stringify({"returnValue":true, "offline":false,
+                "cellular":{"enabled":true}, "wan":{"onInternet":true}})});
+        }
+        else if(serviceURI === "luna://com.palm.wan/getstatus" && returnFct) {
+            returnFct({"payload": JSON.stringify({"returnValue":true,
+                "networkstatus":"attached", "networktype":"lte"})});
+        }
+        else if(serviceURI === "luna://com.palm.telephony/powerQuery" && returnFct) {
+            returnFct({"payload": JSON.stringify({"returnValue":true, "extended":{"powerState":"on"}})});
+        }
+        else if(serviceURI === "luna://com.palm.telephony/networkStatusQuery" && returnFct) {
+            returnFct({"payload": JSON.stringify({"returnValue":true,
+                "extended":{"state":"service", "registration":"home", "networkName":"Test Carrier"}})});
+        }
+        else if(serviceURI === "luna://com.palm.telephony/signalStrengthQuery" && returnFct) {
+            returnFct({"payload": JSON.stringify({"returnValue":true, "extended":{"bars":4, "rssi":-70}})});
         }
         else if(serviceURI === "luna://com.palm.display/control/lockStatus") {
             lockStatusSubscriber =  {func: returnFct};
@@ -285,6 +330,48 @@ QtObject {
 
     function getDisplayProperty_call(args, returnFct, handleError) {
         returnFct({"payload": JSON.stringify({"returnValue": true, "maximumBrightness": 70 })});
+    }
+
+    function setDisplayProperty_call(args, returnFct, handleError) {
+        console.log("setDisplayProperty_call: args = " + JSON.stringify(args));
+        returnFct({"payload": JSON.stringify({"returnValue": true})});
+    }
+
+    function setDisplayState_call(args, returnFct, handleError) {
+        console.log("setDisplayState_call: args = " + JSON.stringify(args));
+        // DockMode.qml's short-form call leaves onResponse/onError unbound.
+        if (returnFct) {
+            returnFct({"payload": JSON.stringify({"returnValue": true})});
+        }
+    }
+
+    function vibrate_call(args, returnFct, handleError) {
+        console.log("vibrate_call: args = " + JSON.stringify(args));
+        // BannerPopupArea.qml calls this with returnFct explicitly undefined.
+        if (returnFct) {
+            returnFct({"payload": JSON.stringify({"returnValue": true})});
+        }
+    }
+
+    function removeAppInstallService_call(args, returnFct, handleError) {
+        console.log("removeAppInstallService_call: args = " + JSON.stringify(args));
+        // FullLauncher.qml calls this with returnFct explicitly undefined.
+        if (returnFct) {
+            returnFct({"payload": JSON.stringify({"returnValue": true})});
+        }
+    }
+
+    function applicationManagerRunning_call(args, returnFct, handleError) {
+        returnFct({"payload": JSON.stringify({"returnValue": true, "running": []})});
+    }
+
+    function audioService_call(serviceURI, args, returnFct, handleError) {
+        console.log("audioService_call: " + serviceURI + ", args = " + JSON.stringify(args));
+        // Several real callers (VolumeControl.qml's volumeUp/volumeDown/setMute)
+        // fire-and-forget with returnFct/handleError explicitly passed as null.
+        if (returnFct) {
+            returnFct({"payload": JSON.stringify({"returnValue": true})});
+        }
     }
 
     function launchApp_call(jsonArgs, returnFct, handleError) {
@@ -715,6 +802,18 @@ QtObject {
             var message = {
                 "returnValue": true,
                 "stackedCardSupport": true
+            };
+        }
+        else if(args.keys == "infiniteCardCycling") {
+            var message = {
+                "returnValue": true,
+                "infiniteCardCycling": true
+            };
+        }
+        else if(args.keys == "showDebugDotGrid") {
+            var message = {
+                "returnValue": true,
+                "showDebugDotGrid": false
             };
         }
         else if(args.keys == "showDateTime") {
