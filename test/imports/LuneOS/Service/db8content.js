@@ -136,6 +136,61 @@ function valueAt(elt, path)
 
 // Evaluates a db8 where clause against one record. Supports '=' and the '%'
 // prefix operator, over dotted paths and arrays.
+/**
+ * A value of the same shape as `sample` but carrying nothing: 0, "", false, an
+ * empty list, or an object whose own fields are likewise emptied.
+ */
+function emptyLike(sample)
+{
+    if( Array.isArray(sample) )
+        return [];
+
+    switch( typeof sample ) {
+    case 'number':  return 0;
+    case 'boolean': return false;
+    case 'string':  return "";
+    case 'object':
+        if( sample === null )
+            return "";
+        var blank = {};
+        for( var key in sample )
+            blank[key] = emptyLike(sample[key]);
+        return blank;
+    }
+
+    return "";
+}
+
+/**
+ * Gives every record the union of the fields found across all of them.
+ *
+ * A ListModel takes its roles from the first row it is given, so a field that
+ * happens to be missing there -- an optional one like a call's duration -- would
+ * be unreadable on every other row too. db8 itself has no such limitation, so
+ * filling the gaps here keeps the mock honest.
+ */
+function unifyFields(records)
+{
+    var samples = {};
+    var i, key;
+
+    for( i = 0; i < records.length; ++i )
+        for( key in records[i] )
+            if( !(key in samples) && records[i][key] !== undefined )
+                samples[key] = records[i][key];
+
+    var unified = [];
+    for( i = 0; i < records.length; ++i ) {
+        var row = {};
+        for( key in samples )
+            row[key] = (records[i][key] !== undefined) ? records[i][key]
+                                                       : emptyLike(samples[key]);
+        unified.push(row);
+    }
+
+    return unified;
+}
+
 function matchesWhere(elt, where)
 {
     if( !where ) return true;

@@ -130,8 +130,9 @@ ListModel {
         }
 
         testDb8Model.clear();
-        for( var sortedElt in result ) {
-            testDb8Model.append(result[sortedElt]);
+        var rows = DB8.unifyFields(result);
+        for( var sortedElt in rows ) {
+            testDb8Model.append(rows[sortedElt]);
         }
     }
 }
