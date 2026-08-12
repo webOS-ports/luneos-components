@@ -24,6 +24,8 @@ import "dualsim.js" as DualSim
 import "db8content.js" as DB8
 
 QtObject {
+    id: lunaServiceMock
+
     property string name
     property string method
     property bool usePrivateBus: false
@@ -270,7 +272,10 @@ QtObject {
         }
 
         var args = JSON.parse(jsonArgs);
-        if(serviceURI === "palm://com.palm.bus/signal/registerServerStatus" || serviceURI === "luna://com.palm.bus/signal/registerServerStatus") {
+        if(/^luna:\/\/com\.palm\.(whatsapp|telegram|signal|teams)\/callStateQuery$/.test(serviceURI)) {
+            connector_watchCallState(serviceURI, returnFct);
+        }
+        else if(serviceURI === "palm://com.palm.bus/signal/registerServerStatus" || serviceURI === "luna://com.palm.bus/signal/registerServerStatus") {
             if(typeof returnFct !== 'undefined') {
                 returnFct({"payload": JSON.stringify({"connected": true})});
             }
@@ -1093,4 +1098,115 @@ QtObject {
         };
         returnFct({payload: JSON.stringify(message)});
     }
+
+    /**
+     * Synergy connectors
+     *
+     * Enough of one to place, answer and end a call over WhatsApp, Telegram,
+     * Signal or Teams, so the app's non-cellular paths -- and the video call
+     * screen, which only a connector can bring up -- can be exercised without
+     * the real thing.
+     */
+    property var _connectorLines: ({})
+    property var _connectorWatchers: ({})
+    property int _connectorNextCall: 1
+
+    function _connectorService(serviceURI) {
+        var match = /^luna:\/\/(com\.palm\.[a-z]+)\//.exec(serviceURI);
+        return match ? match[1] : "";
+    }
+
+    function connector_watchCallState(serviceURI, returnFct) {
+        var service = _connectorService(serviceURI);
+
+        var watchers = _connectorWatchers[service] || [];
+        watchers.push(returnFct);
+        _connectorWatchers[service] = watchers;
+
+        returnFct({"payload": JSON.stringify({"returnValue": true, "subscribed": true})});
+        _connectorPush(service);
+    }
+
+    function _connectorPush(service) {
+        var lines = _connectorLines[service] || [];
+        var payload = JSON.stringify({"returnValue": true, "lines": lines});
+
+        (_connectorWatchers[service] || []).forEach(function(watcher) {
+            watcher({"payload": payload});
+        });
+    }
+
+    function connector_call(serviceURI, args, returnFct, handleError) {
+        var service = _connectorService(serviceURI);
+        var method = serviceURI.slice(serviceURI.lastIndexOf("/") + 1);
+        var lines = _connectorLines[service] || [];
+
+        function reply(extra) {
+            if (returnFct) {
+                var payload = {"returnValue": true};
+                for (var key in (extra || {})) payload[key] = extra[key];
+                returnFct({"payload": JSON.stringify(payload)});
+            }
+        }
+
+        switch (method) {
+        case "dial":
+            var id = service + "-call-" + (_connectorNextCall++);
+            lines = [{
+                "state": "dialing",
+                "outgoingVideo": args.video === true,
+                "incomingVideo": args.video === true,
+                "calls": [{
+                    "id": id,
+                    "address": args.address || "",
+                    "direction": "outgoing",
+                    "startTime": Date.now()
+                }]
+            }];
+            _connectorLines[service] = lines;
+            _connectorPush(service);
+            reply({"callId": id});
+
+            // A connector answers a moment later; without this the call would
+            // sit ringing for ever and never reach the in-call screen.
+            connectorAnswerTimer.service = service;
+            connectorAnswerTimer.restart();
+            break;
+
+        case "answer":
+        case "accept":
+            lines.forEach(function(line) { line.state = "active"; });
+            _connectorLines[service] = lines;
+            _connectorPush(service);
+            reply();
+            break;
+
+        case "hangup":
+        case "end":
+        case "reject":
+            _connectorLines[service] = [];
+            _connectorPush(service);
+            reply();
+            break;
+
+        default:
+            reply();
+            break;
+        }
+    }
+
+    property Timer _connectorAnswerTimer: Timer {
+        id: connectorAnswerTimer
+
+        property string service: ""
+
+        interval: 1200
+        onTriggered: {
+            var lines = lunaServiceMock._connectorLines[service] || [];
+            lines.forEach(function(line) { line.state = "active"; });
+            lunaServiceMock._connectorLines[service] = lines;
+            lunaServiceMock._connectorPush(service);
+        }
+    }
+
 }
