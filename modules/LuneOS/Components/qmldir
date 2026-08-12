@@ -8,6 +8,7 @@ CertDialog 1.0 CertDialog.qml
 ClippedImage 1.0 ClippedImage.qml
 ConfirmDialog 1.0 ConfirmDialog.qml
 DialogButton 1.0 DialogButton.qml
+DialogCheckBox 1.0 DialogCheckBox.qml
 DialogLineInput 1.0 DialogLineInput.qml
 Dialog 1.0 Dialog.qml
 FilePicker 1.0 FilePicker.qml

@@ -32,8 +32,6 @@ Rectangle {
     signal clicked();
 
     height: Units.gu(3.8)
-    anchors.bottom: parent.bottom
-    anchors.bottomMargin: Units.gu(2)
     radius: 4
     color: "#4b4b4b"
     Item {
