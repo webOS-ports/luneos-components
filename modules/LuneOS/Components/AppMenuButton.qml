@@ -17,6 +17,7 @@
 
 import QtQuick 2.0
 import QtQuick.Controls 2.5
+import QtQuick.Templates 2.5 as T
 
 /**
  * The webOS application menu affordance: a rounded pill in the top-left
@@ -40,7 +41,14 @@ Item {
     /// The application's name, as shown in the pill.
     property string text: ""
     /// The menu to open. Popped up left-aligned under the pill.
-    property Menu menu
+    /*
+     * The menu this opens, as the template rather than as Controls' own Menu.
+     * A menu is drawn by whichever style the file declaring it imports, and
+     * each style's Menu is a distinct type; naming one of them here would
+     * refuse every other. What they all have in common is the template they
+     * are built on.
+     */
+    property T.Menu menu
 
     property color textColor: "#ffffff"
     property color backgroundColor: "#3a3c3e"
