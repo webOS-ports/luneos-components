@@ -8,4 +8,11 @@ moc_*.cpp
 *.qmlproject.user
 *.qmlc
 *.jsc
-
+.qtc_clangd
+.qmake.stash
+Makefile.*
+moc_*.json
+moc_predefs.h
+*_metatypes.json
+*_qmltyperegistrations.cpp
+plugins.qmltypes
