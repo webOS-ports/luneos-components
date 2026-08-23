@@ -37,10 +37,88 @@ QtObject {
     property int retriesLeft: 3
     property string configuredPasscode: "4242"
 
+    // ------------------------------------------------------------------
+    // Dual SIM mock state
+    //
+    // Two slots so the multi SIM chrome in the shell is actually exercised;
+    // set simCountMock to 1 to check that a single SIM device still looks the
+    // way it always did.
+    // ------------------------------------------------------------------
+    property int simCountMock: 2
+    property var simListSubscribers: []
+    property var defaultSimSubscribers: []
+    property var mockSims: [
+        {
+            "simId": 0, "present": true, "name": "SIM 1",
+            "iccid": "8931440000000000001", "imsi": "204040000000001",
+            "msisdn": "+31600000001", "operatorName": "Vodafone",
+            "simStatus": "simready", "powered": true, "ready": true, "bars": 4,
+            "state": "service", "registration": "home",
+            "networkRegistered": true, "dataRegistered": true
+        },
+        {
+            "simId": 1, "present": true, "name": "SIM 2",
+            "iccid": "8931440000000000002", "imsi": "204080000000002",
+            "msisdn": "+31600000002", "operatorName": "KPN",
+            "simStatus": "simready", "powered": true, "ready": true, "bars": 2,
+            "state": "service", "registration": "roam",
+            "networkRegistered": true, "dataRegistered": false
+        }
+    ]
+    property var mockDefaultSim: ({ "voice": 0, "sms": 0, "data": 1 })
+
+    function simsPayload() {
+        var sims = [];
+        for (var i = 0; i < simCountMock && i < mockSims.length; i++) {
+            var sim = mockSims[i];
+            sims.push({
+                "simId": sim.simId, "present": sim.present, "name": sim.name,
+                "iccid": sim.iccid, "imsi": sim.imsi, "msisdn": sim.msisdn,
+                "operatorName": sim.operatorName, "simStatus": sim.simStatus,
+                "powered": sim.powered, "ready": sim.ready, "bars": sim.bars,
+                "state": sim.state, "registration": sim.registration,
+                "networkRegistered": sim.networkRegistered,
+                "dataRegistered": sim.dataRegistered,
+                "defaultForVoice": mockDefaultSim.voice === sim.simId,
+                "defaultForSms": mockDefaultSim.sms === sim.simId,
+                "defaultForData": mockDefaultSim.data === sim.simId
+            });
+        }
+        return {
+            "returnValue": true, "subscribed": true,
+            "simCount": sims.length, "sims": sims,
+            "defaultSim": mockDefaultSim
+        };
+    }
+
+    function postSimList() {
+        var payload = { "payload": JSON.stringify(simsPayload()) };
+        for (var i = 0; i < simListSubscribers.length; i++)
+            simListSubscribers[i](payload);
+
+        var defPayload = { "payload": JSON.stringify({
+            "returnValue": true, "subscribed": true, "defaultSim": mockDefaultSim }) };
+        for (var j = 0; j < defaultSimSubscribers.length; j++)
+            defaultSimSubscribers[j](defPayload);
+    }
+
+    function mockSimById(simId) {
+        for (var i = 0; i < mockSims.length; i++)
+            if (mockSims[i].simId === simId)
+                return mockSims[i];
+        return null;
+    }
+
     property NotificationService notifService: NotificationService {}
 
-    signal response
     signal initialized
+    /*
+     * The real LuneOS.Service plugin exposes these as QJSValue properties
+     * (onResponse/onError) and declares no "response" signal. A signal of that
+     * name here would shadow the property, so that `onResponse: function(...)`
+     * in QML binds a signal handler and leaves the property unset - which makes
+     * every short-form call()/subscribe() silently do nothing.
+     */
     property var onResponse
     property var onError
 
@@ -187,6 +265,46 @@ QtObject {
                 serviceURI === "luna://org.webosports.service.audio/playFeedback") {
             audioService_call(serviceURI, args, returnFct, handleError);
         }
+        else if(serviceURI === "luna://com.palm.telephony/defaultSimSet" ||
+                serviceURI === "luna://com.webos.service.telephony/defaultSimSet") {
+            var roles = ["voice", "sms", "data"];
+            for (var r = 0; r < roles.length; r++) {
+                if (args[roles[r]] !== undefined && mockSimById(args[roles[r]]))
+                    mockDefaultSim[roles[r]] = args[roles[r]];
+            }
+            if (returnFct)
+                returnFct({"payload": JSON.stringify({"returnValue": true, "defaultSim": mockDefaultSim})});
+            postSimList();
+        }
+        else if(serviceURI === "luna://com.palm.telephony/simNameSet" ||
+                serviceURI === "luna://com.webos.service.telephony/simNameSet") {
+            var namedSim = mockSimById(args.simId);
+            if (namedSim)
+                namedSim.name = args.name;
+            if (returnFct)
+                returnFct({"payload": JSON.stringify({"returnValue": namedSim !== null})});
+            postSimList();
+        }
+        else if(serviceURI === "luna://com.palm.telephony/powerSet" ||
+                serviceURI === "luna://com.webos.service.telephony/powerSet") {
+            // a simId turns the radio of one slot on/off, otherwise the lot
+            var poweredSims = args.simId !== undefined ? [mockSimById(args.simId)] : mockSims;
+            for (var p = 0; p < poweredSims.length; p++) {
+                if (!poweredSims[p])
+                    continue;
+                poweredSims[p].powered = (args.state === "on");
+                poweredSims[p].bars = (args.state === "on") ? poweredSims[p].bars : 0;
+                poweredSims[p].registration = (args.state === "on") ? "home" : "noservice";
+                poweredSims[p].state = (args.state === "on") ? "service" : "noservice";
+                poweredSims[p].networkRegistered = (args.state === "on");
+            }
+            if (returnFct)
+                returnFct({"payload": JSON.stringify({"returnValue": true, "simId": args.simId})});
+            postSimList();
+        }
+        else if(/^luna:\/\/com\.palm\.(whatsapp|telegram|signal|teams)\//.test(serviceURI)) {
+            connector_call(serviceURI, args, returnFct, handleError);
+        }
         else {
             // Embed the jsonArgs into a payload message
             var message = { applicationId: "org.webosports.tests.dummyWindow", payload: jsonArgs };
@@ -239,6 +357,17 @@ QtObject {
         else if(serviceURI === "luna://com.palm.wan/getstatus" && returnFct) {
             returnFct({"payload": JSON.stringify({"returnValue":true,
                 "networkstatus":"attached", "networktype":"lte"})});
+        }
+        else if((serviceURI === "luna://com.palm.telephony/simListQuery" ||
+                 serviceURI === "luna://com.webos.service.telephony/simListQuery") && returnFct) {
+            simListSubscribers.push(returnFct);
+            returnFct({"payload": JSON.stringify(simsPayload())});
+        }
+        else if((serviceURI === "luna://com.palm.telephony/defaultSimQuery" ||
+                 serviceURI === "luna://com.webos.service.telephony/defaultSimQuery") && returnFct) {
+            defaultSimSubscribers.push(returnFct);
+            returnFct({"payload": JSON.stringify({
+                "returnValue": true, "subscribed": true, "defaultSim": mockDefaultSim})});
         }
         else if(serviceURI === "luna://com.palm.telephony/powerQuery" && returnFct) {
             returnFct({"payload": JSON.stringify({"returnValue":true, "extended":{"powerState":"on"}})});
