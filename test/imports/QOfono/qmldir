@@ -1,4 +1,4 @@
-module MeeGo.QOfono
+module QOfono
 
 OfonoVoiceCallManager 0.2 OfonoVoiceCallManager.qml
 OfonoVoiceCall 0.2 OfonoVoiceCall.qml
@@ -11,4 +11,4 @@ OfonoNetworkRegistration 0.2 OfonoNetworkRegistration.qml
 OfonoNetworkOperator 0.2 OfonoNetworkOperator.qml
 OfonoSupplementaryServices 0.2 OfonoSupplementaryServices.qml
 
-typeinfo MeeGo.QOfono.qmltypes
+typeinfo QOfono.qmltypes
