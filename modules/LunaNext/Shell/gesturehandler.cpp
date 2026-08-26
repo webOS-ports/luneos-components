@@ -187,8 +187,12 @@ bool ScreenEdgeFlickGestureRecognizer::eventFilter(QObject *, QEvent *event)
 
                 emit screenEdgeFlickGesture(GestureHandler::ScreenEdgeFlickGesture, mStartPos, false);
             };
-            if (touchEvent->touchPoints().count() == 1)
-                emit touchEnd();
+            // TouchEnd marks the end of the whole touch sequence. Emit
+            // unconditionally: touchBegin() is emitted for every sequence, and
+            // skipping the end when several points are released in the same
+            // event frame leaves the consumers unbalanced (e.g. the shell's
+            // rotation lock stayed engaged until the next tap).
+            emit touchEnd();
         }
         break;
     default: break;
