@@ -24,14 +24,19 @@ import QtQuick.Templates 2.5 as T
  * corner showing the application's name with a chevron, which opens the app
  * menu beneath it.
  *
- * This is where webOS users look for an app's own commands -- on device the
- * system bar draws it, and an app drawing its own chrome should put it in the
- * same place rather than inventing an overflow button somewhere else.
+ * FOR THE DESKTOP TEST HOST ONLY. On a device the status bar draws this
+ * affordance itself and opens the menu by relaunching the app with
+ * palm-command open-app-menu -- an app answers that relaunch and never draws
+ * a button of its own. Only when the app runs standalone (from QtCreator,
+ * through its main-desktop.qml) is there no status bar and so no other way
+ * into the menu; this button fills that gap and nothing more. Show it only
+ * behind the desktop flag, as the phone app does with `runningOnDesktop`.
  *
  * Assign a Menu to `menu` and it is popped up under the pill:
  *
  *     AppMenuButton {
  *         text: "Phone"
+ *         visible: runningOnDesktop
  *         menu: Menu { MenuItem { text: "Preferences" } }
  *     }
  */
