@@ -5,17 +5,35 @@ Item {
     property string state: ready ? "online" : "offline"
     property bool ready: (modemPath !== "")
 
+    // A '*100#'-style balance code answers straight away; anything else opens a
+    // menu, so the interactive USSD path can be exercised on the desktop.
     function initiate(command) {
-        if(ready) {
-            console.log("Initiating USSD "+command);
-            ussdResponse("You sent: "+command);
+        if(!ready) {
+            initiateFailed();
+            return;
+        }
+
+        console.log("Initiating USSD "+command);
+
+        if(command.indexOf("*100") === 0) {
+            state = "idle";
+            ussdResponse("Your balance is EUR 12.34.");
+        }
+        else {
+            state = "user-response";
+            requestReceived("Mock menu for " + command + "\n1. Balance\n2. Top up\n3. Bundles");
         }
     }
 
-    function respond() {
+    function respond(reply) {
+        state = "idle";
+        respondComplete(true, "Thanks, you chose " + reply + ".");
+        ussdResponse("Thanks, you chose " + reply + ".");
     }
 
     function cancel() {
+        state = "idle";
+        cancelComplete(true);
     }
 
     signal notificationReceived(string message);

@@ -1,9 +1,7 @@
 import QtQuick 2.0
 
 Item {
-    id: ofonoContextConnection
-
     property string contextPath: ""
-    property string type: ""
-    property bool active: false
+    property string type: "internet"
+    property bool active: true
 }

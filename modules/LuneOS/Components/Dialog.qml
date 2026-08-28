@@ -144,38 +144,55 @@ Item {
                 height: Units.gu(2.5)
             }
 
+            // Held inside the frame: the artwork's own edge is a couple of
+            // grid units thick, and content laid flush against the dialog
+            // would sit on top of it.
             Item {
             id: staticContent
-            anchors.centerIn: parent
             anchors.fill: parent
+            anchors.margins: Units.gu(1.6)
 
             Text {
                 id: titleText
-                width: parent.width
+                anchors.top: parent.top
                 anchors.horizontalCenter: parent.horizontalCenter
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
                 font.family: "Prelude"
+                color: "#3b3b3b"
                 font.pixelSize: 16
                 font.weight: Font.Bold
                 elide: Text.ElideRight
             }
 
+            // Under the title rather than over it: both were anchored to the
+            // top of the dialog, so a dialog with both printed them on top of
+            // one another.
             Text {
                 id: messageText
                 anchors.left: parent.left
-                anchors.leftMargin: Units.gu(2)
-                anchors.top: parent.top
-                anchors.topMargin: Units.gu(2)
+                anchors.right: parent.right
+                anchors.top: titleText.visible && titleText.text.length > 0
+                                 ? titleText.bottom : parent.top
+                anchors.topMargin: Units.gu(1)
+                wrapMode: Text.Wrap
                 font.family: "Prelude"
                 color: "#292929"
                 font.pixelSize: FontUtils.sizeToPixels("12pt")
 
             }
 
+            // The buttons a dialog is given, stacked against its foot. The
+            // margin used to live on DialogButton itself, which anchored to
+            // its parent's bottom -- and an item that anchors itself cannot be
+            // laid out by a Column, so a dialog offering a choice of more than
+            // one button drew them all on top of each other.
             Column {
                 id: dynamicColumn
                 spacing: Units.gu(0.5)
                 anchors {
                     bottom: staticContent.bottom
+                    bottomMargin: Units.gu(1)
                     horizontalCenter: staticContent.horizontalCenter
                 }
             }

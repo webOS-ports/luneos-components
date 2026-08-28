@@ -70,16 +70,24 @@ ListModel {
         xhr.send();
     }
 
-    function syncDb8Model() {
-        // Parse _internalDb and try to apply the query
-        // We make the assumption that the query is a simple classic one
+    function del(ids)
+    {
+        DB8.del(testDb8Model.kind, ids, undefined);
+    }
 
-        var propFilter = "";
-        var propFilterValue = "";
-        if( testDb8Model.query.where ) {
-            propFilter = testDb8Model.query.where[0].prop;
-            propFilterValue = testDb8Model.query.where[0].val;
-        }
+    function merge(dataArray)
+    {
+        DB8.merge(testDb8Model.kind, dataArray);
+    }
+
+    function syncDb8Model() {
+        // Parse _internalDb and try to apply the query.
+        // Filtering understands every clause in the where array, dotted
+        // property paths ("capabilityProviders.capability") and arrays along
+        // the way, which is what the accounts and contacts queries need.
+
+        if( !testDb8Model.query ) return;
+
         var orderByProp = testDb8Model.query.orderBy;
         var ascending = !testDb8Model.query.desc;
 
@@ -88,41 +96,43 @@ ListModel {
         var dbContent = DB8.getDb(testDb8Model.kind);
         for( var i=0; i<dbContent.length; ++i ) {
             var elt = dbContent[i];
-            if( !testDb8Model.query.where ) {
-                // no filtering --> go on
-                result.push(elt);
-            }
-            else {
-                // apply filter. Only "prop" and "=" are supported so far.
-                if (typeof elt[propFilter] === 'object') {
-                    for( var j=0; j<elt[propFilter].length; ++j) {
-                        var subElt = elt[propFilter][j];
-                        if (subElt._id === propFilterValue) {
-                            result.push(elt);
-                            break;
-                        }
+
+            // Legacy behaviour: a where clause naming a plain array property
+            // matched when one of its entries had that _id.
+            if( testDb8Model.query.where && testDb8Model.query.where.length === 1 &&
+                Array.isArray(elt[testDb8Model.query.where[0].prop]) ) {
+                var list = elt[testDb8Model.query.where[0].prop];
+                var wanted = testDb8Model.query.where[0].val;
+                for( var j=0; j<list.length; ++j ) {
+                    if( list[j] === wanted || (list[j] && list[j]._id === wanted) ) {
+                        result.push(elt);
+                        break;
                     }
                 }
-                else if (elt[propFilter] === propFilterValue) {
-                    result.push(elt);
-                }
+                continue;
+            }
+
+            if( DB8.matchesWhere(elt, testDb8Model.query.where) ) {
+                result.push(elt);
             }
         }
 
-        if( orderByProp !== "" ) {
+        if( orderByProp !== undefined && orderByProp !== "" ) {
             result.sort(function(elt1,elt2) {
-                if( ascending ) {
-                    return elt1[orderByProp] - elt2[orderByProp];
-                }
-                else {
-                    return elt2[orderByProp] - elt1[orderByProp];
-                }
+                var a = elt1[orderByProp];
+                var b = elt2[orderByProp];
+                // sortKey is a string; timestamps are numbers.
+                var order = (typeof a === 'string' || typeof b === 'string')
+                                ? String(a).localeCompare(String(b))
+                                : (a - b);
+                return ascending ? order : -order;
             });
         }
 
         testDb8Model.clear();
-        for( var sortedElt in result ) {
-            testDb8Model.append(result[sortedElt]);
+        var rows = DB8.unifyFields(result);
+        for( var sortedElt in rows ) {
+            testDb8Model.append(rows[sortedElt]);
         }
     }
 }

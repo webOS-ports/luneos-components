@@ -25,7 +25,10 @@ Dialog {
     id: confirmDialog
 
     message: "Please confirm"
-    dialogHeight: Units.gu(14)
+    // Tall enough for the title, the message and both buttons. It used to be
+    // shorter, which only looked right while the two buttons were drawn on
+    // top of one another and the message was behind them.
+    dialogHeight: Units.gu(19)
     dialogWidth: Units.gu(30)
 
     signal accepted();

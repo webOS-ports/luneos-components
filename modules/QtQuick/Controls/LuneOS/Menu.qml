@@ -44,8 +44,38 @@ import LunaNext.Common 0.1
 T.Menu {
     id: control
 
+    /*
+     * As wide as its widest entry.
+     *
+     * The content item is a vertical ListView, and such a list's contentWidth
+     * is the width of its viewport rather than of its widest delegate, so
+     * asking it left every menu as wide as its background image with anything
+     * longer cut short. Menu.contentWidth would be the thing to use, but it
+     * stays at zero while the content item is a list of our own.
+     *
+     * Measured rather than bound: reaching for an item creates it, and an item
+     * being created while the menu is working out how wide it is would have
+     * the menu ask itself.
+     */
+    property real _widestItem: 0
+
+    function _measureItems() {
+        var widest = 0;
+        for (var i = 0; i < control.count; ++i) {
+            var item = control.itemAt(i);
+            if (item && item.implicitWidth > widest)
+                widest = item.implicitWidth;
+        }
+        control._widestItem = widest;
+    }
+
+    // Measured as the menu is about to be shown, by which point its items
+    // exist. Reaching for them while the menu is still being built leaves the
+    // list half-made and nothing draws at all.
+    onAboutToShow: _measureItems()
+
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem ? contentItem.implicitWidth + leftPadding + rightPadding + 60 : 0)
+                            _widestItem + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem ? contentItem.implicitHeight : 0) + topPadding + bottomPadding
 

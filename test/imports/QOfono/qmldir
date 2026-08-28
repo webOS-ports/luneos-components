@@ -1,14 +1,16 @@
 module QOfono
 
-OfonoVoiceCallManager 0.2 OfonoVoiceCallManager.qml
-OfonoVoiceCall 0.2 OfonoVoiceCall.qml
 OfonoManager 0.2 OfonoManager.qml
-OfonoConnMan 0.2 OfonoConnMan.qml
 OfonoModem 0.2 OfonoModem.qml
-OfonoContextConnection 0.2 OfonoContextConnection.qml
 OfonoSimManager 0.2 OfonoSimManager.qml
 OfonoNetworkRegistration 0.2 OfonoNetworkRegistration.qml
 OfonoNetworkOperator 0.2 OfonoNetworkOperator.qml
+OfonoMessageWaiting 0.2 OfonoMessageWaiting.qml
+OfonoVoiceCallManager 0.2 OfonoVoiceCallManager.qml
+OfonoVoiceCall 0.2 OfonoVoiceCall.qml
 OfonoSupplementaryServices 0.2 OfonoSupplementaryServices.qml
-
-typeinfo QOfono.qmltypes
+OfonoCallForwarding 0.2 OfonoCallForwarding.qml
+OfonoCallSettings 0.2 OfonoCallSettings.qml
+OfonoCallBarring 0.2 OfonoCallBarring.qml
+OfonoConnMan 0.2 OfonoConnMan.qml
+OfonoContextConnection 0.2 OfonoContextConnection.qml

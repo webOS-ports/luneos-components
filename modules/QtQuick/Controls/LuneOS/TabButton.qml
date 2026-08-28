@@ -52,31 +52,52 @@ T.TabButton {
     readonly property url _image: LuneOSButton.image
 
     //! [contentItem]
+    // A tab may carry an image, a label, or -- as the webOS apps do -- an icon
+    // above a small caption. Setting both used to hide the text; now they stack.
+    readonly property bool _hasImage: _image.toString() !== ""
+    readonly property bool _hasText: control.text !== ""
+    readonly property bool _stacked: _hasImage && _hasText
+
     contentItem: Item {
         Image {
             id: imageContent
-            visible: _image.toString() !== ""
+            visible: control._hasImage
             source: _image
 
-            height: parent.height
+            height: control._stacked ? Math.round(parent.height * 0.6) : parent.height
             width: height
             fillMode: Image.PreserveAspectCrop
             clip: true
             verticalAlignment: (control.checked||control.down) ? Image.AlignBottom : Image.AlignTop
             anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
         }
         Text {
             id: textContent
-            anchors.fill: parent
-            visible: !imageContent.visible
+            visible: control._hasText
+
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: control._stacked ? imageContent.bottom : parent.top
+            anchors.bottom: parent.bottom
 
             text: control.text
-            font: control.font
+            // Assigning the whole font group and then individual members is an
+            // error, so every member is set here. The size is left as the
+            // caller set it: a font given by pointSize reports pixelSize as -1,
+            // and scaling that yields an invalid size and no text at all.
+            font.family: control.font.family
+            font.bold: control.font.bold
+            font.italic: control.font.italic
+            font.weight: control.font.weight
+            font.pixelSize: control.font.pixelSize
+            // A caption under an icon reads as a label rather than body text.
+            font.capitalization: control._stacked ? Font.AllUppercase : Font.MixedCase
             elide: Text.ElideRight
             opacity: enabled ? 1 : 0.3
             color: !control.checked ? "#ffffff" : control.down ? "#26282a" : "#353637"
             horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
+            verticalAlignment: control._stacked ? Text.AlignTop : Text.AlignVCenter
         }
     }
     //! [contentItem]
