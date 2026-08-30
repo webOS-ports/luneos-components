@@ -6,11 +6,13 @@ uri = LuneOS.Components
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 
 QML_FILES = AlertDialog.qml \
+            AppMenuButton.qml \
             AuthenticationDialog.qml \
             CertDialog.qml \
             ClippedImage.qml \
             ConfirmDialog.qml \
             DialogButton.qml \
+            DialogCheckBox.qml \
             DialogLineInput.qml \
             Dialog.qml \
             FilePicker.qml \
@@ -20,6 +22,7 @@ QML_FILES = AlertDialog.qml \
             PageStackWindow.qml \
             PromptDialog.qml \
             ProxyAuthenticationDialog.qml \
+            SpriteIcon.qml \
             Tweak.qml \
             UserAgent.qml
 
