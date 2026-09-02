@@ -2,6 +2,7 @@ TEMPLATE = subdirs
 
 SUBDIRS += \
     QtQuick/Controls/LuneOS/styles2.pro \
+    LuneOS/Camera/camera.pro \
     LuneOS/Components/components.pro \
     LuneOS/Telephony/telephony.pro
     

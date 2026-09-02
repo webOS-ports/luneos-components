@@ -85,9 +85,17 @@ T.GroupBox {
 
     //! [background]
     background: Column {
+        id: groupBoxBg
         width: parent.width
+
+        // group-labeled-bottom.png starts with the seam that sits under the
+        // title bar, so on its own it left an untitled group with a butchered
+        // top edge. webOS ships a rounded box for that case; use it.
+        readonly property bool titled: control.title.length > 0
+
         BorderImage {
             id: groupBoxTitleBg
+            visible: groupBoxBg.titled
             source: "images/group-labeled-top.png"
             width: parent.width; height: control.topPadding - control.padding
             border.left: 12; border.top: 12
@@ -95,9 +103,12 @@ T.GroupBox {
         }
         BorderImage {
             id: groupBoxContentBg
-            source: "images/group-labeled-bottom.png"
-            width: parent.width; height: parent.height - control.topPadding + control.padding
-            border.left: 12; border.top: 9
+            source: groupBoxBg.titled ? "images/group-labeled-bottom.png"
+                                      : "images/group-unlabeled.png"
+            width: parent.width
+            height: groupBoxBg.titled ? parent.height - control.topPadding + control.padding
+                                      : parent.height
+            border.left: 12; border.top: groupBoxBg.titled ? 9 : 12
             border.right: 12; border.bottom: 12
         }
     }

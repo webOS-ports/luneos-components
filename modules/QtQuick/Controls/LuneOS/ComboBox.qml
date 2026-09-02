@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.12
+import QtQuick.Window 2.12
 import QtQuick.Templates 2.4 as T
 
 import QtQuick.Controls.LuneOS 2.0
@@ -109,11 +110,23 @@ T.ComboBox {
 
     //! [popup]
     popup: T.Popup {
+        // How tall the list is allowed to get. LuneOS apps are WebOSWindows,
+        // not ApplicationWindows, so T.ApplicationWindow.overlay is undefined
+        // in all of them and this used to fall back to control.parent.height -
+        // one settings row, which cut the first choice in half. The window is
+        // there either way.
+        readonly property real maximumHeight: {
+            if (T.ApplicationWindow.overlay)
+                return T.ApplicationWindow.overlay.height / 2;
+            if (control.Window.window)
+                return control.Window.height / 2;
+            return listview.contentHeight;
+        }
+
         y: control.height - (control.visualFocus ? 0 : 1)
         width: control.width
         implicitHeight: Math.min(listview.contentHeight,
-                                 Math.max(T.ApplicationWindow.overlay ? T.ApplicationWindow.overlay.height/2 : 0,
-                                          control.parent.height))
+                                 Math.max(maximumHeight, control.parent.height))
         topMargin: 6
         bottomMargin: 6
 

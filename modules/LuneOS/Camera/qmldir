@@ -1,0 +1,2 @@
+module LuneOS.Camera
+plugin luneos-camera-qml
