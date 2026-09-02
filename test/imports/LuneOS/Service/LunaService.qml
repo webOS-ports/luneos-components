@@ -21,6 +21,7 @@ import WebOSCompositorBase 1.0
 
 import "LunaServiceRegistering.js" as LSRegisteredMethods
 import "dualsim.js" as DualSim
+import "wan.js" as Wan
 import "db8content.js" as DB8
 
 QtObject {
@@ -231,6 +232,15 @@ QtObject {
                 returnFct({"payload": JSON.stringify({"returnValue": namedSim !== null})});
             DualSim.postSimList();
         }
+        else if(serviceURI === "luna://com.palm.telephony/ratQuery" && returnFct) {
+            returnFct({"payload": JSON.stringify({"returnValue":true,
+                "extended":{"mode": Wan.ratMode}})});
+        }
+        else if(serviceURI === "luna://com.palm.telephony/ratSet") {
+            Wan.setRatMode(args.mode);
+            if (returnFct)
+                returnFct({"payload": JSON.stringify({"returnValue":true})});
+        }
         else if(serviceURI === "luna://com.palm.telephony/powerSet" ||
                 serviceURI === "luna://com.webos.service.telephony/powerSet") {
             // a simId turns the radio of one slot on/off, otherwise the lot
@@ -327,8 +337,8 @@ QtObject {
                 "cellular":{"enabled":true}, "wan":{"onInternet":true}})});
         }
         else if(serviceURI === "luna://com.palm.wan/getstatus" && returnFct) {
-            returnFct({"payload": JSON.stringify({"returnValue":true,
-                "networkstatus":"attached", "networktype":"lte"})});
+            Wan.statusSubscribers.push(returnFct);
+            returnFct({"payload": JSON.stringify(Wan.statusPayload())});
         }
         else if((serviceURI === "luna://com.palm.telephony/simListQuery" ||
                  serviceURI === "luna://com.webos.service.telephony/simListQuery") && returnFct) {
@@ -702,11 +712,10 @@ QtObject {
     }
 
     function wanSet_call(args, returnFct, handleError) {
-        var message = {
-            "returnValue":true
-        };
+        Wan.applyConfiguration(args);
 
-        returnFct({payload: JSON.stringify(message)});
+        if (returnFct)
+            returnFct({payload: JSON.stringify({"returnValue": true})});
     }
 
     function wifiSetState_call(args, returnFct, handleError) {
