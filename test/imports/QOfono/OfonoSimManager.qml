@@ -46,6 +46,13 @@ Item {
     property string mockPuk: "12345678"
 
     property string modemPath: ""
+
+    /// QOfonoObject exposes this on every interface: true once the modem's
+    /// D-Bus interface has answered. A mock is always up, so it is always
+    /// true -- but it has to exist, because callers watch it to tell a SIM
+    /// that is really there from one still being asked about.
+    property bool valid: true
+
     property bool present: true
     property string subscriberIdentity: "204040123456789"
     property string mobileCountryCode: "204"
