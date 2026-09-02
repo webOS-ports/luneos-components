@@ -87,15 +87,20 @@ T.TabButton {
             // caller set it: a font given by pointSize reports pixelSize as -1,
             // and scaling that yields an invalid size and no text at all.
             font.family: control.font.family
-            font.bold: control.font.bold
+            // The selected tab is set in bold. font.weight is assigned after
+            // font.bold and therefore decides the result, so both have to say
+            // the same thing - setting only font.bold here does nothing.
+            font.bold: control.checked ? true : control.font.bold
             font.italic: control.font.italic
-            font.weight: control.font.weight
+            font.weight: control.checked ? Font.Bold : control.font.weight
             font.pixelSize: control.font.pixelSize
             // A caption under an icon reads as a label rather than body text.
             font.capitalization: control._stacked ? Font.AllUppercase : Font.MixedCase
             elide: Text.ElideRight
-            opacity: enabled ? 1 : 0.3
-            color: !control.checked ? "#ffffff" : control.down ? "#26282a" : "#353637"
+            // Dimming on press replaces the darker text colour the selected
+            // tab used to carry, which as good as vanished against the blue.
+            opacity: !enabled ? 0.3 : control.down ? 0.7 : 1
+            color: "#ffffff"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: control._stacked ? Text.AlignTop : Text.AlignVCenter
         }

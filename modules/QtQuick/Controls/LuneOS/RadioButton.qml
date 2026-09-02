@@ -77,7 +77,13 @@ T.RadioButton {
 
         text: control.text
         font: control.font
-        color: control.down ? "#26282a" : "#353637"
+        // In the collapsed layout the selected segment is drawn on the blue of
+        // radiobutton-*-pressed.png, where the dark label all but disappears;
+        // white and bold is what the rest of the theme puts on that blue. The
+        // expanded layout keeps its dark label on the page background.
+        color: (_useCollapsedLayout && (control.checked || control.down))
+                    ? "#ffffff"
+                    : control.down ? "#26282a" : "#353637"
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignHCenter
