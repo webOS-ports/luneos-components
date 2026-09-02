@@ -104,7 +104,11 @@ T.TabButton {
 
     //! [background]
     background: Rectangle {
-        color: control.checked ? "#2071bb" : "#343434"
+        // The selected tab now carries the same blue as a Switch in its "on"
+        // state (images/toggle-button-on.png), which is a lighter, less
+        // saturated blue than the #2071bb this used to be - side by side the
+        // old one read as a different, darker accent.
+        color: control.checked ? "#4585b8" : "#343434"
         height: control.height
 
         BorderImage {
