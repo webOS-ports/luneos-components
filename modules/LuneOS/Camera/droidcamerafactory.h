@@ -36,6 +36,11 @@ public:
 
     bool available() const;
 
+    /* Whether gst-droid is usable in this process. Static so the QML plugin
+     * can consult it at import time, before any instance exists, to decide
+     * the QtMultimedia backend. */
+    static bool droidPluginAvailable();
+
     Q_INVOKABLE QObject *createVideoSource(int cameraDevice);
 
     /* Full-resolution still capture through droidcamsrc's imgsrc pad -

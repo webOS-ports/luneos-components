@@ -28,7 +28,27 @@
 #define HAVE_QGSTREAMER_VIDEO_SOURCE 1
 #endif
 
-static const QLatin1String cGstDroidPlugin("/usr/lib/gstreamer-1.0/libgstdroid.so");
+/* Ask the GStreamer registry rather than probing a fixed path. gst-droid is
+ * not always in the directory GStreamer scans by default: LuneOS installs it
+ * in ${libdir}/gstreamer-1.0-gated and gst-droid-gate.service adds that to
+ * GST_PLUGIN_PATH once the Android media services answer, so a hardcoded
+ * ${libdir}/gstreamer-1.0 probe reports "not installed" on exactly the
+ * devices where it is installed and working. */
+bool DroidCameraFactory::droidPluginAvailable()
+{
+    static const bool available = [] {
+        gst_init(nullptr, nullptr);
+
+        GstElementFactory *factory = gst_element_factory_find("droidcamsrc");
+        if (!factory)
+            return false;
+
+        gst_object_unref(factory);
+        return true;
+    }();
+
+    return available;
+}
 
 DroidCameraFactory::DroidCameraFactory(QObject *parent)
     : QObject(parent)
@@ -38,7 +58,7 @@ DroidCameraFactory::DroidCameraFactory(QObject *parent)
 bool DroidCameraFactory::available() const
 {
 #ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
-    return QFile::exists(cGstDroidPlugin);
+    return droidPluginAvailable();
 #else
     return false;
 #endif
