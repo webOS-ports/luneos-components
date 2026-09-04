@@ -20,11 +20,29 @@
 
 var _internalDb8 = {};
 var testDataFileParsed = [];
+var _seededKinds = {};
 
 function generateId()
 {
     // low risk of collision up to 10k numbers
     return '++QML' + Math.random().toString(36).substr(2, 9);
+}
+
+/*
+ * Seeds a kind with example rows exactly once, ever - unlike the hard-coded
+ * canned responses findDb_call answers com.palm.browserhistory:1 and
+ * friends with, this goes through the same mutable in-memory store put/del
+ * everyone else uses, so deleting a seeded row (testing a swipe-to-delete,
+ * say) actually removes it rather than having it reappear the next time the
+ * owning page re-opens and asks to be seeded again.
+ */
+function seedOnce(kind, rows)
+{
+    if( _seededKinds[kind] ) return;
+    _seededKinds[kind] = true;
+
+    initDb8Kind(kind, function() {});
+    put(kind, rows);
 }
 
 function initDb8Kind(kind, syncDb8Model)
