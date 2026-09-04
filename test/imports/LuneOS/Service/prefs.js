@@ -90,7 +90,16 @@ var values = {
 
     "airplaneMode": false,
     "rotationLock": false,
-    "4DigitNumber": "+312055512"
+    "4DigitNumber": "+312055512",
+
+    // LocationPage.qml's global prefs - com.palm.location (the real legacy
+    // service these belonged to, per luneos-vpn-adapter-style research into
+    // the shipped TouchPad rootfs) does not exist on LuneOS, so these are
+    // ordinary preferences instead of a dedicated service's, same as
+    // TextAssistPage's keyboard settings.
+    "autoLocate": true,
+    "webSetting": true,
+    "geotagPhotos": false
 };
 
 /*

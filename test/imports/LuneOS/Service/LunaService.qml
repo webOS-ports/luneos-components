@@ -24,6 +24,10 @@ import "dualsim.js" as DualSim
 import "wan.js" as Wan
 import "db8content.js" as DB8
 import "prefs.js" as Prefs
+import "vpn.js" as Vpn
+import "print.js" as Print
+import "justtype.js" as JustType
+import "certmgr.js" as CertMgr
 
 QtObject {
     id: lunaServiceMock
@@ -202,8 +206,19 @@ QtObject {
         else if(serviceURI === "luna://org.webosports.service.tweaks.prefs/get") {
             getTweaks_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "luna://com.palm.universalsearch/getUniversalSearchList") {
-            getUniversalSearch_call(args, returnFct, handleError);
+        else if(serviceURI === "luna://com.palm.universalsearch/getAllSearchPreference" && returnFct) {
+            returnFct({"payload": JSON.stringify(JustType.preferencesPayload())});
+        }
+        else if(serviceURI === "luna://com.palm.universalsearch/setSearchPreference" && returnFct) {
+            returnFct({"payload": JSON.stringify(JustType.setSearchPreference(args.key, args.value))});
+        }
+        else if(serviceURI === "luna://com.palm.universalsearch/updateSearchItem" && returnFct) {
+            returnFct({"payload": JSON.stringify(
+                JustType.updateSearchItem(args.id, args.enabled, args.category, args.setDefault))});
+        }
+        else if(serviceURI === "luna://com.palm.universalsearch/updateAllSearchItems" && returnFct) {
+            returnFct({"payload": JSON.stringify(
+                JustType.updateAllSearchItems(args.category, args.enabled))});
         }
         else if(serviceURI === "luna://org.webosports.service.update/retrieveVersion") {
             retrieveVersion_call(args, returnFct, handleError);
@@ -288,6 +303,68 @@ QtObject {
         else if(/^luna:\/\/com\.palm\.(whatsapp|telegram|signal|teams)\//.test(serviceURI)) {
             connector_call(serviceURI, args, returnFct, handleError);
         }
+        else if(serviceURI === "luna://com.webos.service.vpn/getAgents" && returnFct) {
+            returnFct({"payload": JSON.stringify({"returnValue": true, "vpnAgents": Vpn.vpnAgents})});
+        }
+        else if(serviceURI === "luna://com.webos.service.vpn/getAgentFormFields" && returnFct) {
+            returnFct({"payload": JSON.stringify({"returnValue": true,
+                "vpnAgentGuid": args.vpnAgentGuid,
+                "vpnFormFields": Vpn.agentFormFields(args.vpnAgentGuid)})});
+        }
+        else if(serviceURI === "luna://com.webos.service.vpn/getProfileDetails" && returnFct) {
+            vpnGetProfileDetails_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.webos.service.vpn/addProfile" && returnFct) {
+            var profile = args.vpnProfile || {};
+            returnFct({"payload": JSON.stringify(Vpn.addProfile(args.vpnProfileName,
+                args.vpnAgentGuid, profile.vpnHost, profile.vpnDomain, profile.vpnFormFields))});
+        }
+        else if(serviceURI === "luna://com.webos.service.vpn/updateProfile" && returnFct) {
+            var updated = args.vpnProfile || {};
+            returnFct({"payload": JSON.stringify(Vpn.updateProfile(args.vpnProfileName,
+                updated.vpnHost, updated.vpnDomain, updated.vpnFormFields))});
+        }
+        else if(serviceURI === "luna://com.webos.service.vpn/deleteProfile" && returnFct) {
+            returnFct({"payload": JSON.stringify(Vpn.deleteProfile(args.vpnProfileName))});
+        }
+        else if(serviceURI === "luna://com.webos.service.vpn/importProfile" && returnFct) {
+            returnFct({"payload": JSON.stringify(
+                Vpn.importProfile(args.vpnProfileName, args.format, args.filePath))});
+        }
+        else if(serviceURI === "luna://com.webos.service.vpn/importCertificate" && returnFct) {
+            returnFct({"payload": JSON.stringify(
+                Vpn.importCertificate(args.vpnProfileName, args.role, args.filePath))});
+        }
+        else if(serviceURI === "luna://com.webos.service.vpn/connect" && returnFct) {
+            vpnConnect_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.webos.service.vpn/disconnect" && returnFct) {
+            vpnDisconnect_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://org.webosports.service.print/addPrinter" && returnFct) {
+            returnFct({"payload": JSON.stringify(Print.addPrinter(args.name, args.uri))});
+        }
+        else if(serviceURI === "luna://org.webosports.service.print/removePrinter" && returnFct) {
+            returnFct({"payload": JSON.stringify(Print.removePrinter(args.printerId))});
+        }
+        else if(serviceURI === "luna://org.webosports.service.print/setDefaultPrinter" && returnFct) {
+            returnFct({"payload": JSON.stringify(Print.setDefaultPrinter(args.printerId))});
+        }
+        else if(serviceURI === "luna://org.webosports.service.print/cancelJob" && returnFct) {
+            returnFct({"payload": JSON.stringify(Print.cancelJob(args.jobId))});
+        }
+        else if(serviceURI === "luna://org.webosports.service.print/cancelAllJobs" && returnFct) {
+            returnFct({"payload": JSON.stringify(Print.cancelAllJobs())});
+        }
+        else if(serviceURI === "luna://org.webosports.service.certmgr/listAll" && returnFct) {
+            returnFct({"payload": JSON.stringify(CertMgr.listAllPayload())});
+        }
+        else if(serviceURI === "luna://org.webosports.service.certmgr/install" && returnFct) {
+            returnFct({"payload": JSON.stringify(CertMgr.install(args.path, args.passphrase))});
+        }
+        else if(serviceURI === "luna://org.webosports.service.certmgr/remove" && returnFct) {
+            returnFct({"payload": JSON.stringify(CertMgr.remove(args.serial))});
+        }
         else {
             // Embed the jsonArgs into a payload message
             var message = { applicationId: "org.webosports.tests.dummyWindow", payload: jsonArgs };
@@ -340,6 +417,26 @@ QtObject {
             Qt.callLater(function() {
                 returnFct({"payload": JSON.stringify(lunaServiceMock.fingerprintStatusPayload())});
             });
+        }
+        else if(serviceURI === "luna://com.webos.service.vpn/getProfileList" && args.subscribe && returnFct) {
+            Vpn.profileListSubscribers.push(returnFct);
+            returnFct({"payload": JSON.stringify(Vpn.profileListPayload())});
+        }
+        else if(serviceURI === "luna://com.webos.service.vpn/getStatus" && args.subscribe && returnFct) {
+            Vpn.statusSubscribers.push(returnFct);
+            returnFct({"payload": JSON.stringify(Vpn.statusPayload())});
+        }
+        else if(serviceURI === "luna://org.webosports.service.print/listPrinters" && args.subscribe && returnFct) {
+            Print.printerSubscribers.push(returnFct);
+            returnFct({"payload": JSON.stringify(Print.printersPayload())});
+        }
+        else if(serviceURI === "luna://org.webosports.service.print/listJobs" && args.subscribe && returnFct) {
+            Print.jobSubscribers.push(returnFct);
+            returnFct({"payload": JSON.stringify(Print.jobsPayload())});
+        }
+        else if(serviceURI === "luna://com.palm.universalsearch/getUniversalSearchList" && args.subscribe && returnFct) {
+            JustType.searchListSubscribers.push(returnFct);
+            returnFct({"payload": JSON.stringify(JustType.searchListPayload())});
         }
         else if(serviceURI === "luna://com.webos.service.location/getLocationUpdates" && returnFct) {
             locationTrackingSubscribers.push(returnFct);
@@ -858,6 +955,17 @@ QtObject {
         if(args.id)
             DB8.initDb8Kind(args.id, function() {});
 
+        // LocationPage's Granted Access list: two examples so there is
+        // something to see and swipe away on first run, seeded once only -
+        // see seedOnce()'s own comment for why that matters for testing
+        // delete specifically.
+        if(args.id === "org.webosports.app.settings.locationgrants:1") {
+            DB8.seedOnce(args.id, [
+                { "appId": "org.webosports.app.maps", "displayName": "Maps", "grantedAt": 1 },
+                { "url": "https://weather.example.com", "displayName": "weather.example.com", "grantedAt": 2 }
+            ]);
+        }
+
         if(typeof returnFct !== 'undefined')
             returnFct({"payload": JSON.stringify({"returnValue": true})});
     }
@@ -875,6 +983,77 @@ QtObject {
             "available": true, "state": "idle",
             "fingerprints": fingerprintTemplates
         };
+    }
+
+    /*
+     * VPN. Profile data itself (three protocols, plus one Immutable entry)
+     * lives in vpn.js, shared across LunaService instances the same way
+     * wan.js's packet data state is - VPNPage's getProfileList subscription
+     * and a later connect/addProfile call have to see the same list.
+     *
+     * connect/disconnect answer "returnValue: true" immediately (the real
+     * connect call only resolves once the tunnel is up or fails, but that
+     * would leave a page's own connect_call() waiting on a callback that
+     * never comes here) and instead move the profile through a busy state
+     * for a moment, the way a real handshake would, before settling -
+     * that's what _vpnTransitionTimer is for. Credential prompts
+     * (getStatus's promptId push, answered via uiPromptResponse) are not
+     * mocked: none of profiles below need one, and simulating connman's own
+     * VPN agent round-trip is more machinery than a component gallery needs.
+     */
+    property var _pendingVpnTransitions: []
+
+    function _applyNextVpnTransition() {
+        if (lunaServiceMock._pendingVpnTransitions.length === 0)
+            return;
+        var next = lunaServiceMock._pendingVpnTransitions.shift();
+        Vpn.settleTransition(next.name, next.finalState);
+        if (lunaServiceMock._pendingVpnTransitions.length > 0)
+            vpnTransitionTimer.restart();
+    }
+
+    function vpnGetProfileDetails_call(args, returnFct, handleError) {
+        var profile = Vpn.findProfile(args.vpnProfileName);
+        if (!profile) {
+            returnFct({"payload": JSON.stringify(
+                {"returnValue": false, "errorCode": -3, "errorText": "No such profile."})});
+            return;
+        }
+        returnFct({"payload": JSON.stringify({
+            "returnValue": true,
+            "vpnProfileName": profile.vpnProfileName,
+            "vpnAgentGuid": profile.vpnAgentGuid,
+            "immutable": profile.immutable,
+            "vpnProfile": {
+                "vpnHost": profile.vpnHost,
+                "vpnDomain": profile.vpnDomain,
+                "vpnFormFields": profile.vpnFormFields
+            }
+        })});
+    }
+
+    function vpnConnect_call(args, returnFct, handleError) {
+        if (!Vpn.findProfile(args.vpnProfileName)) {
+            returnFct({"payload": JSON.stringify(
+                {"returnValue": false, "errorCode": -3, "errorText": "No such profile."})});
+            return;
+        }
+        Vpn.beginTransition(args.vpnProfileName, "connecting");
+        lunaServiceMock._pendingVpnTransitions.push({"name": args.vpnProfileName, "finalState": "connected"});
+        vpnTransitionTimer.restart();
+        returnFct({"payload": JSON.stringify({"returnValue": true})});
+    }
+
+    function vpnDisconnect_call(args, returnFct, handleError) {
+        if (!Vpn.findProfile(args.vpnProfileName)) {
+            returnFct({"payload": JSON.stringify(
+                {"returnValue": false, "errorCode": -3, "errorText": "No such profile."})});
+            return;
+        }
+        Vpn.beginTransition(args.vpnProfileName, "disconnecting");
+        lunaServiceMock._pendingVpnTransitions.push({"name": args.vpnProfileName, "finalState": "disconnected"});
+        vpnTransitionTimer.restart();
+        returnFct({"payload": JSON.stringify({"returnValue": true})});
     }
 
     /*
@@ -1362,16 +1541,6 @@ QtObject {
         returnFct({payload: JSON.stringify(message)});
     }
 
-    function getUniversalSearch_call(args, returnFct, handleError) {
-        var message = { 
-            "returnValue": true, 
-            "UniversalSearchList": [ { "id": "google", "displayName": "Google", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-google.png", "url": "https:\/\/www.google.com\/search?q=#{searchTerms}", "suggestURL": "https:\/\/encrypted.google.com\/complete\/search?hl=en&output=firefox&q=#{searchTerms}", "launchParam": "", "type": "web", "enabled": true }, { "id": "wikipedia", "displayName": "Wikipedia", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-wikipedia.png", "url": "https:\/\/en.wikipedia.org\/wiki\/Special:Search?search=#{searchTerms}", "suggestURL": "https:\/\/en.wikipedia.org\/w\/api.php?action=opensearch&search=#{searchTerms}&limit=8&namespace=0&format=json", "launchParam": "", "type": "web", "enabled": true }, { "id": "duckduckgo", "displayName": "DuckDuckGo", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-duckduckgo.png", "url": "https:\/\/www.duckduckgo.com\/?q=#{searchTerms}", "suggestURL": "", "launchParam": "", "type": "web", "enabled": true }, { "id": "cnn", "displayName": "CNN", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-cnn.png", "url": "http:\/\/www.cnn.com\/search\/?query=#{searchTerms}", "suggestURL": "", "launchParam": "", "type": "web", "enabled": false }, { "id": "amazon", "displayName": "Amazon", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-amazon.png", "url": "https:\/\/www.amazon.com\/s\/?k=#{searchTerms}", "suggestURL": "", "launchParam": "", "type": "web", "enabled": false }, { "id": "imdb", "displayName": "IMDb", "iconFilePath": "\/usr\/palm\/applications\/com.palm.launcher\/images\/search-icon-imdb.png", "url": "http:\/\/www.imdb.com\/find?q=#{searchTerms}", "suggestURL": "", "launchParam": "", "type": "web", "enabled": false } ], "ActionList": [ { "id": "com.palm.app.email", "displayName": "New Email", "iconFilePath": "\/usr\/palm\/applications\/com.palm.app.email\/icon.png", "url": "com.palm.app.email", "launchParam": "text", "enabled": true }, { "id": "com.palm.app.calendar", "displayName": "New Event", "iconFilePath": "\/usr\/palm\/applications\/com.palm.app.calendar\/images\/icon-256x256.png", "url": "com.palm.app.calendar", "launchParam": "quickLaunchText", "enabled": true }, { "id": "org.webosports.app.messaging", "displayName": "New Message", "iconFilePath": "\/usr\/palm\/applications\/org.webosports.app.messaging\/icon.png", "url": "org.webosports.app.messaging", "launchParam": "{ \"compose\": { \"messageText\": \"#{searchTerms}\" } }", "enabled": true } ], "DBSearchItemList": [ { "id": "com.palm.app.email", "displayName": "Email", "iconFilePath": "\/usr\/palm\/applications\/com.palm.app.email\/icon.png", "launchParam": "emailId", "launchParamDbField": "_id", "dbQuery": { "from": "com.palm.email:1", "where": [ { "prop": "flags.visible", "op": "=", "val": true }, { "prop": "searchText", "op": "?", "val": "", "collate": "primary" } ], "orderBy": "timestamp", "desc": true, "limit": 20 }, "displayFields": [ "from.name", "subject" ], "batchQuery": false, "enabled": true }, { "id": "com.palm.app.calendar", "displayName": "Calendar Events", "iconFilePath": "\/usr\/palm\/applications\/com.palm.app.calendar\/images\/icon-256x256.png", "launchParam": "showEventDetail", "launchParamDbField": "_id", "dbQuery": { "from": "com.palm.calendarevent:1", "where": [ { "prop": "searchText", "op": "?", "val": "", "collate": "primary" } ], "orderBy": "subject", "desc": false, "limit": 20 }, "displayFields": [ "subject", { "name": "dtstart", "type": "timestamp" } ], "batchQuery": false, "enabled": true } ], 
-            "defaultSearchEngine": "google", 
-            "subscribed": false 
-        };
-        returnFct({payload: JSON.stringify(message)});
-    }
-
     function retrieveVersion_call(args, returnFct, handleError) {
         var message = {
             "returnValue": true,
@@ -1515,6 +1684,13 @@ QtObject {
             lunaServiceMock._connectorLines[service] = lines;
             lunaServiceMock._connectorPush(service);
         }
+    }
+
+    property Timer _vpnTransitionTimer: Timer {
+        id: vpnTransitionTimer
+
+        interval: 900
+        onTriggered: lunaServiceMock._applyNextVpnTransition()
     }
 
 }
