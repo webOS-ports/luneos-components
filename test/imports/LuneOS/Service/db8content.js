@@ -51,6 +51,13 @@ function put(kind, dataArray)
     _internalDb8[kind].syncFct.forEach(function(fct) { fct() });
 }
 
+// Every kind something has been stored under, for a caller that has an id but
+// not the kind it belongs to.
+function kinds()
+{
+    return Object.keys(_internalDb8);
+}
+
 function getDb(kind)
 {
     if( typeof _internalDb8[kind] === 'undefined' ) return []

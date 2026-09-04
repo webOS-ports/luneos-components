@@ -23,6 +23,7 @@ import "LunaServiceRegistering.js" as LSRegisteredMethods
 import "dualsim.js" as DualSim
 import "wan.js" as Wan
 import "db8content.js" as DB8
+import "prefs.js" as Prefs
 
 QtObject {
     id: lunaServiceMock
@@ -125,6 +126,32 @@ QtObject {
         }
         else if(serviceURI === "luna://com.palm.systemservice/getPreferenceValues") {
             getPreferenceValues_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.palm.systemservice/time/setSystemTime" ||
+                serviceURI === "luna://com.webos.service.systemservice/time/setSystemTime") {
+            setSystemTime_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.palm.systemservice/wallpaper/importWallpaper" ||
+                serviceURI === "luna://com.webos.service.systemservice/wallpaper/importWallpaper") {
+            importWallpaper_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.palm.systemmanager/setDevicePasscode") {
+            setDevicePasscode_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.palm.applicationManager/listDockModeLaunchPoints" ||
+                serviceURI === "luna://com.palm.applicationManager/addDockModeLaunchPoint" ||
+                serviceURI === "luna://com.palm.applicationManager/removeDockModeLaunchPoint") {
+            dockModeLaunchPoints_call(serviceURI, args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.palm.db/putKind") {
+            putKindDb_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.webos.service.location/setState") {
+            setLocationHandlerState_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.webos.service.location/getAllLocationHandlers" && returnFct) {
+            // Also reachable unsubscribed: a plain one-shot call is valid too.
+            returnFct({"payload": JSON.stringify(locationHandlersPayload())});
         }
         else if(serviceURI === "luna://com.palm.systemmanager/matchDevicePasscode") {
             matchDevicePasscode_call(args, returnFct, handleError);
@@ -295,6 +322,36 @@ QtObject {
             LSRegisteredMethods.addRegisteredMethod("luna://com.palm.applicationManager/launchPointChanges", returnFct);
             //returnFct({"payload": JSON.stringify({})});
         }
+        else if((serviceURI === "luna://com.palm.systemservice/time/getSystemTime" ||
+                 serviceURI === "luna://com.webos.service.systemservice/time/getSystemTime") && returnFct) {
+            systemTimeSubscribers.push(returnFct);
+            returnFct({"payload": JSON.stringify(systemTimePayload())});
+        }
+        else if(serviceURI === "luna://com.palm.applicationManager/listDockModeLaunchPoints" && returnFct) {
+            dockModeSubscribers.push(returnFct);
+            returnFct({"payload": JSON.stringify(dockModePayload())});
+        }
+        else if(serviceURI === "luna://com.webos.service.fingerprint/getStatus" && returnFct) {
+            fingerprintStatusSubscribers.push(returnFct);
+            // Deferred, like the location fix below: answering synchronously
+            // from inside Component.onCompleted collided with the page's own
+            // first layout pass and Qt Quick misread the settling geometry as
+            // a binding loop on a wrapping Label a couple of items down.
+            Qt.callLater(function() {
+                returnFct({"payload": JSON.stringify(lunaServiceMock.fingerprintStatusPayload())});
+            });
+        }
+        else if(serviceURI === "luna://com.webos.service.location/getLocationUpdates" && returnFct) {
+            locationTrackingSubscribers.push(returnFct);
+            returnFct({"payload": JSON.stringify({"returnValue": true, "subscribed": true})});
+            // A first fix shortly after subscribing, the way a real GNSS fix
+            // takes a moment to come in rather than answering instantly.
+            Qt.callLater(_deliverLocationFix);
+        }
+        else if(serviceURI === "luna://com.webos.service.location/getAllLocationHandlers" && returnFct) {
+            locationHandlersSubscribers.push(returnFct);
+            returnFct({"payload": JSON.stringify(locationHandlersPayload())});
+        }
         else if(serviceURI === "luna://org.webosports.bootmgr/getStatus" && args.subscribe) {
             console.log("bootmgr status: normal");
             returnFct({"payload": JSON.stringify({"subscribed":true, "state": "normal"})}); // simulate subscription answer
@@ -303,20 +360,20 @@ QtObject {
                  serviceURI === "luna://com.palm.systemservice/getPreferences" ||
                  serviceURI === "luna://com.webos.service.systemservice/getPreferences" )
                 && args.subscribe) {
-            var prefs = {"subscribed": true, "wallpaper": { "wallpaperFile": "images/background.jpg"}, "timeFormat":"HH24", "locale": { "languageCode": "en", "countryCode": "us", "phoneRegion": { "countryName": "United States", "countryCode": "us" } }};
             var requested = args.keys || [];
+            var prefs = Prefs.read(requested, true);
 
-            // Phone preferences. Left unset on purpose where the app is meant
-            // to ask the user -- the preferred calling service is the one that
-            // makes the "which service?" chooser appear.
-            if(requested.indexOf("ringtone") >= 0)
-                prefs.ringtone = { "fullPath": "" };
-            if(requested.indexOf("region") >= 0)
-                prefs.region = { "countryName": "Netherlands", "countryCode": "NL" };
-            if(requested.indexOf("4DigitNumber") >= 0)
-                prefs["4DigitNumber"] = "+312055512";
+            // These three used to come back whether or not they were asked
+            // for, and something may still be counting on that.
+            prefs.wallpaper = Prefs.values.wallpaper;
+            prefs.timeFormat = Prefs.values.timeFormat;
+            prefs.locale = Prefs.values.locale;
 
             returnFct({"payload": JSON.stringify(prefs)});
+
+            // Kept, so a later setPreferences reaches whoever is watching -
+            // which is how a settings page and the shell stay in step.
+            Prefs.subscribe(requested, returnFct);
         }
         // In-call audio routing: no bluetooth or headset, not docked.
         else if(serviceURI === "luna://com.palm.bluetooth/hfg/monitorstatus" && returnFct) {
@@ -515,6 +572,14 @@ QtObject {
         else if(jsonArgs.id === "com.palm.app.accounts") {
             console.log("Succesfully launched com.palm.app.accounts");
         }
+        else if(jsonArgs.id && jsonArgs.id.indexOf("org.webosports.app.settings.") === 0) {
+            // Each settings category is its own launchable app on real
+            // hardware; the harness that runs one page at a time has nowhere
+            // to switch to, so this only has to not look like a failure.
+            console.log("Successfully launched " + jsonArgs.id);
+            if(typeof returnFct !== 'undefined')
+                returnFct({"payload": JSON.stringify({"returnValue": true})});
+        }
         else {
             handleError("Error: parameter 'id' not specified");
         }
@@ -637,7 +702,9 @@ QtObject {
             };
         }
         else {
-            console.log("We don't have a preferences for: "+args.keys);
+            // Anything the branches above do not name is answered from the
+            // store, so a new setting does not need a branch of its own.
+            var message = Prefs.read(args.keys || []);
         }
         returnFct({payload: JSON.stringify(message)});
     }
@@ -670,9 +737,224 @@ QtObject {
         returnFct({payload: JSON.stringify(message)});
     }
 
+    /*
+     * The device clock.
+     *
+     * The service reports the time it believes it is and re-reports whenever
+     * it jumps, which is what lets a settings page show a clock that ticks and
+     * still notice a correction. Here it is the host clock plus whatever
+     * offset was set by hand.
+     */
+    property var systemTimeSubscribers: []
+    property real systemTimeOffset: 0
+
+    function systemTimePayload() {
+        var utc = Math.floor(Date.now() / 1000) + systemTimeOffset;
+        var local = new Date(utc * 1000);
+
+        return {
+            "returnValue": true,
+            "subscribed": true,
+            "utc": utc,
+            "localtime": {
+                "year": local.getFullYear(), "month": local.getMonth() + 1,
+                "day": local.getDate(), "hour": local.getHours(),
+                "minute": local.getMinutes(), "second": local.getSeconds()
+            },
+            "offset": -local.getTimezoneOffset(),
+            "timezone": Prefs.values.timeZone ? Prefs.values.timeZone.ZoneID : "UTC",
+            "TZ": Prefs.values.timeZone && Prefs.values.timeZone.Description
+                  ? Prefs.values.timeZone.Description : "UTC",
+            "isDST": false
+        };
+    }
+
+    function setSystemTime_call(args, returnFct, handleError) {
+        if(args.utc !== undefined)
+            systemTimeOffset = args.utc - Math.floor(Date.now() / 1000);
+
+        if(typeof returnFct !== 'undefined')
+            returnFct({"payload": JSON.stringify({"returnValue": true})});
+
+        var payload = {"payload": JSON.stringify(systemTimePayload())};
+        systemTimeSubscribers.forEach(function(subscriber) { subscriber(payload); });
+    }
+
+    /*
+     * Wallpapers. The real service crops the picture for the screen and files
+     * it away; here the picked file is simply reported back as the wallpaper,
+     * which is all a page needs to store and draw it.
+     */
+    function importWallpaper_call(args, returnFct, handleError) {
+        var path = args.target !== undefined ? decodeURIComponent(args.target) : "";
+        var name = path.substring(path.lastIndexOf("/") + 1);
+
+        var wallpaper = {
+            "wallpaperName": name,
+            "wallpaperFile": path,
+            "wallpaperThumbFile": path
+        };
+
+        if(typeof returnFct !== 'undefined')
+            returnFct({"payload": JSON.stringify({"returnValue": true,
+                                                  "wallpaper": wallpaper})});
+    }
+
+    function setDevicePasscode_call(args, returnFct, handleError) {
+        deviceLockMode = args.lockMode !== undefined ? args.lockMode : "none";
+        if(args.passCode !== undefined && args.passCode.length > 0)
+            configuredPasscode = args.passCode;
+
+        if(typeof returnFct !== 'undefined')
+            returnFct({"payload": JSON.stringify({"returnValue": true})});
+
+        if(deviceLockModeSubscriber)
+            getDeviceLockMode_call({}, deviceLockModeSubscriber.func, undefined);
+    }
+
+    /*
+     * Exhibition mode. Two applications that say they can run in a dock, so
+     * the list is worth looking at.
+     */
+    property var dockModeSubscribers: []
+    property var dockModeLaunchPoints: [
+        {"appId": "org.webosports.app.clock", "title": "Clock", "enabled": true},
+        {"appId": "org.webosports.app.photos", "title": "Photos", "enabled": false},
+        {"appId": "org.webosports.app.music", "title": "Music", "enabled": false}
+    ]
+
+    function dockModePayload() {
+        return {"returnValue": true, "subscribed": true,
+                "launchPoints": dockModeLaunchPoints};
+    }
+
+    function dockModeLaunchPoints_call(serviceURI, args, returnFct, handleError) {
+        if(serviceURI.indexOf("addDockModeLaunchPoint") >= 0 ||
+           serviceURI.indexOf("removeDockModeLaunchPoint") >= 0) {
+            var enable = serviceURI.indexOf("addDockModeLaunchPoint") >= 0;
+            var updated = [];
+
+            dockModeLaunchPoints.forEach(function(launchPoint) {
+                updated.push({
+                    "appId": launchPoint.appId,
+                    "title": launchPoint.title,
+                    "enabled": launchPoint.appId === args.appId ? enable
+                                                                : launchPoint.enabled
+                });
+            });
+            dockModeLaunchPoints = updated;
+
+            var payload = {"payload": JSON.stringify(dockModePayload())};
+            dockModeSubscribers.forEach(function(subscriber) { subscriber(payload); });
+        }
+
+        if(typeof returnFct !== 'undefined')
+            returnFct({"payload": JSON.stringify(dockModePayload())});
+    }
+
+    // db8 registers a kind before anything may be stored under it; the store
+    // here creates one on demand, so this only has to succeed.
+    function putKindDb_call(args, returnFct, handleError) {
+        if(args.id)
+            DB8.initDb8Kind(args.id, function() {});
+
+        if(typeof returnFct !== 'undefined')
+            returnFct({"payload": JSON.stringify({"returnValue": true})});
+    }
+
+    /*
+     * Fingerprint. Two enrolled prints, so both the Fingerprint page and
+     * Screen & Lock's summary row have something to show.
+     */
+    property var fingerprintStatusSubscribers: []
+    property var fingerprintTemplates: ["finger-1", "finger-2"]
+
+    function fingerprintStatusPayload() {
+        return {
+            "returnValue": true, "subscribed": true,
+            "available": true, "state": "idle",
+            "fingerprints": fingerprintTemplates
+        };
+    }
+
+    /*
+     * Location, as com.webos.service.location actually answers - not the
+     * webOS-ports location-service this used to pretend to be, which turned
+     * out not to be what any device on hand actually runs (found by trying
+     * it against sargo and mindphone; see LocationPage.qml). Field names
+     * below and the "Handler" capitalisation on setState both come from that
+     * live introspection and testing, not from source.
+     */
+    property var locationTrackingSubscribers: []
+    property real _mockLatitude: 52.3676
+    property real _mockLongitude: 4.9041
+
+    property var locationHandlersSubscribers: []
+    property var locationHandlers: [
+        {"name": "gps", "state": true},
+        {"name": "network", "state": false}
+    ]
+
+    function locationFixPayload() {
+        // A little jitter, so a page watching this move looks like it is
+        // actually tracking rather than frozen on one point.
+        _mockLatitude += (Math.random() - 0.5) * 0.0004;
+        _mockLongitude += (Math.random() - 0.5) * 0.0004;
+
+        return {
+            "returnValue": true, "errorCode": 0,
+            "latitude": _mockLatitude, "longitude": _mockLongitude,
+            "altitude": 2, "horizAccuracy": 12, "vertAccuracy": -1,
+            "direction": -1, "speed": -1,
+            "timestamp": Math.floor(Date.now() / 1000)
+        };
+    }
+
+    // QtObject has no default property, so a child Timer cannot be declared
+    // here the way it can on an Item; Qt.callLater is the door-to-door
+    // equivalent for "answer on the next turn of the event loop" that a
+    // QtObject can actually use.
+    function _deliverLocationFix() {
+        var payload = {"payload": JSON.stringify(lunaServiceMock.locationFixPayload())};
+        lunaServiceMock.locationTrackingSubscribers.forEach(function(subscriber) {
+            subscriber(payload);
+        });
+    }
+
+    function locationHandlersPayload() {
+        return {"returnValue": true, "handlers": locationHandlers};
+    }
+
+    function setLocationHandlerState_call(args, returnFct, handleError) {
+        // A lowercase "handler" is exactly what real hardware rejects with
+        // errorCode 10 "Invalid input" - the mock holds to that too, rather
+        // than being more forgiving than the thing it is standing in for.
+        if(args.Handler === undefined || args.state === undefined) {
+            if(typeof returnFct !== 'undefined')
+                returnFct({"payload": JSON.stringify(
+                    {"returnValue": false, "errorCode": 10, "errorText": "Invalid input"})});
+            return;
+        }
+
+        var updated = locationHandlers.map(function(handler) {
+            return handler.name === args.Handler
+                   ? {"name": handler.name, "state": args.state} : handler;
+        });
+        locationHandlers = updated;
+
+        if(typeof returnFct !== 'undefined')
+            returnFct({"payload": JSON.stringify({"returnValue": true})});
+
+        var payload = {"payload": JSON.stringify(locationHandlersPayload())};
+        locationHandlersSubscribers.forEach(function(subscriber) { subscriber(payload); });
+    }
+
     function setPreferences_call(args, returnFct, handleError) {
+        Prefs.write(args);
+
         var message = {"returnValue": true};
-        returnFct({payload: JSON.stringify(message)});
+        if(typeof returnFct !== 'undefined')
+            returnFct({payload: JSON.stringify(message)});
     }
 
     function getPreferenceValues_call(args, returnFct, handleError) {
@@ -812,7 +1094,23 @@ QtObject {
             };
         }
         else {
-            console.log("Others: "+args.query.from)
+            // Any other kind is answered from the same in-memory store
+            // putDb_call writes to, so an app that registers a kind of its own
+            // - a settings page keeping a user dictionary, say - can read back
+            // what it stored.
+            var others = DB8.getDb(args.query.from).filter(function(elt) {
+                return DB8.matchesWhere(elt, args.query.where);
+            });
+
+            if(args.query.orderBy) {
+                var orderBy = args.query.orderBy;
+                others = others.slice().sort(function(a, b) {
+                    return String(a[orderBy]).localeCompare(String(b[orderBy]));
+                });
+            }
+            if(args.query.limit) others = others.slice(0, args.query.limit);
+
+            message = { "returnValue": true, "results": others };
         }
         returnFct({payload: JSON.stringify(message)});
     }
@@ -842,8 +1140,9 @@ QtObject {
 
         if(args.ids) {
             // Without a kind the id could be in any of them, so try each.
-            count += DB8.del("com.palm.phonecall:1", args.ids, undefined);
-            count += DB8.del("com.palm.phonecallgroup:1", args.ids, undefined);
+            DB8.kinds().forEach(function(kind) {
+                count += DB8.del(kind, args.ids, undefined);
+            });
         }
         if(args.query && args.query.from) {
             count += DB8.del(args.query.from, undefined, args.query.where);
