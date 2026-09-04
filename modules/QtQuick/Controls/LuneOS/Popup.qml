@@ -47,8 +47,25 @@ T.Popup {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentWidth > 0 ? contentHeight + topPadding + bottomPadding : 0)
 
-    contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
-    contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
+    // contentChildren is whatever a user of Popup{} declared as plain
+    // children - often exactly one (a ColumnLayout, say), but not always: a
+    // Loader sitting alongside one to host a second, nested popup is a
+    // common shape (see org.webosports.app.settings' VpnImportProfilePopup/
+    // CertificatePage), and singling out "exactly one child" here silently
+    // dropped back to 0 the moment a second one showed up - the popup lost
+    // its size, and with it this background, without any error to explain
+    // why. Taking the largest implicit size across every content child
+    // handles 0, 1 or many the same way; an empty Loader reports 0 either
+    // way and simply does not contribute.
+    contentWidth: contentItem.implicitWidth || _maxImplicit(contentChildren, "Width")
+    contentHeight: contentItem.implicitHeight || _maxImplicit(contentChildren, "Height")
+
+    function _maxImplicit(children, axis) {
+        var max = 0;
+        for (var i = 0; i < children.length; i++)
+            max = Math.max(max, children[i]["implicit" + axis] || 0);
+        return max;
+    }
 
     padding: 25
 
