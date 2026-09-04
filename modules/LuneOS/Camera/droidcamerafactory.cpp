@@ -20,6 +20,9 @@
 #include <QFileInfo>
 #include <QDir>
 #include <QDebug>
+#include <QTimer>
+
+#include <thread>
 
 #include <gst/gst.h>
 
@@ -181,6 +184,11 @@ static bool audioSourceUsable(const char *device)
                    << "unusable, recording video only";
     return ok;
 }
+
+/* How long the vendor recorder gets to produce its first encoded frame
+ * before the software encoder takes over. Long enough for a slow HAL to
+ * spin up its encoder, short enough not to lose the shot. */
+static const int kHwRecordingGraceMs = 2500;
 
 bool DroidCameraFactory::droidPluginAvailable()
 {
@@ -469,10 +477,18 @@ void DroidCameraFactory::stopRecording()
             GstElement *cam =
                 gst_bin_get_by_name(GST_BIN(source->gstElement()), "droidcam");
             if (cam) {
-                // droidcamsrc stops the recorder and pushes EOS through
-                // vidsrc; the filesink probe fires finishHwRecording().
-                g_signal_emit_by_name(cam, "stop-capture");
-                gst_object_unref(cam);
+                /* droidcamsrc stops the recorder and pushes EOS through
+                 * vidsrc; the filesink probe fires finishHwRecording().
+                 *
+                 * Off the UI thread: stop-capture reaches droidmedia's
+                 * recorder, and when the vendor stack has wedged - the camera
+                 * delivering frames CameraSource drops for want of a memory
+                 * base, the encoder never consuming - it does not return.
+                 * Emitting it inline freezes the whole application. */
+                std::thread([cam] {
+                    g_signal_emit_by_name(cam, "stop-capture");
+                    gst_object_unref(cam);
+                }).detach();
             }
         }
         return;
@@ -561,6 +577,16 @@ bool DroidCameraFactory::startHwRecording(GstElement *bin,
                                           const QString &filePath)
 {
 #ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
+    /* Opt-in only. On a device whose vendor recorder accepts the session but
+     * never delivers, there is no way back: stop-capture blocks inside
+     * droidmedia holding GStreamer's locks, and every streaming thread and
+     * the UI thread pile up behind it - the application deadlocks and the
+     * software encoder cannot be started, because it needs the same
+     * pipeline. Since that cannot be recovered from in process, it must not
+     * be risked by default. Set LUNEOS_CAMERA_HW_RECORDING=1 to try it. */
+    if (qEnvironmentVariable("LUNEOS_CAMERA_HW_RECORDING") != QLatin1String("1"))
+        return false;
+
     GstElement *cam = gst_bin_get_by_name(GST_BIN(bin), "droidcam");
     GstElement *vidsink = gst_bin_get_by_name(GST_BIN(bin), "vidsink");
     if (!cam || !vidsink) {
@@ -643,6 +669,20 @@ bool DroidCameraFactory::startHwRecording(GstElement *bin,
     gst_object_unref(fspad);
     gst_object_unref(filesink);
 
+    /* Count what actually reaches the recording bin. droidcamsrc happily
+     * reports a started capture even when the Android side never delivers:
+     * the vendor encoder is created and the camera configures an encoder
+     * stream, but CameraSource sits in "Timed out waiting for incoming
+     * camera video frames" and vidsrc pushes nothing at all. */
+    m_hwFrames.store(0);
+    GstPad *recsinkpad = gst_element_get_static_pad(rec, "sink");
+    gst_pad_add_probe(recsinkpad, GST_PAD_PROBE_TYPE_BUFFER,
+        [](GstPad *, GstPadProbeInfo *, gpointer u) -> GstPadProbeReturn {
+            static_cast<DroidCameraFactory *>(u)->m_hwFrames.fetch_add(1);
+            return GST_PAD_PROBE_OK;
+        }, this, nullptr);
+    gst_object_unref(recsinkpad);
+
     g_signal_emit_by_name(cam, "start-capture");
     gst_object_unref(cam);
     gst_object_unref(vidsink);
@@ -652,6 +692,16 @@ bool DroidCameraFactory::startHwRecording(GstElement *bin,
     m_pendingVideoPath = filePath;
     qInfo() << "DroidCameraFactory: HW recording to" << filePath;
     emit recordingChanged();
+
+    /* Report a recorder that took the session and then produced nothing, so
+     * the zero-byte file it leaves behind has an explanation in the log.
+     * Nothing is torn down here on purpose - see the note above. */
+    QTimer::singleShot(kHwRecordingGraceMs, this, [this] {
+        if (m_hwRecording && m_hwFrames.load() == 0)
+            qWarning() << "DroidCameraFactory: hardware recorder produced no "
+                          "frames after" << kHwRecordingGraceMs
+                       << "ms; the recording will be empty";
+    });
     return true;
 #else
     Q_UNUSED(bin); Q_UNUSED(filePath);

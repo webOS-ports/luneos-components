@@ -19,6 +19,8 @@
 
 #include <QObject>
 
+#include <atomic>
+
 /*
  * On Halium devices the cameras are not visible to QtMultimedia's device
  * enumeration: they sit behind the Android camera HAL, reached through
@@ -77,6 +79,8 @@ private:
     void *m_recTeePad = nullptr;
     bool m_hwRecording = false;
     QString m_pendingVideoPath;
+    /* Written from a GStreamer streaming thread, read from the watchdog. */
+    std::atomic<unsigned> m_hwFrames{0};
 };
 
 #endif // DROIDCAMERAFACTORY_H
