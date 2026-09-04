@@ -98,7 +98,11 @@ T.ComboBox {
         text: control.displayText
         font: control.font
         color: "#333333"
-        horizontalAlignment: Text.AlignLeft
+        // The closed control shows the current value against its label, to
+        // its left, so it reads right-aligned like the Mojo ListSelector it
+        // replaces. The choices inside the open popup are a plain list and
+        // stay left-aligned - that's the delegate below, not this Text.
+        horizontalAlignment: Text.AlignRight
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
     }
@@ -112,21 +116,17 @@ T.ComboBox {
     popup: T.Popup {
         // How tall the list is allowed to get. LuneOS apps are WebOSWindows,
         // not ApplicationWindows, so T.ApplicationWindow.overlay is undefined
-        // in all of them and this used to fall back to control.parent.height -
-        // one settings row, which cut the first choice in half. The window is
-        // there either way.
-        readonly property real maximumHeight: {
-            if (T.ApplicationWindow.overlay)
-                return T.ApplicationWindow.overlay.height / 2;
-            if (control.Window.window)
-                return control.Window.height / 2;
-            return listview.contentHeight;
-        }
+        // in all of them, and control.Window.window is not reliably resolved
+        // by the time this binding first evaluates either - both used to
+        // silently fall through to control.parent.height, one settings row,
+        // which cut the list down to a sliver with nothing to scroll to.
+        // Screen.height needs no item/window attachment to be ready, so it
+        // is the one basis here that is always available.
+        readonly property real maximumHeight: Screen.height * 0.5
 
         y: control.height - (control.visualFocus ? 0 : 1)
         width: control.width
-        implicitHeight: Math.min(listview.contentHeight,
-                                 Math.max(maximumHeight, control.parent.height))
+        implicitHeight: Math.min(listview.contentHeight, maximumHeight)
         topMargin: 6
         bottomMargin: 6
 
