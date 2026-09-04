@@ -64,7 +64,7 @@ public:
          * rather than in the application.
          */
         if (!qEnvironmentVariableIsSet("QT_MEDIA_BACKEND")
-                && QFile::exists(QStringLiteral("/usr/lib/gstreamer-1.0/libgstdroid.so")))
+                && DroidCameraFactory::droidPluginAvailable())
             qputenv("QT_MEDIA_BACKEND", "gstreamer");
 
         // @uri LuneOS.Camera
