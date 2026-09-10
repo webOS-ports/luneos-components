@@ -44,7 +44,12 @@ Item {
     // that used to sit here showed up as a DNS row on networks that were not
     // even connected.
     /*readonly*/ property variant /*QStringList*/ nameservers: []
-    property variant /*QStringList*/ nameserversConfig: ["default"]
+    // Empty unless nameservers have actually been configured by hand, as
+    // connman has it - on a DHCP network Nameservers.Configuration is empty
+    // and the resolvers show up under "nameservers" instead. The "default"
+    // placeholder that used to sit here was not an address, so anything
+    // reading it as one (the static IP editor) saw an invalid entry.
+    property variant /*QStringList*/ nameserversConfig: []
     /*readonly*/ property variant /*QStringList*/ domains: []
     property variant /*QStringList*/ domainsConfig: []
     /*readonly*/ property variant /*QVariantMap*/ proxy: ({})
