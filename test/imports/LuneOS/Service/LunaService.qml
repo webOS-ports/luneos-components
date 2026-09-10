@@ -32,6 +32,9 @@ import "battery.js" as Battery
 import "devmode.js" as DevMode
 import "diskmode.js" as DiskMode
 import "tweaks.js" as Tweaks
+import "apps.js" as Apps
+import "volumes.js" as Volumes
+import "notifications.js" as Notifications
 
 QtObject {
     id: lunaServiceMock
@@ -212,6 +215,18 @@ QtObject {
         else if(serviceURI === "luna://org.webosports.service.tweaks.prefs/get") {
             getTweaks_call(args, returnFct, handleError);
         }
+        else if(serviceURI === "luna://com.webos.notification/enableToast") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(Notifications.setBlocked(args.source, false))});
+        }
+        else if(serviceURI === "luna://com.webos.notification/disableToast") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(Notifications.setBlocked(args.source, true))});
+        }
+        else if(serviceURI === "luna://com.webos.appInstallService/remove") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(Apps.remove(args.id))});
+        }
         else if(serviceURI === "luna://org.webosports.service.tweaks.prefs/set") {
             if (returnFct)
                 returnFct({payload: JSON.stringify(Tweaks.set(args))});
@@ -223,6 +238,14 @@ QtObject {
         else if(serviceURI === "luna://org.webosports.service.devmode/setStatus") {
             if (returnFct)
                 returnFct({payload: JSON.stringify(DevMode.setStatus(args))});
+        }
+        else if(serviceURI === "luna://com.palm.storage/volumes/getSpaceInfo") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(Volumes.spaceInfoPayload())});
+        }
+        else if(serviceURI === "luna://com.palm.storage/volumes/getEncryptionStatus") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(Volumes.encryptionStatusPayload())});
         }
         else if(serviceURI === "luna://com.palm.storage/diskmode/hostIsConnected") {
             if (returnFct)
@@ -478,6 +501,17 @@ QtObject {
         else if(serviceURI === "luna://com.webos.service.location/getAllLocationHandlers" && returnFct) {
             locationHandlersSubscribers.push(returnFct);
             returnFct({"payload": JSON.stringify(locationHandlersPayload())});
+        }
+        else if(serviceURI === "luna://com.webos.notification/getToastSettings") {
+            if (args.subscribe)
+                Notifications.addSubscriber(returnFct);
+            returnFct({"payload": JSON.stringify(Notifications.settingsPayload())});
+        }
+        else if((serviceURI === "luna://com.webos.applicationManager/listApps" ||
+                 serviceURI === "luna://com.webos.service.applicationManager/listApps")) {
+            if (args.subscribe)
+                Apps.addListSubscriber(returnFct);
+            returnFct({"payload": JSON.stringify(Apps.listPayload())});
         }
         else if(serviceURI === "luna://org.webosports.bootmgr/getStatus" && args.subscribe) {
             console.log("bootmgr status: normal");
