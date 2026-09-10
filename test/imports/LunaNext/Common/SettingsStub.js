@@ -86,6 +86,51 @@ function selectedProfile() {
     return commandLineProfile() || defaultProfile;
 }
 
+/*
+ * How much larger or smaller than normal the interface is drawn, from
+ * --ui-scale=<n> on the command line.
+ *
+ * Parsed here, at load, for the same reason the profile is: every JavaScript
+ * library that Qt.include()s this one gets its own copy of these variables,
+ * so anything set later reaches only the copy it was set on. That is exactly
+ * how the first attempt at this went wrong - Units grew, because the scale
+ * was set on Units' copy, and text did not, because FontUtils reads a
+ * different copy through its own include of UnitsStub. Deriving it from the
+ * command line means every copy computes the same number without anybody
+ * having to remember to tell them all.
+ *
+ * It also matches what the real Units does: read once, at construction, and
+ * fixed for the life of the process - which is why the Accessibility panel
+ * says a change takes effect the next time an application starts.
+ *
+ * Clamped to the range the real Units clamps to.
+ */
+function commandLineUiScale() {
+    if (typeof Qt === "undefined" || !Qt.application || !Qt.application.arguments)
+        return 1.0;
+
+    var args = Qt.application.arguments;
+    for (var i = 0; i < args.length; ++i) {
+        var arg = String(args[i]);
+        var value = null;
+
+        if (arg.indexOf("--ui-scale=") === 0)
+            value = arg.substring("--ui-scale=".length);
+        else if (arg === "--ui-scale" && i + 1 < args.length)
+            value = String(args[i + 1]);
+
+        if (value !== null) {
+            var scale = parseFloat(value);
+            if (!isNaN(scale))
+                return Math.max(0.75, Math.min(1.5, scale));
+        }
+    }
+
+    return 1.0;
+}
+
+var uiScale = commandLineUiScale();
+
 var isTestEnvironment = true;
 
 var profileName;
