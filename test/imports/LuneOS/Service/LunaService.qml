@@ -28,6 +28,13 @@ import "vpn.js" as Vpn
 import "print.js" as Print
 import "justtype.js" as JustType
 import "certmgr.js" as CertMgr
+import "battery.js" as Battery
+import "devmode.js" as DevMode
+import "diskmode.js" as DiskMode
+import "tweaks.js" as Tweaks
+import "apps.js" as Apps
+import "volumes.js" as Volumes
+import "notifications.js" as Notifications
 
 QtObject {
     id: lunaServiceMock
@@ -161,11 +168,13 @@ QtObject {
             matchDevicePasscode_call(args, returnFct, handleError);
         }
         else if(serviceURI === "luna://com.palm.power/com/palm/power/batteryStatusQuery" ||
-                serviceURI === "luna://com.webos.service.battery/com/palm/power/batteryStatusQuery") {
+                serviceURI === "luna://com.webos.service.battery/com/palm/power/batteryStatusQuery" ||
+                serviceURI === "luna://com.webos.service.battery/batteryStatusQuery") {
             getBatteryStatusQuery_call(args, returnFct, handleError);
         }
         else if(serviceURI === "luna://com.palm.power/com/palm/power/chargerStatusQuery" ||
-                serviceURI === "luna://com.webos.service.battery/com/palm/power/chargerStatusQuery") {
+                serviceURI === "luna://com.webos.service.battery/com/palm/power/chargerStatusQuery" ||
+                serviceURI === "luna://com.webos.service.battery/chargerStatusQuery") {
             getChargerStatusQuery_call(args, returnFct, handleError);
         }
         else if(serviceURI ==="luna://com.palm.connectionmanager/getstatus") {
@@ -205,6 +214,50 @@ QtObject {
         }
         else if(serviceURI === "luna://org.webosports.service.tweaks.prefs/get") {
             getTweaks_call(args, returnFct, handleError);
+        }
+        else if(serviceURI === "luna://com.webos.notification/enableToast") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(Notifications.setBlocked(args.source, false))});
+        }
+        else if(serviceURI === "luna://com.webos.notification/disableToast") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(Notifications.setBlocked(args.source, true))});
+        }
+        else if(serviceURI === "luna://com.webos.appInstallService/remove") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(Apps.remove(args.id))});
+        }
+        else if(serviceURI === "luna://org.webosports.service.tweaks.prefs/set") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(Tweaks.set(args))});
+        }
+        else if(serviceURI === "luna://org.webosports.service.devmode/getStatus") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(DevMode.statusPayload())});
+        }
+        else if(serviceURI === "luna://org.webosports.service.devmode/setStatus") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(DevMode.setStatus(args))});
+        }
+        else if(serviceURI === "luna://com.palm.storage/volumes/getSpaceInfo") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(Volumes.spaceInfoPayload())});
+        }
+        else if(serviceURI === "luna://com.palm.storage/volumes/getEncryptionStatus") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(Volumes.encryptionStatusPayload())});
+        }
+        else if(serviceURI === "luna://com.palm.storage/diskmode/hostIsConnected") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(DiskMode.hostIsConnectedPayload())});
+        }
+        else if(serviceURI === "luna://com.palm.storage/diskmode/queryMSMStatus") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(DiskMode.queryMSMStatusPayload())});
+        }
+        else if(serviceURI === "luna://com.palm.storage/diskmode/enterMSM") {
+            if (returnFct)
+                returnFct({payload: JSON.stringify(DiskMode.enterMSM(args))});
         }
         else if(serviceURI === "luna://com.palm.universalsearch/getAllSearchPreference" && returnFct) {
             returnFct({"payload": JSON.stringify(JustType.preferencesPayload())});
@@ -449,6 +502,17 @@ QtObject {
             locationHandlersSubscribers.push(returnFct);
             returnFct({"payload": JSON.stringify(locationHandlersPayload())});
         }
+        else if(serviceURI === "luna://com.webos.notification/getToastSettings") {
+            if (args.subscribe)
+                Notifications.addSubscriber(returnFct);
+            returnFct({"payload": JSON.stringify(Notifications.settingsPayload())});
+        }
+        else if((serviceURI === "luna://com.webos.applicationManager/listApps" ||
+                 serviceURI === "luna://com.webos.service.applicationManager/listApps")) {
+            if (args.subscribe)
+                Apps.addListSubscriber(returnFct);
+            returnFct({"payload": JSON.stringify(Apps.listPayload())});
+        }
         else if(serviceURI === "luna://org.webosports.bootmgr/getStatus" && args.subscribe) {
             console.log("bootmgr status: normal");
             returnFct({"payload": JSON.stringify({"subscribed":true, "state": "normal"})}); // simulate subscription answer
@@ -594,7 +658,20 @@ QtObject {
     }
 
     function getDisplayProperty_call(args, returnFct, handleError) {
-        returnFct({"payload": JSON.stringify({"returnValue": true, "maximumBrightness": 70 })});
+        // Answer the properties actually asked for. Returning only
+        // maximumBrightness left a page reading "timeout" with whatever
+        // default it happened to start with, which looked like the device
+        // agreeing rather than like nothing having answered.
+        var known = { "maximumBrightness": 70, "timeout": 120, "onWhenConnected": false };
+        var message = { "returnValue": true };
+        var requested = args.properties || ["maximumBrightness"];
+
+        for (var i = 0; i < requested.length; i++) {
+            if (known.hasOwnProperty(requested[i]))
+                message[requested[i]] = known[requested[i]];
+        }
+
+        returnFct({"payload": JSON.stringify(message)});
     }
 
     function setDisplayProperty_call(args, returnFct, handleError) {
@@ -1188,21 +1265,11 @@ QtObject {
     }
 
     function getBatteryStatusQuery_call(args, returnFct, handleError) {
-        var message = {
-            "returnValue": true,
-            "percent_ui": 10
-        };
-
-        returnFct({payload: JSON.stringify(message)});
+        returnFct({payload: JSON.stringify(Battery.batteryStatusPayload())});
     }
 
     function getChargerStatusQuery_call(args, returnFct, handleError) {
-        var message = {
-            "returnValue": true,
-            "Charging": false
-        };
-
-        returnFct({payload: JSON.stringify(message)});
+        returnFct({payload: JSON.stringify(Battery.chargerStatusPayload())});
     }
 
     function getConnectionManagerStatus_call(args, returnFct, handleError) {
@@ -1437,108 +1504,7 @@ QtObject {
     }
 
     function getTweaks_call(args, returnFct, handleError) {
-
-        //return preference value for locale
-        if(args.keys == "dialPadFeedback") {
-            var message = {
-                "returnValue": true,
-                "dialPadFeedback": "vibrateOnly"
-            };
-        }
-        else if(args.keys == "alwaysShowProgressBarKey") {
-            var message = {
-                "returnValue": true,
-                "alwaysShowProgressBarKey": true
-            };
-        }
-        else if(args.keys == "privateByDefaultKey") {
-            var message = {
-                "returnValue": true,
-                "privateByDefaultKey": true
-            };
-        }
-        else if(args.keys == "toggleVKBKey") {
-            var message = {
-                "returnValue": true,
-                "toggleVKBKey": true
-            };
-        }
-        else if(args.keys == "tapRippleSupport") {
-            var message = {
-                "returnValue": true,
-                "tapRippleSupport": true
-            };
-        }
-        else if(args.keys == "showGestureArea") {
-            var message = {
-                "returnValue": true,
-                "showGestureArea": true
-            };
-        }
-        else if(args.keys == "tabTitleCase") {
-            var message = {
-                "returnValue": true,
-                "tabTitleCase": "upperCase"
-            };
-        }
-        else if(args.keys == "tabIndicatorNumber") {
-            var message = {
-                "returnValue": true,
-                "tabIndicatorNumber": "default"
-            };
-        }
-        else if(args.keys == "stackedCardSupport") {
-            var message = {
-                "returnValue": true,
-                "stackedCardSupport": true
-            };
-        }
-        else if(args.keys == "infiniteCardCycling") {
-            var message = {
-                "returnValue": true,
-                "infiniteCardCycling": true
-            };
-        }
-        else if(args.keys == "showDebugDotGrid") {
-            var message = {
-                "returnValue": true,
-                "showDebugDotGrid": false
-            };
-        }
-        else if(args.keys == "showDateTime") {
-            var message = {
-                "returnValue": true,
-                "showDateTime": "timeOnly"
-            };
-        }
-        else if(args.keys == "showBatteryPercentage") {
-            var message = {
-                "returnValue": true,
-                "showBatteryPercentage": "iconOnly"
-            };
-        }
-        else if(args.keys == "batteryPercentageColor") {
-            var message = {
-                "returnValue": true,
-                "batteryPercentageColor": "white"
-            };
-        }
-        else if(args.keys == "useCustomCarrierString") {
-            var message = {
-                "returnValue": true,
-                "useCustomCarrierString": false
-            };
-        }
-        else if(args.keys == "carrierString") {
-            var message = {
-                "returnValue": true,
-                "carrierString": "LuneOS"
-            };
-        }
-        else {
-            console.log("We don't have a Tweak for: "+args.keys);
-        }
-        returnFct({payload: JSON.stringify(message)});
+        returnFct({payload: JSON.stringify(Tweaks.getPayload(args.keys))});
     }
 
     function retrieveVersion_call(args, returnFct, handleError) {

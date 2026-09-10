@@ -27,6 +27,16 @@ function length(lengthAt132DPI) {
 
 var DEFAULT_GRID_UNIT_PX = 8;
 
+/*
+ * What the real Units multiplies the grid unit by, from
+ * /var/luna/preferences/ui-scale. Normal here: a desktop has no such file and
+ * the real thing falls back to 1.0 the same way. It is a value and not a
+ * function because the real one is a CONSTANT property - the scale is fixed
+ * for the life of a process, which is the whole reason the Accessibility
+ * panel has to say a change takes effect next time.
+ */
+var uiScale = 1.0;
+
 function dp(value) {
     var ratio = gridUnit / DEFAULT_GRID_UNIT_PX;
     if (value <= 2.0)

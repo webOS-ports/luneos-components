@@ -27,6 +27,9 @@ class Units : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(float gridUnit READ gridUnit WRITE setGridUnit NOTIFY gridUnitChanged)
+    /* What the interface is being scaled by, for a page that wants to show it.
+     * Read only: it is fixed for the life of a process - see units.cpp. */
+    Q_PROPERTY(float uiScale READ uiScale CONSTANT)
 
 public:
     explicit Units();
@@ -40,11 +43,19 @@ public:
     float gridUnit();
     void setGridUnit(float gridUnit);
 
+    static float uiScale();
+
+    /* Writes the scale the whole device is drawn at. Narrow on purpose: this
+     * is not a general file writer handed to QML, it takes one number and
+     * writes one known file. Only the shell has any business calling it. */
+    Q_INVOKABLE bool persistUiScale(float scale);
+
 Q_SIGNALS:
     void gridUnitChanged();
 
 private:
     static float mGridUnit;
+    static float mUiScale;
 
     static float _dp(float value);
     friend class FontUtils;
