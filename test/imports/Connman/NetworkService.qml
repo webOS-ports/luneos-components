@@ -1,17 +1,36 @@
 import QtQuick 2.0
 
-import "SecurityTypeEnum.js" as SecurityType;
 import "EapMethodEnum.js" as EapMethod;
 
 Item {
     id: networkService
+
+    /*
+     * The real NetworkService is a C++ type whose SecurityType is a Q_ENUM,
+     * so QML reads the values off the type itself - NetworkService.SecurityPSK.
+     * SecurityTypeEnum.js could not stand in for that: a plain QML Item
+     * carries no enum, so against this stub every such comparison came out
+     * undefined and quietly did the wrong thing. WiFiPage's lock icon
+     * (securityType !== NetworkService.SecurityNone) showed on open networks
+     * for exactly that reason. Declared as a QML enum, the stub now answers
+     * the way the plugin does.
+     *
+     * Values match libconnman-qt's NetworkService::SecurityType.
+     */
+    enum SecurityType {
+        SecurityUnknown = 0,
+        SecurityNone = 1,
+        SecurityWEP = 2,
+        SecurityPSK = 3,
+        SecurityIEEE802 = 4
+    }
 
     /*readonly*/ property string name: ""
     /*readonly*/ property string state: ""
     /*readonly*/ property string type: ""
     /*readonly*/ property string error: ""
     /*readonly*/ property variant /*QStringList*/ security: [""]
-    /*readonly*/ property int /*SecurityType*/ securityType: SecurityType.SecurityNone
+    /*readonly*/ property int /*SecurityType*/ securityType: NetworkService.SecurityNone
     /*readonly*/ property int strength: 0
     /*readonly*/ property bool favorite: false
     property bool autoConnect: false
@@ -20,8 +39,17 @@ Item {
     property variant /*QVariantMap*/ ipv4Config: ({})
     /*readonly*/ property variant /*QVariantMap*/ ipv6: ({})
     property variant /*QVariantMap*/ ipv6Config: ({})
-    /*readonly*/ property variant /*QStringList*/ nameservers: [ "local", "other" ]
-    property variant /*QStringList*/ nameserversConfig: ["default"]
+    // Empty until the service is actually up, as connman has it: these are
+    // the nameservers in use, not the configured ones. The placeholder pair
+    // that used to sit here showed up as a DNS row on networks that were not
+    // even connected.
+    /*readonly*/ property variant /*QStringList*/ nameservers: []
+    // Empty unless nameservers have actually been configured by hand, as
+    // connman has it - on a DHCP network Nameservers.Configuration is empty
+    // and the resolvers show up under "nameservers" instead. The "default"
+    // placeholder that used to sit here was not an address, so anything
+    // reading it as one (the static IP editor) saw an invalid entry.
+    property variant /*QStringList*/ nameserversConfig: []
     /*readonly*/ property variant /*QStringList*/ domains: []
     property variant /*QStringList*/ domainsConfig: []
     /*readonly*/ property variant /*QVariantMap*/ proxy: ({})
