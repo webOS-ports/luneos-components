@@ -3,6 +3,7 @@ import QtQuick 2.9
 Item {
     id: networkTechnology
 
+    /*readonly*/ property bool available: true
     /*readonly*/ property string name: ""
     /*readonly*/ property string type: ""
     property bool powered: false
