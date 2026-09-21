@@ -32,12 +32,18 @@ class DroidCameraFactory : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool available READ available CONSTANT)
+    Q_PROPERTY(int cameraCount READ cameraCount CONSTANT)
     Q_PROPERTY(bool recording READ recording NOTIFY recordingChanged)
 
 public:
     explicit DroidCameraFactory(QObject *parent = nullptr);
 
     bool available() const;
+
+    /* How many cameras the Android HAL reports. QtMultimedia's MediaDevices
+     * enumerates none of them on Halium, so a UI that wants to know whether
+     * there is a second camera to switch to has nowhere else to ask. */
+    int cameraCount() const;
 
     /* Whether gst-droid is usable in this process. Static so the QML plugin
      * can consult it at import time, before any instance exists, to decide
