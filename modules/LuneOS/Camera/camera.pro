@@ -16,10 +16,12 @@ PKGCONFIG += gstreamer-1.0
 
 SOURCES += \
     plugin.cpp \
-    droidcamerafactory.cpp
+    droidcamerafactory.cpp \
+    camerasensorinfo.cpp
 
 HEADERS += \
-    droidcamerafactory.h
+    droidcamerafactory.h \
+    camerasensorinfo.h
 
 OTHER_FILES += qmldir
 

@@ -35,6 +35,7 @@
 #include <QFile>
 
 #include "droidcamerafactory.h"
+#include "camerasensorinfo.h"
 
 static QObject *droidCameraFactorySingleton(QQmlEngine *engine,
                                             QJSEngine *scriptEngine)
@@ -43,6 +44,15 @@ static QObject *droidCameraFactorySingleton(QQmlEngine *engine,
     Q_UNUSED(scriptEngine);
 
     return new DroidCameraFactory();
+}
+
+static QObject *cameraSensorInfoSingleton(QQmlEngine *engine,
+                                          QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
+
+    return new CameraSensorInfo();
 }
 
 class LuneOSCameraPlugin : public QQmlExtensionPlugin
@@ -70,6 +80,14 @@ public:
         // @uri LuneOS.Camera
         qmlRegisterSingletonType<DroidCameraFactory>(uri, 1, 0,
                         "DroidCameraFactory", droidCameraFactorySingleton);
+
+        /*
+         * CameraInfo exposes each sensor's device-tree mounting rotation and
+         * orientation so an app can show an upright preview without hardcoding
+         * per-device angles. See camerasensorinfo.h.
+         */
+        qmlRegisterSingletonType<CameraSensorInfo>(uri, 1, 0,
+                        "CameraInfo", cameraSensorInfoSingleton);
     }
 };
 
