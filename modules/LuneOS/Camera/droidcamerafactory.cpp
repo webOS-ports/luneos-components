@@ -211,6 +211,61 @@ DroidCameraFactory::DroidCameraFactory(QObject *parent)
 {
 }
 
+/* The camera count, taken from gst-droid rather than from droidmedia
+ * directly, so that nothing here has to link the Android side.
+ *
+ * gst_droidcamsrc_class_init() installs the "camera-device" property only
+ * when the HAL reports at least one camera, and gives it the range
+ *
+ *     0 .. droid_media_camera_get_number_of_cameras() - 1
+ *
+ * so the paramspec's maximum is the real count minus one, and the property's
+ * absence means no cameras at all. Reading the class is enough - no element
+ * is instantiated and no camera is opened, which matters because this HAL
+ * serves one client at a time.
+ */
+int DroidCameraFactory::cameraCount() const
+{
+    static const int count = [] () -> int {
+        if (!droidPluginAvailable())
+            return 0;
+
+        GstElementFactory *factory = gst_element_factory_find("droidcamsrc");
+        if (!factory)
+            return 0;
+
+        /* find() hands back the registry entry without loading the plugin,
+         * and an unloaded feature has no element GType yet - the class that
+         * installs "camera-device" has not run. Load it first. */
+        factory = GST_ELEMENT_FACTORY(
+            gst_plugin_feature_load(GST_PLUGIN_FEATURE(factory)));
+        if (!factory)
+            return 0;
+
+        GType type = gst_element_factory_get_element_type(factory);
+        gst_object_unref(factory);
+        if (type == G_TYPE_INVALID)
+            return 0;
+
+        gpointer klass = g_type_class_ref(type);
+        if (!klass)
+            return 0;
+
+        GParamSpec *spec =
+            g_object_class_find_property(G_OBJECT_CLASS(klass), "camera-device");
+        /* Range-checked rather than cast blindly: if gst-droid ever respells
+         * the property, a wrong cast here would read rubbish as a count. */
+        const int n = (spec && G_IS_PARAM_SPEC_INT(spec))
+                          ? G_PARAM_SPEC_INT(spec)->maximum + 1
+                          : 0;
+        g_type_class_unref(klass);
+
+        return n;
+    }();
+
+    return count;
+}
+
 bool DroidCameraFactory::available() const
 {
 #ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
