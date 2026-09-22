@@ -42,6 +42,7 @@ var values = {
     "showGestureArea": true,
     "tabTitleCase": "capitalizedCase",
     "tabIndicatorNumber": "default",
+    "showAndroidTab": true,
     "stackedCardSupport": true,
     "infiniteCardCycling": true,
     "showDebugDotGrid": false,

@@ -28,17 +28,19 @@ function length(lengthAt132DPI) {
 var DEFAULT_GRID_UNIT_PX = 8;
 
 /*
- * What the real Units multiplies the grid unit by, from
- * /var/luna/preferences/ui-scale. Normal here: a desktop has no such file and
- * the real thing falls back to 1.0 the same way. It is a value and not a
- * function because the real one is a CONSTANT property - the scale is fixed
- * for the life of a process, which is the whole reason the Accessibility
- * panel has to say a change takes effect next time.
+ * uiScale comes from SettingsStub, which parses it off the command line at
+ * load. It is deliberately not settable from here: every library that
+ * Qt.include()s another gets its own copy of its variables, so a setter here
+ * would move Units and leave FontUtils - which reads the scale through its
+ * own include of this file - at 1.0. Text would then not grow with the rest,
+ * which is precisely the bug this replaced.
+ *
+ * Pass --ui-scale=<n> to the run instead, the same way --profile picks the
+ * device. On a device the real Units reads the value once when it is
+ * constructed, so it is fixed for the life of a process there too.
  */
-var uiScale = 1.0;
-
 function dp(value) {
-    var ratio = gridUnit / DEFAULT_GRID_UNIT_PX;
+    var ratio = (gridUnit * uiScale) / DEFAULT_GRID_UNIT_PX;
     if (value <= 2.0)
         // for values under 2dp, return only multiples of the value
         return Math.round(value * Math.floor(ratio));
@@ -46,5 +48,5 @@ function dp(value) {
 }
 
 function gu(value) {
-    return Math.round(value * gridUnit);
+    return Math.round(value * gridUnit * uiScale);
 }
