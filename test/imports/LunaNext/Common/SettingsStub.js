@@ -56,6 +56,15 @@ var profiles = {
     "radon":   { tabletUi: false, displayWidth:  720, displayHeight: 1600, dpi: 262, gridUnit: 15,
                  cutouts: [ { x: 324, y: 0, width: 72, height: 102 } ],
                  cornerRadii: [ 75, 75, 75, 75 ] },
+    /*
+     * Not a real device: a deliberately asymmetric panel, so a test can tell the
+     * four corners and the four rotations apart. Every radius differs and the
+     * cutout sits in a corner rather than centred, which radon's cannot pin down
+     * - its corners are all 75 and its notch is symmetric about the centre.
+     */
+    "asymmetric": { tabletUi: false, displayWidth:  400, displayHeight: 800, dpi: 262, gridUnit: 15,
+                    cutouts: [ { x: 0, y: 0, width: 40, height: 60 } ],
+                    cornerRadii: [ 10, 20, 30, 40 ] },
     /* For desktop debug */
     "desktop": { tabletUi: false, displayWidth:  600, displayHeight:  800, dpi: 148, gridUnit: 10 }
 };
