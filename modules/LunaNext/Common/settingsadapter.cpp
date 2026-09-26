@@ -72,12 +72,15 @@ bool SettingsAdapter::displayFps() const
  * fields, is dropped with a warning: one bad entry in a hand-written deviceinfo
  * must not take the rest of the list with it, and a silently empty rect at
  * 0,0,0,0 would be indistinguishable from a corner cutout of no width.
+ *
+ * The separator is an argument because both levels of the cutout syntax are the
+ * same job: the list of rectangles is split on ';' and each rectangle on ' '.
  */
-static QList<int> parseIntList(const QString &raw, const char *what)
+static QList<int> parseIntList(const QString &raw, QChar separator, const char *what)
 {
 	QList<int> out;
 
-	const QStringList fields = raw.split(QLatin1Char(';'), Qt::SkipEmptyParts);
+	const QStringList fields = raw.split(separator, Qt::SkipEmptyParts);
 	for (const QString &field : fields) {
 		bool ok = false;
 		const int v = field.trimmed().toInt(&ok);
@@ -92,6 +95,16 @@ static QList<int> parseIntList(const QString &raw, const char *what)
 	return out;
 }
 
+/*
+ * The avoidance rectangles, as rect values QML can read directly:
+ *
+ *   Cutouts="324 0 72 102"            ->  [ { x: 324, y: 0, width: 72, height: 102 } ]
+ *   Cutouts="0 0 40 96;505 21 70 71"  ->  [ { x: 0,   y: 0,  width: 40, height: 96  },
+ *                                           { x: 505, y: 21, width: 70, height: 71  } ]
+ *
+ * so a consumer writes cutouts[0].x, .y, .width, .height. An absent or empty key
+ * gives an empty list, which is the normal case - a panel with no cutouts.
+ */
 QVariantList SettingsAdapter::displayCutouts() const
 {
 	QVariantList out;
@@ -100,34 +113,24 @@ QVariantList SettingsAdapter::displayCutouts() const
 	const QStringList rects = raw.split(QLatin1Char(';'), Qt::SkipEmptyParts);
 
 	for (const QString &rect : rects) {
-		const QStringList f = rect.simplified().split(QLatin1Char(' '), Qt::SkipEmptyParts);
-		if (f.count() != 4) {
-			qWarning("SettingsAdapter: cutout '%s' is not \"x y w h\", ignoring it",
-			         qUtf8Printable(rect));
-			continue;
-		}
+		const QList<int> f = parseIntList(rect.simplified(), QLatin1Char(' '), "cutout");
 
-		bool ok = true;
-		int v[4];
-		for (int i = 0; i < 4; ++i) {
-			bool fieldOk = false;
-			v[i] = f.at(i).toInt(&fieldOk);
-			ok = ok && fieldOk;
-		}
-		if (!ok) {
-			qWarning("SettingsAdapter: cutout '%s' has a non-numeric field, ignoring it",
+		// Covers both a rect with the wrong number of fields and one whose
+		// fields did not all parse - parseIntList has already said which.
+		if (f.count() != 4) {
+			qWarning("SettingsAdapter: cutout '%s' is not four numbers \"x y w h\", ignoring it",
 			         qUtf8Printable(rect));
 			continue;
 		}
 		// A zero-sized cutout costs the layout nothing and would only make the
 		// shell reason about an obstacle that is not there.
-		if (v[2] <= 0 || v[3] <= 0) {
+		if (f.at(2) <= 0 || f.at(3) <= 0) {
 			qWarning("SettingsAdapter: cutout '%s' has no area, ignoring it",
 			         qUtf8Printable(rect));
 			continue;
 		}
 
-		out.append(QVariant::fromValue(QRect(v[0], v[1], v[2], v[3])));
+		out.append(QVariant::fromValue(QRect(f.at(0), f.at(1), f.at(2), f.at(3))));
 	}
 
 	return out;
@@ -138,14 +141,20 @@ QVariantList SettingsAdapter::displayCutouts() const
  * gmobile's GmCornerPosition uses, so that a panel definition taken from there
  * transcribes without reshuffling. A single value is accepted and applied to all
  * four corners, which is what almost every phone actually has and what gmobile's
- * own deprecated "border-radius" meant.
+ * own deprecated "border-radius" meant:
+ *
+ *   CornerRadii="75"           ->  [ 75, 75, 75, 75 ]
+ *   CornerRadii="10;20;30;40"  ->  [ 10, 20, 30, 40 ]
+ *
+ * a plain list of ints, so a consumer writes cornerRadii[0] for the top-left.
+ * Empty when the key is absent, or when it holds neither one value nor four.
  */
 QVariantList SettingsAdapter::displayCornerRadii() const
 {
 	QVariantList out;
 
 	const QString raw = QString::fromStdString(Settings::LunaSettings()->displayCornerRadii);
-	QList<int> radii = parseIntList(raw, "corner radius");
+	QList<int> radii = parseIntList(raw, QLatin1Char(';'), "corner radius");
 
 	if (radii.count() == 1)
 		radii = QList<int>() << radii.at(0) << radii.at(0) << radii.at(0) << radii.at(0);
