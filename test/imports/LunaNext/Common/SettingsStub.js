@@ -46,6 +46,25 @@ var profiles = {
     "n4":      { tabletUi: false, displayWidth:  768, displayHeight: 1280, dpi: 264, gridUnit: 18 },
     /* N5 alike */
     "n5":      { tabletUi: false, displayWidth: 1080, displayHeight: 1920, dpi: 445, gridUnit: 26 },
+    /*
+     * FuriPhone FLX1s (radon) - the first LuneOS device with a declared panel
+     * shape, and the reason cutouts/cornerRadii exist below. The notch and the
+     * radius are FuriLabs' own numbers, from their gmobile fork's
+     * data/devices/display-panels/furilabs,flx1s.json. A centred notch is the
+     * interesting case: it is the one that puts the clock behind the lens.
+     */
+    "radon":   { tabletUi: false, displayWidth:  720, displayHeight: 1600, dpi: 262, gridUnit: 15,
+                 cutouts: [ { x: 324, y: 0, width: 72, height: 102 } ],
+                 cornerRadii: [ 75, 75, 75, 75 ] },
+    /*
+     * Not a real device: a deliberately asymmetric panel, so a test can tell the
+     * four corners and the four rotations apart. Every radius differs and the
+     * cutout sits in a corner rather than centred, which radon's cannot pin down
+     * - its corners are all 75 and its notch is symmetric about the centre.
+     */
+    "asymmetric": { tabletUi: false, displayWidth:  400, displayHeight: 800, dpi: 262, gridUnit: 15,
+                    cutouts: [ { x: 0, y: 0, width: 40, height: 60 } ],
+                    cornerRadii: [ 10, 20, 30, 40 ] },
     /* For desktop debug */
     "desktop": { tabletUi: false, displayWidth:  600, displayHeight:  800, dpi: 148, gridUnit: 10 }
 };
@@ -140,6 +159,15 @@ var displayHeight;
 var dpi;
 var gridUnit;
 var layoutScale;
+/*
+ * The panel's shape. The real Settings hands QML a list of QRects and a list of
+ * ints; plain objects with the same four fields are indistinguishable to every
+ * consumer, which only ever reads x/y/width/height, and are all a .pragma
+ * library can build. Empty on every profile that does not declare them, which is
+ * the same answer the real one gives for a device with no adaptation.
+ */
+var displayCutouts;
+var displayCornerRadii;
 
 /*
  * Switches the run to another device part-way through.
@@ -164,6 +192,8 @@ function setProfile(name) {
     dpi           = profiles[name].dpi;
     gridUnit      = profiles[name].gridUnit;
     layoutScale   = dpi / 132;
+    displayCutouts     = profiles[name].cutouts || [];
+    displayCornerRadii = profiles[name].cornerRadii || [];
     return true;
 }
 

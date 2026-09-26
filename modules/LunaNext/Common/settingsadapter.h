@@ -20,6 +20,7 @@
 #define SETTINGS_H_
 
 #include <QObject>
+#include <QVariantList>
 
 namespace luna
 {
@@ -33,6 +34,11 @@ class SettingsAdapter : public QObject
     Q_PROPERTY(int displayWidth READ displayWidth CONSTANT)
     Q_PROPERTY(int displayHeight READ displayHeight CONSTANT)
     Q_PROPERTY(int displayFps READ displayFps CONSTANT)
+    /* The panel's shape: the rectangles the UI must keep clear of, and the
+     * four corner radii. See Settings.h for the format and the coordinate
+     * space. Both are empty on an ordinary rectangular panel. */
+    Q_PROPERTY(QVariantList displayCutouts READ displayCutouts CONSTANT)
+    Q_PROPERTY(QVariantList displayCornerRadii READ displayCornerRadii CONSTANT)
     Q_PROPERTY(int showReticle READ showReticle CONSTANT)
     Q_PROPERTY(int splashIconSize READ splashIconSize CONSTANT)
     Q_PROPERTY(int gestureAreaHeight READ gestureAreaHeight CONSTANT)
@@ -62,6 +68,8 @@ public:
     int displayWidth() const;
     int displayHeight() const;
     bool displayFps() const;
+    QVariantList displayCutouts() const;
+    QVariantList displayCornerRadii() const;
     bool showReticle() const;
     int splashIconSize() const;
     int gestureAreaHeight() const;
