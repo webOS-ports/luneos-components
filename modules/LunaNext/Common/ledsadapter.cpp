@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2013 Simon Busch <morphis@gravedo.de>
  * Copyright (C) 2015 Nikolay Nizov <nizovn@gmail.com>
+ * Copyright (C) 2026 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +30,13 @@ LedsAdapter::LedsAdapter()
         qWarning() << "CoreNaviLeds were not successfully opened";
 }
 
+LedsAdapter::Led LedsAdapter::notificationLed() const
+{
+    // Asked of CoreNaviLeds rather than named directly, so this cannot drift
+    // from the mask it actually passes to nyx.
+    return m_leds ? static_cast<Led>(m_leds->Center()) : NoLed;
+}
+
 void LedsAdapter::stopAll() const
 {
     if (!m_leds) return;
@@ -45,6 +53,24 @@ void LedsAdapter::ledSet(int brightness) const
 {
     if (!m_leds) return;
     m_leds->ledSet(m_leds->Center(), brightness);
+}
+
+void LedsAdapter::setColor(const QColor &color) const
+{
+    if (!m_leds) return;
+
+    if (!color.isValid()) {
+        m_leds->clearColor();
+        return;
+    }
+
+    m_leds->setColor(color.red(), color.green(), color.blue());
+}
+
+void LedsAdapter::clearColor() const
+{
+    if (!m_leds) return;
+    m_leds->clearColor();
 }
 
 } // namespace luna
