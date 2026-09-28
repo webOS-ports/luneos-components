@@ -22,6 +22,15 @@ function LedsAdapter() {
     return true;
 }
 
+// The nyx LED masks, as the real adapter's Led enum exposes them.
+var NoLed = 0x00;
+var LeftLed = 0x01;
+var CenterLed = 0x02;
+var RightLed = 0x04;
+
+// The notification LED, as the real adapter reports it.
+var notificationLed = CenterLed;
+
 function stopAll() {
     console.log("LedsAdapter stub: stopAll always return true");
     return true;
@@ -34,5 +43,15 @@ function ledPulsate(led, brightness, startDelay, FadeIn, FadeOut, FadeOutDelay, 
 
 function ledSet(brightness) {
     console.log("LedsAdapter stub: ledSet always return true");
+    return true;
+}
+
+function setColor(color) {
+    console.log("LedsAdapter stub: setColor(" + color + ") always return true");
+    return true;
+}
+
+function clearColor() {
+    console.log("LedsAdapter stub: clearColor always return true");
     return true;
 }
