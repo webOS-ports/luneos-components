@@ -213,6 +213,8 @@ Item {
                     font.family: "Prelude"
                     font.pixelSize: FontUtils.sizeToPixels("17pt")
                     color: "black"
+                    selectionColor: "#FFEA58"
+                    selectedTextColor: "#000000"
                 }
             }
 
@@ -276,6 +278,8 @@ Item {
                     font.family: "Prelude"
                     font.pixelSize: FontUtils.sizeToPixels("17pt")
                     color: "black"
+                    selectionColor: "#FFEA58"
+                    selectedTextColor: "#000000"
                 }
             }
 

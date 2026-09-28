@@ -58,8 +58,14 @@ T.TextField {
 
     opacity: enabled ? 1 : 0.3
     color: "#353637"
-    selectionColor: "#338fff"
-    selectedTextColor: "white"
+    //! Legacy's own selection: yellow with black letters on it. #FFEA58 is the
+    //! value every application of the era showed, straight out of Mojo's
+    //! global-base.css: "::selection { background: #ffea58; color: #000 }". The
+    //! engine highlights web pages in the same pair, so a field looks alike
+    //! whichever kind of application it belongs to. Qt's default is a blue that
+    //! belongs to no part of this.
+    selectionColor: "#FFEA58"
+    selectedTextColor: "#000000"
     verticalAlignment: TextInput.AlignVCenter
 
     font.family: "Prelude"

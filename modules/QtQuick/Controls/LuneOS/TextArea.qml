@@ -57,8 +57,9 @@ T.TextArea {
 
     opacity: enabled ? 1 : 0.2
     color: "#353637"
-    selectionColor: "#338fff"
-    selectedTextColor: "white"
+    //! Legacy's own selection - see TextField.qml.
+    selectionColor: "#FFEA58"
+    selectedTextColor: "#000000"
 
     font.family: "Prelude"
     font.pixelSize: FontUtils.sizeToPixels("medium")
