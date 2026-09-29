@@ -53,6 +53,8 @@ Rectangle {
         font.family: "Prelude"
         font.pixelSize: FontUtils.sizeToPixels("large")
         color: "#444444"
+        selectionColor: "#FFEA58"
+        selectedTextColor: "#000000"
         onAccepted: dialogLineInput.accepted()
     }
 }
