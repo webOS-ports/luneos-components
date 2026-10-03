@@ -36,7 +36,7 @@
 
 import QtQuick 2.12
 import QtQuick.Templates 2.12 as T
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import LunaNext.Common 0.1
 
@@ -89,10 +89,14 @@ T.TextField {
     }
 
     //! [background]
-    background: ColorOverlay {
+    //! Darkens the artwork, keeping its alpha, until the field has focus.
+    //! Colorizing with a black colour of alpha a scales the colour by 1 - a,
+    //! which is what the ColorOverlay this replaced did.
+    background: MultiEffect {
         anchors.fill: control
         source: bgImage
-        color: control.activeFocus? "transparent" : "#60000000";
+        colorization: 1.0
+        colorizationColor: control.activeFocus? "transparent" : "#60000000";
 
         BorderImage {
             id: bgImage
