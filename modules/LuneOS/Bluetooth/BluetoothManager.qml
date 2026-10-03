@@ -29,7 +29,14 @@ Item {
     id: root
 
     property alias powered: bluetoothTech.powered
-    readonly property bool bluetoothOperational: btManager.bluetoothOperational
+    // Not btManager.bluetoothOperational: BluezQt also requires every
+    // Bluetooth rfkill switch to be unblocked, and some devices carry one
+    // that never is - on the BlackBerry KEY2 (WCN3990) the vendor bt_power
+    // switch stays soft-blocked because the chip has no enable GPIO, while
+    // the Android HAL powers it through /dev/btpower. Power is connman's
+    // call (see "powered" above); once it powers the adapter off, BluezQt
+    // drops it as the usable adapter anyway.
+    readonly property bool bluetoothOperational: btManager.operational && btManager.usableAdapter !== null
     readonly property bool initializing: powered && !bluetoothOperational
     property bool discoveringMode: false
     readonly property bool discoverable: bluetoothOperational && btManager.usableAdapter.discoverable
@@ -49,7 +56,7 @@ Item {
             });
         }
 
-        if (btManager.bluetoothOperational) {
+        if (root.bluetoothOperational) {
             var device = btManager.deviceForAddress(btDeviceAddress);
             if(root.connectingDevice === device || device.connected) {
                 pendingCall = device.disconnectFromDevice();
