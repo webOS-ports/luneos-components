@@ -8,7 +8,7 @@ var _listLaunchPoints = [
             { "title": "Memos", "id": "org.webosports.app.memos", "icon": "../images/default-app-icon.png", "userHideable": false },
             { "title": "Phone", "id": "org.webosports.app.phone", "icon": "../images/default-app-icon.png", "userHideable": false },
             { "title": "Calculator", "id": "org.webosports.tests.noWindow", "icon": "../images/default-app-icon.png", "showInSearch": false },
-            { "title": "Browser", "id": "org.webosports.app.browser", "icon": "../images/default-app-icon.png", "userHideable": true },
+            { "title": "Browser", "id": "org.webosports.app.atlas", "icon": "../images/default-app-icon.png", "userHideable": true },
             { "title": "This is a long title", "id": "org.webosports.tests.noWindow", "icon": "../images/default-app-icon.png" },
             { "title": "This_is_also_a_long_title", "id": "org.webosports.tests.noWindow", "icon": "../images/default-app-icon.png" },
             { "title": "Preware 5", "id": "com.palm.app.swmanager", "icon": "../images/default-app-icon.png" },

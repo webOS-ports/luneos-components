@@ -34,8 +34,8 @@
  */
 var apps = [
     {
-        "id": "com.palm.app.browser", "title": "Browser", "version": "3.0.0",
-        "type": "web", "vendor": "Palm", "visible": true,
+        "id": "org.webosports.app.atlas", "title": "Browser", "version": "3.0.0",
+        "type": "web", "vendor": "WebOS Ports", "visible": true,
         "systemApp": true, "removable": false,
         "requiredPermissions": ["networkconnection.query", "database.operation"]
     },
@@ -59,8 +59,8 @@ var apps = [
         "requiredPermissions": ["database.operation"]
     },
     {
-        "id": "org.webosports.app.preware", "title": "Preware",
-        "version": "1.9.4", "type": "web", "vendor": "WebOS Internals",
+        "id": "com.palm.app.preware2", "title": "Preware",
+        "version": "2.1.3", "type": "web", "vendor": "WebOS Internals",
         "visible": true, "systemApp": false, "removable": true,
         "requiredPermissions": ["ipkg-service.operation",
                                 "applicationinstall.management"]
