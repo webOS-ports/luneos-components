@@ -546,6 +546,21 @@ void DroidCameraFactory::stopRecording()
                 }).detach();
             }
         }
+        /* The recording's audio source (if any) is not fed by droidcamsrc, so
+         * it gets its own EOS or mp4mux waits for it for ever and never writes
+         * its moov atom; see the software path below. From a thread of its own,
+         * as there. */
+        if (m_recBin) {
+            GstElement *audiosrc =
+                gst_bin_get_by_name(GST_BIN(static_cast<GstElement *>(m_recBin)), "recaudio");
+            if (audiosrc) {
+                std::thread([audiosrc] {
+                    gst_element_send_event(audiosrc, gst_event_new_eos());
+                    gst_object_unref(audiosrc);
+                    qInfo() << "DroidCameraFactory: audio EOS delivered (hardware recording)";
+                }).detach();
+            }
+        }
         return;
     }
 
@@ -664,8 +679,14 @@ bool DroidCameraFactory::startHwRecording(GstElement *bin,
      * the UI thread pile up behind it - the application deadlocks and the
      * software encoder cannot be started, because it needs the same
      * pipeline. Since that cannot be recovered from in process, it must not
-     * be risked by default. Set LUNEOS_CAMERA_HW_RECORDING=1 to try it. */
-    if (qEnvironmentVariable("LUNEOS_CAMERA_HW_RECORDING") != QLatin1String("1"))
+     * be risked by default. Set LUNEOS_CAMERA_HW_RECORDING=1 to try it, or
+     * install /etc/luneos/camera-hw-recording on a device where it is known to
+     * work (LUNEOS_CAMERA_HW_RECORDING=0 turns it off again). */
+    const QString hwEnv = qEnvironmentVariable("LUNEOS_CAMERA_HW_RECORDING");
+    const bool hwWanted = hwEnv.isEmpty()
+        ? QFileInfo::exists(QStringLiteral("/etc/luneos/camera-hw-recording"))
+        : hwEnv == QLatin1String("1");
+    if (!hwWanted)
         return false;
 
     GstElement *cam = gst_bin_get_by_name(GST_BIN(bin), "droidcam");
