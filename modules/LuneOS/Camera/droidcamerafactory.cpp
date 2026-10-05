@@ -455,7 +455,7 @@ bool DroidCameraFactory::startRecording(const QString &filePath)
         "video/x-raw,format=I420,width=1344,height=672 ! "
         "avenc_mpeg4 bitrate=8000000 ! mp4mux name=recmux ! "
         "filesink name=recsink async=false location=\"%1\" "
-        "pulsesrc device=%2 ! audioconvert ! "
+        "pulsesrc name=recaudio device=%2 ! audioconvert ! "
         "avenc_aac ! queue ! recmux.")
         .arg(filePath, QString::fromLatin1(audioSource));
     const QString vDesc = QStringLiteral(
@@ -546,11 +546,35 @@ void DroidCameraFactory::stopRecording()
                 }).detach();
             }
         }
+        /* The recording's audio source (if any) is not fed by droidcamsrc, so
+         * it gets its own EOS or mp4mux waits for it for ever and never writes
+         * its moov atom; see the software path below. From a thread of its own,
+         * as there. */
+        if (m_recBin) {
+            GstElement *audiosrc =
+                gst_bin_get_by_name(GST_BIN(static_cast<GstElement *>(m_recBin)), "recaudio");
+            if (audiosrc) {
+                std::thread([audiosrc] {
+                    gst_element_send_event(audiosrc, gst_event_new_eos());
+                    gst_object_unref(audiosrc);
+                    qInfo() << "DroidCameraFactory: audio EOS delivered (hardware recording)";
+                }).detach();
+            }
+        }
         return;
     }
 
     if (!m_recBin || !m_recTeePad)
         return;
+
+    qInfo() << "DroidCameraFactory: stopping recording";
+    // Only this recording: a new one may have started within the 8 s.
+    const QString stoppedPath = m_pendingVideoPath;
+    QTimer::singleShot(8000, this, [this, stoppedPath] {
+        if (m_recBin && m_pendingVideoPath == stoppedPath)
+            qWarning() << "DroidCameraFactory: EOS has not reached the file sink 8 s after stopRecording of"
+                       << stoppedPath;
+    });
 
     auto *teepad = static_cast<GstPad *>(m_recTeePad);
 
@@ -564,16 +588,33 @@ void DroidCameraFactory::stopRecording()
             GstPad *sinkpad = gst_element_get_static_pad(rec, "sink");
             gst_pad_unlink(pad, sinkpad);
 
-            // EOS into the video branch; the audio source (if any) gets its
-            // own EOS so both tracks finalize.
-            GstElement *audiosrc =
-                gst_bin_get_by_name(GST_BIN(rec), "pulsesrc0");
-            if (audiosrc) {
-                gst_element_send_event(audiosrc, gst_event_new_eos());
-                gst_object_unref(audiosrc);
-            }
+            qInfo() << "DroidCameraFactory: recording branch idle, sending EOS";
+
+            // EOS into the video branch first. The branch is unlinked from the
+            // tee, so no more video arrives: if the audio EOS went first and
+            // blocked (the audio source's thread pushing into an mp4mux that is
+            // waiting for video), the video EOS would never be sent, mp4mux
+            // would never write its moov atom, and this callback - which runs
+            // on the viewfinder's streaming thread - would hang that too.
             gst_pad_send_event(sinkpad, gst_event_new_eos());
             gst_object_unref(sinkpad);
+
+            // The audio source (if any) gets its own EOS so both tracks
+            // finalize, from a thread of its own: send_event on a live source
+            // can wait for its streaming thread. It is looked up by the name
+            // the description gives it: its automatic name (pulsesrc0, 1, 2 ..)
+            // depends on how many pulsesrc elements the process has made, and
+            // audioSourceUsable() makes one first, so "pulsesrc0" was never it
+            // and no audio EOS went out, which left mp4mux waiting for it.
+            GstElement *audiosrc =
+                gst_bin_get_by_name(GST_BIN(rec), "recaudio");
+            if (audiosrc) {
+                std::thread([audiosrc] {
+                    gst_element_send_event(audiosrc, gst_event_new_eos());
+                    gst_object_unref(audiosrc);
+                    qInfo() << "DroidCameraFactory: audio EOS delivered";
+                }).detach();
+            }
 
             // Watch for EOS reaching the file sink.
             GstElement *filesink = gst_bin_get_by_name(GST_BIN(rec), "recsink");
@@ -638,8 +679,14 @@ bool DroidCameraFactory::startHwRecording(GstElement *bin,
      * the UI thread pile up behind it - the application deadlocks and the
      * software encoder cannot be started, because it needs the same
      * pipeline. Since that cannot be recovered from in process, it must not
-     * be risked by default. Set LUNEOS_CAMERA_HW_RECORDING=1 to try it. */
-    if (qEnvironmentVariable("LUNEOS_CAMERA_HW_RECORDING") != QLatin1String("1"))
+     * be risked by default. Set LUNEOS_CAMERA_HW_RECORDING=1 to try it, or
+     * install /etc/luneos/camera-hw-recording on a device where it is known to
+     * work (LUNEOS_CAMERA_HW_RECORDING=0 turns it off again). */
+    const QString hwEnv = qEnvironmentVariable("LUNEOS_CAMERA_HW_RECORDING");
+    const bool hwWanted = hwEnv.isEmpty()
+        ? QFileInfo::exists(QStringLiteral("/etc/luneos/camera-hw-recording"))
+        : hwEnv == QLatin1String("1");
+    if (!hwWanted)
         return false;
 
     GstElement *cam = gst_bin_get_by_name(GST_BIN(bin), "droidcam");
@@ -654,7 +701,7 @@ bool DroidCameraFactory::startHwRecording(GstElement *bin,
     const QString avDesc = QStringLiteral(
         "h264parse ! mp4mux name=recmux ! "
         "filesink name=recsink async=false location=\"%1\" "
-        "pulsesrc device=%2 ! audioconvert ! "
+        "pulsesrc name=recaudio device=%2 ! audioconvert ! "
         "avenc_aac ! queue ! recmux.")
         .arg(filePath, QString::fromLatin1(audioSource));
     const QString vDesc = QStringLiteral(
