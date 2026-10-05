@@ -513,6 +513,8 @@ bool DroidCameraFactory::startRecording(const QString &filePath)
 
     m_recBin = rec;
     m_recTeePad = teepad;
+    m_stopRequested = false;
+    m_recStartedAt.start();
     m_pendingVideoPath = filePath;
     qInfo() << "DroidCameraFactory: recording to" << filePath;
     emit recordingChanged();
@@ -526,6 +528,23 @@ bool DroidCameraFactory::startRecording(const QString &filePath)
 void DroidCameraFactory::stopRecording()
 {
 #ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
+    /* Starting a recording blocks the UI thread for a few seconds (the camera
+     * reconfigures for video, the encoder is created), so a user who taps again
+     * meanwhile has that tap delivered the moment the start returns, as a stop:
+     * recordings of half a second, or two stops in a row. Nobody means to stop
+     * within a second of the recording starting, and a stop that is already under
+     * way needs no second one. */
+    if (!m_recBin)
+        return;
+    if (m_recStartedAt.isValid() && m_recStartedAt.elapsed() < 1500) {
+        qInfo() << "DroidCameraFactory: ignoring a stop" << m_recStartedAt.elapsed()
+                << "ms after the recording started (a tap queued behind the start)";
+        return;
+    }
+    if (m_stopRequested)
+        return;
+    m_stopRequested = true;
+
     if (m_hwRecording) {
         auto *source = qobject_cast<QGStreamerVideoSource *>(m_videoSource);
         if (source && source->gstElement()) {
@@ -663,6 +682,8 @@ void DroidCameraFactory::finishRecording()
     m_pendingVideoPath.clear();
     m_recBin = nullptr;
     m_recTeePad = nullptr;
+    m_stopRequested = false;
+    m_recStartedAt.invalidate();
     emit recordingChanged();
     qInfo() << "DroidCameraFactory: saved recording to" << path;
     emit videoSaved(path);
@@ -697,12 +718,15 @@ bool DroidCameraFactory::startHwRecording(GstElement *bin,
         return false;
     }
 
+    // The audio queue is unbounded: the hardware encoder hands over video in bursts, mp4mux
+    // holds the audio until the video catches up, and the default one second of queue then
+    // fills, stalls the source and drops most of the audio.
     const QByteArray audioSource = recordingAudioSource();
     const QString avDesc = QStringLiteral(
         "h264parse ! mp4mux name=recmux ! "
         "filesink name=recsink async=false location=\"%1\" "
         "pulsesrc name=recaudio device=%2 ! audioconvert ! "
-        "avenc_aac ! queue ! recmux.")
+        "avenc_aac ! queue max-size-buffers=0 max-size-bytes=0 max-size-time=0 ! recmux.")
         .arg(filePath, QString::fromLatin1(audioSource));
     const QString vDesc = QStringLiteral(
         "h264parse ! mp4mux name=recmux ! "
@@ -751,6 +775,30 @@ bool DroidCameraFactory::startHwRecording(GstElement *bin,
     }
     gst_object_unref(vidsrcpad);
 
+    /* droidcamsrc's recorder stamps the video from zero at start-capture, but
+     * the audio source lives in the already running pipeline, so its buffers
+     * carry the time since the pipeline started (the viewfinder had been up for
+     * ~20 s). Left like that the muxer held the audio back until the video
+     * ended: the audio track began that late in the file and most of it was
+     * lost. Delay the video by the running time now, so both are on the
+     * pipeline's timeline (the software path gets that for free from the
+     * viewfinder's own timestamps). A positive pad offset is what this is for;
+     * a negative one on the audio side does not work. */
+    {
+        GstClock *clock = gst_element_get_clock(bin);
+        if (clock) {
+            const GstClockTime base = gst_element_get_base_time(bin);
+            const GstClockTime now = gst_clock_get_time(clock);
+            if (GST_CLOCK_TIME_IS_VALID(base) && now > base) {
+                if (GstPad *rsink = gst_element_get_static_pad(rec, "sink")) {
+                    gst_pad_set_offset(rsink, static_cast<gint64>(now - base));
+                    gst_object_unref(rsink);
+                }
+            }
+            gst_object_unref(clock);
+        }
+    }
+
     // Video mode renegotiates vidsrc against h264parse, selecting the
     // hardware encoder; then start-capture begins the recording.
     g_object_set(cam, "mode", 2, nullptr);
@@ -791,6 +839,8 @@ bool DroidCameraFactory::startHwRecording(GstElement *bin,
 
     m_recBin = rec;
     m_hwRecording = true;
+    m_stopRequested = false;
+    m_recStartedAt.start();
     m_pendingVideoPath = filePath;
     qInfo() << "DroidCameraFactory: HW recording to" << filePath;
     emit recordingChanged();
@@ -842,6 +892,8 @@ void DroidCameraFactory::finishHwRecording()
     m_pendingVideoPath.clear();
     m_recBin = nullptr;
     m_hwRecording = false;
+    m_stopRequested = false;
+    m_recStartedAt.invalidate();
     emit recordingChanged();
     qInfo() << "DroidCameraFactory: saved HW recording to" << path;
     emit videoSaved(path);

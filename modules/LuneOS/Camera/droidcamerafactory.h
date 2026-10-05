@@ -18,6 +18,7 @@
 #define DROIDCAMERAFACTORY_H
 
 #include <QObject>
+#include <QElapsedTimer>
 
 #include <atomic>
 
@@ -84,6 +85,10 @@ private:
     void *m_recBin = nullptr;
     void *m_recTeePad = nullptr;
     bool m_hwRecording = false;
+    // When the recording started (after the possibly slow set-up) and whether a stop is
+    // already under way.
+    QElapsedTimer m_recStartedAt;
+    bool m_stopRequested = false;
     QString m_pendingVideoPath;
     /* Written from a GStreamer streaming thread, read from the watchdog. */
     std::atomic<unsigned> m_hwFrames{0};
