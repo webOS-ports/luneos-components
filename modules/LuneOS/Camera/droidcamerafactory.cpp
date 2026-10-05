@@ -415,14 +415,39 @@ void DroidCameraFactory::saveImage(const QByteArray &data)
 
 bool DroidCameraFactory::recording() const
 {
-    return m_recBin != nullptr;
+    // Also while a hardware recording is being set up, so the UI shows it at once.
+    return m_recBin != nullptr || m_starting;
+}
+
+/* The EOS that stop-capture pushes through vidsrc leaves the pad in the EOS state, and droidcamsrc
+ * only clears it again at start-capture. Negotiating vidsrc before that - when the next recording
+ * sets the camera to video mode, or when the pad is given back to the idle sink after this one and the
+ * camera goes back to image mode - pushes the caps event onto an EOS pad ("We're EOS"), fails, and
+ * droidcamsrc posts "failed to negotiate vidsrc", which Qt's capture session reports as an error. A
+ * recording was not affected, but each one logged it. A FLUSH_STOP clears the state. */
+static void clearVidsrcEos(GstElement *cam)
+{
+    if (GstPad *pad = gst_element_get_static_pad(cam, "vidsrc")) {
+        gst_pad_push_event(pad, gst_event_new_flush_stop(TRUE));
+        gst_object_unref(pad);
+    }
+}
+
+/* Hardware recording is used when the environment asks for it, or, when it does not say, when the
+ * device installed the marker file (see startHwRecording()). */
+static bool hwRecordingWanted()
+{
+    const QString hwEnv = qEnvironmentVariable("LUNEOS_CAMERA_HW_RECORDING");
+    return hwEnv.isEmpty()
+        ? QFileInfo::exists(QStringLiteral("/etc/luneos/camera-hw-recording"))
+        : hwEnv == QLatin1String("1");
 }
 
 bool DroidCameraFactory::startRecording(const QString &filePath)
 {
 #ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
     auto *source = qobject_cast<QGStreamerVideoSource *>(m_videoSource);
-    if (!source || !source->gstElement() || m_recBin) {
+    if (!source || !source->gstElement() || m_recBin || m_starting) {
         emit videoCaptureError(QStringLiteral("cannot start recording"));
         return false;
     }
@@ -435,9 +460,49 @@ bool DroidCameraFactory::startRecording(const QString &filePath)
     // DroidMediaRecorder attaches the encoder to the camera session inside
     // the Android layer and vidsrc emits encoded frames, independent of
     // the raw viewfinder (needs the gst-droid raw-preview-recorder patch).
-    if (startHwRecording(bin, filePath))
+    //
+    // Setting it up takes seconds (the audio source is tried out, the camera
+    // reconfigures for video, the encoder is created), so it is done on a
+    // thread of its own and the UI stays alive: a user whose tap seems to do
+    // nothing taps again, and with the UI blocked that tap was delivered the
+    // moment the start returned, as a stop. recording() is true meanwhile, so
+    // the UI shows the recording at once, and a stop asked for before the
+    // recorder is up is carried out as soon as it is.
+    if (hwRecordingWanted()) {
+        m_starting = true;
+        m_stopAfterStart = false;
+        m_pendingVideoPath = filePath;
+        emit recordingChanged();
+        gst_object_ref(bin);
+        std::thread([this, bin, filePath] {
+            GstElement *rec = startHwRecording(bin, filePath);
+            QMetaObject::invokeMethod(this, [this, bin, filePath, rec] {
+                m_starting = false;
+                if (rec) {
+                    hwRecordingStarted(rec, filePath);
+                } else {
+                    // The hardware recorder could not be set up: record in software instead.
+                    m_pendingVideoPath.clear();
+                    m_stopAfterStart = false;
+                    if (!startSwRecording(bin, filePath))
+                        emit recordingChanged();
+                }
+                gst_object_unref(bin);
+            }, Qt::QueuedConnection);
+        }).detach();
         return true;
+    }
 
+    return startSwRecording(bin, filePath);
+#else
+    Q_UNUSED(filePath);
+    return false;
+#endif
+}
+
+bool DroidCameraFactory::startSwRecording(GstElement *bin, const QString &filePath)
+{
+#ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
     GstElement *tee = gst_bin_get_by_name(GST_BIN(bin), "vftee");
     if (!tee) {
         emit videoCaptureError(QStringLiteral("viewfinder tee not found"));
@@ -514,13 +579,12 @@ bool DroidCameraFactory::startRecording(const QString &filePath)
     m_recBin = rec;
     m_recTeePad = teepad;
     m_stopRequested = false;
-    m_recStartedAt.start();
     m_pendingVideoPath = filePath;
     qInfo() << "DroidCameraFactory: recording to" << filePath;
     emit recordingChanged();
     return true;
 #else
-    Q_UNUSED(filePath);
+    Q_UNUSED(bin); Q_UNUSED(filePath);
     return false;
 #endif
 }
@@ -528,19 +592,16 @@ bool DroidCameraFactory::startRecording(const QString &filePath)
 void DroidCameraFactory::stopRecording()
 {
 #ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
-    /* Starting a recording blocks the UI thread for a few seconds (the camera
-     * reconfigures for video, the encoder is created), so a user who taps again
-     * meanwhile has that tap delivered the moment the start returns, as a stop:
-     * recordings of half a second, or two stops in a row. Nobody means to stop
-     * within a second of the recording starting, and a stop that is already under
-     * way needs no second one. */
-    if (!m_recBin)
-        return;
-    if (m_recStartedAt.isValid() && m_recStartedAt.elapsed() < 1500) {
-        qInfo() << "DroidCameraFactory: ignoring a stop" << m_recStartedAt.elapsed()
-                << "ms after the recording started (a tap queued behind the start)";
+    /* A stop asked for while the hardware recorder is still being set up (the
+     * start runs on a worker thread, see startRecording()) is carried out when it
+     * is up. A stop that is already under way needs no second one. */
+    if (m_starting) {
+        qInfo() << "DroidCameraFactory: stop asked for while the recorder starts; stopping once it is up";
+        m_stopAfterStart = true;
         return;
     }
+    if (!m_recBin)
+        return;
     if (m_stopRequested)
         return;
     m_stopRequested = true;
@@ -565,6 +626,18 @@ void DroidCameraFactory::stopRecording()
                 }).detach();
             }
         }
+        /* A recorder that never delivered a frame (the video hardware is wedged, say) cannot
+         * finish: no EOS comes out of it, so the recording would stay on for ever. Give up on it
+         * instead, once stop-capture has had a moment. */
+        if (m_hwFrames.load() == 0) {
+            qWarning() << "DroidCameraFactory: the hardware recorder has produced no frames; abandoning the recording";
+            QTimer::singleShot(1000, this, [this] {
+                if (m_recBin && m_hwRecording)
+                    finishHwRecording(false);
+            });
+            return;
+        }
+
         /* The recording's audio source (if any) is not fed by droidcamsrc, so
          * it gets its own EOS or mp4mux waits for it for ever and never writes
          * its moov atom; see the software path below. From a thread of its own,
@@ -683,15 +756,14 @@ void DroidCameraFactory::finishRecording()
     m_recBin = nullptr;
     m_recTeePad = nullptr;
     m_stopRequested = false;
-    m_recStartedAt.invalidate();
     emit recordingChanged();
     qInfo() << "DroidCameraFactory: saved recording to" << path;
     emit videoSaved(path);
 #endif
 }
 
-bool DroidCameraFactory::startHwRecording(GstElement *bin,
-                                          const QString &filePath)
+GstElement *DroidCameraFactory::startHwRecording(GstElement *bin,
+                                                  const QString &filePath)
 {
 #ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
     /* Opt-in only. On a device whose vendor recorder accepts the session but
@@ -703,19 +775,12 @@ bool DroidCameraFactory::startHwRecording(GstElement *bin,
      * be risked by default. Set LUNEOS_CAMERA_HW_RECORDING=1 to try it, or
      * install /etc/luneos/camera-hw-recording on a device where it is known to
      * work (LUNEOS_CAMERA_HW_RECORDING=0 turns it off again). */
-    const QString hwEnv = qEnvironmentVariable("LUNEOS_CAMERA_HW_RECORDING");
-    const bool hwWanted = hwEnv.isEmpty()
-        ? QFileInfo::exists(QStringLiteral("/etc/luneos/camera-hw-recording"))
-        : hwEnv == QLatin1String("1");
-    if (!hwWanted)
-        return false;
-
     GstElement *cam = gst_bin_get_by_name(GST_BIN(bin), "droidcam");
     GstElement *vidsink = gst_bin_get_by_name(GST_BIN(bin), "vidsink");
     if (!cam || !vidsink) {
         if (cam) gst_object_unref(cam);
         if (vidsink) gst_object_unref(vidsink);
-        return false;
+        return nullptr;
     }
 
     // The audio queue is unbounded: the hardware encoder hands over video in bursts, mp4mux
@@ -746,7 +811,7 @@ bool DroidCameraFactory::startHwRecording(GstElement *bin,
         g_clear_error(&error);
         gst_object_unref(cam);
         gst_object_unref(vidsink);
-        return false;
+        return nullptr;
     }
     gst_element_set_name(rec, "hwrecbin");
 
@@ -757,9 +822,17 @@ bool DroidCameraFactory::startHwRecording(GstElement *bin,
     gst_object_unref(oldsink);
 
     gst_bin_add(GST_BIN(bin), rec);
-    gst_element_sync_state_with_parent(rec);
+    // PAUSED, not PLAYING: the audio source must not start capturing until the video does (see
+    // below); the camera takes seconds to reconfigure for video and audio from before that would
+    // run ahead of the video in the file.
+    gst_element_set_state(rec, GST_STATE_PAUSED);
     GstPad *recsink = gst_element_get_static_pad(rec, "sink");
-    const bool linked = gst_pad_link(vidsrcpad, recsink) == GST_PAD_LINK_OK;
+    /* No caps check: it asks vidsrc for its caps, which is answered under droidcamsrc's device
+     * lock (so it can block for a second or two behind the camera) and, depending on how far the
+     * camera's parameters have been read, may list only the raw formats, failing the link with
+     * "no common format". The real negotiation happens when the mode is set below. */
+    const bool linked = gst_pad_link_full(vidsrcpad, recsink, GST_PAD_LINK_CHECK_HIERARCHY)
+        == GST_PAD_LINK_OK;
     gst_object_unref(recsink);
 
     if (!linked) {
@@ -771,36 +844,13 @@ bool DroidCameraFactory::startHwRecording(GstElement *bin,
         gst_object_unref(vidsrcpad);
         gst_object_unref(cam);
         gst_object_unref(vidsink);
-        return false;
+        return nullptr;
     }
     gst_object_unref(vidsrcpad);
 
-    /* droidcamsrc's recorder stamps the video from zero at start-capture, but
-     * the audio source lives in the already running pipeline, so its buffers
-     * carry the time since the pipeline started (the viewfinder had been up for
-     * ~20 s). Left like that the muxer held the audio back until the video
-     * ended: the audio track began that late in the file and most of it was
-     * lost. Delay the video by the running time now, so both are on the
-     * pipeline's timeline (the software path gets that for free from the
-     * viewfinder's own timestamps). A positive pad offset is what this is for;
-     * a negative one on the audio side does not work. */
-    {
-        GstClock *clock = gst_element_get_clock(bin);
-        if (clock) {
-            const GstClockTime base = gst_element_get_base_time(bin);
-            const GstClockTime now = gst_clock_get_time(clock);
-            if (GST_CLOCK_TIME_IS_VALID(base) && now > base) {
-                if (GstPad *rsink = gst_element_get_static_pad(rec, "sink")) {
-                    gst_pad_set_offset(rsink, static_cast<gint64>(now - base));
-                    gst_object_unref(rsink);
-                }
-            }
-            gst_object_unref(clock);
-        }
-    }
-
     // Video mode renegotiates vidsrc against h264parse, selecting the
     // hardware encoder; then start-capture begins the recording.
+    clearVidsrcEos(cam);
     g_object_set(cam, "mode", 2, nullptr);
 
     GstElement *filesink = gst_bin_get_by_name(GST_BIN(rec), "recsink");
@@ -833,35 +883,75 @@ bool DroidCameraFactory::startHwRecording(GstElement *bin,
         }, this, nullptr);
     gst_object_unref(recsinkpad);
 
+    /* droidcamsrc's recorder stamps the video from zero at start-capture, but
+     * the audio source lives in the already running pipeline, so its buffers
+     * carry the time since the pipeline started (the viewfinder had been up for
+     * ~20 s). Left like that the muxer held the audio back until the video
+     * ended: the audio track began that late in the file and most of it was
+     * lost. Delay the video by the running time now, so both are on the
+     * pipeline's timeline (the software path gets that for free from the
+     * viewfinder's own timestamps). A positive pad offset is what this is for;
+     * a negative one on the audio side does not work. */
+    {
+        GstClock *clock = gst_element_get_clock(bin);
+        if (clock) {
+            const GstClockTime base = gst_element_get_base_time(bin);
+            const GstClockTime now = gst_clock_get_time(clock);
+            if (GST_CLOCK_TIME_IS_VALID(base) && now > base) {
+                if (GstPad *rsink = gst_element_get_static_pad(rec, "sink")) {
+                    gst_pad_set_offset(rsink, static_cast<gint64>(now - base));
+                    gst_object_unref(rsink);
+                }
+            }
+            gst_object_unref(clock);
+        }
+    }
+
+    /* Audio starts now, with the video: the recording bin goes to PLAYING at the moment the
+     * running time for the offset above is taken. */
+    gst_element_sync_state_with_parent(rec);
+
     g_signal_emit_by_name(cam, "start-capture");
     gst_object_unref(cam);
     gst_object_unref(vidsink);
 
+    return rec;
+#else
+    Q_UNUSED(bin); Q_UNUSED(filePath);
+    return nullptr;
+#endif
+}
+
+void DroidCameraFactory::hwRecordingStarted(GstElement *rec, const QString &filePath)
+{
+#ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
     m_recBin = rec;
     m_hwRecording = true;
     m_stopRequested = false;
-    m_recStartedAt.start();
     m_pendingVideoPath = filePath;
     qInfo() << "DroidCameraFactory: HW recording to" << filePath;
     emit recordingChanged();
 
     /* Report a recorder that took the session and then produced nothing, so
      * the zero-byte file it leaves behind has an explanation in the log.
-     * Nothing is torn down here on purpose - see the note above. */
+     * Nothing is torn down here on purpose - see the note in startHwRecording(). */
     QTimer::singleShot(kHwRecordingGraceMs, this, [this] {
         if (m_hwRecording && m_hwFrames.load() == 0)
             qWarning() << "DroidCameraFactory: hardware recorder produced no "
                           "frames after" << kHwRecordingGraceMs
                        << "ms; the recording will be empty";
     });
-    return true;
+
+    if (m_stopAfterStart) {
+        m_stopAfterStart = false;
+        stopRecording();
+    }
 #else
-    Q_UNUSED(bin); Q_UNUSED(filePath);
-    return false;
+    Q_UNUSED(rec); Q_UNUSED(filePath);
 #endif
 }
 
-void DroidCameraFactory::finishHwRecording()
+void DroidCameraFactory::finishHwRecording(bool saved)
 {
 #ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
     auto *source = qobject_cast<QGStreamerVideoSource *>(m_videoSource);
@@ -876,9 +966,10 @@ void DroidCameraFactory::finishHwRecording()
         GstElement *vidsink = gst_bin_get_by_name(GST_BIN(bin), "vidsink");
         gst_bin_remove(GST_BIN(bin), rec);
         if (cam && vidsink) {
+            clearVidsrcEos(cam);
             GstPad *vidsrcpad = gst_element_get_static_pad(cam, "vidsrc");
             GstPad *os = gst_element_get_static_pad(vidsink, "sink");
-            gst_pad_link(vidsrcpad, os);
+            gst_pad_link_full(vidsrcpad, os, GST_PAD_LINK_CHECK_HIERARCHY);
             gst_object_unref(os);
             gst_object_unref(vidsrcpad);
             // back to image mode so stills work again
@@ -893,9 +984,15 @@ void DroidCameraFactory::finishHwRecording()
     m_recBin = nullptr;
     m_hwRecording = false;
     m_stopRequested = false;
-    m_recStartedAt.invalidate();
     emit recordingChanged();
-    qInfo() << "DroidCameraFactory: saved HW recording to" << path;
-    emit videoSaved(path);
+    if (saved) {
+        qInfo() << "DroidCameraFactory: saved HW recording to" << path;
+        emit videoSaved(path);
+    } else {
+        // Nothing was recorded: do not leave an empty file behind.
+        QFile::remove(path);
+        qWarning() << "DroidCameraFactory: abandoned the empty HW recording" << path;
+        emit videoCaptureError(QStringLiteral("the hardware recorder produced no video"));
+    }
 #endif
 }
