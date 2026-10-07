@@ -74,8 +74,10 @@ signals:
 private:
     void saveImage(const QByteArray &data);
     void finishRecording();
-    bool startHwRecording(struct _GstElement *bin, const QString &filePath);
-    void finishHwRecording();
+    struct _GstElement *startHwRecording(struct _GstElement *bin, const QString &filePath);
+    void hwRecordingStarted(struct _GstElement *rec, const QString &filePath);
+    bool startSwRecording(struct _GstElement *bin, const QString &filePath);
+    void finishHwRecording(bool saved = true);
 
     QObject *m_videoSource = nullptr;
     QString m_pendingImagePath;
@@ -84,6 +86,13 @@ private:
     void *m_recBin = nullptr;
     void *m_recTeePad = nullptr;
     bool m_hwRecording = false;
+    // A stop is already under way.
+    bool m_stopRequested = false;
+    // A hardware recording is being set up on a worker thread (the camera reconfigures for
+    // video and the encoder is created, which takes seconds), and whether a stop was asked
+    // for meanwhile.
+    bool m_starting = false;
+    bool m_stopAfterStart = false;
     QString m_pendingVideoPath;
     /* Written from a GStreamer streaming thread, read from the watchdog. */
     std::atomic<unsigned> m_hwFrames{0};
