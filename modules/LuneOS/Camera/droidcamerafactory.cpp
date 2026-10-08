@@ -785,10 +785,12 @@ GstElement *DroidCameraFactory::startHwRecording(GstElement *bin,
 
     // The audio queue is unbounded: the hardware encoder hands over video in bursts, mp4mux
     // holds the audio until the video catches up, and the default one second of queue then
-    // fills, stalls the source and drops most of the audio.
+    // fills, stalls the source and drops most of the audio. The video gets a queue too: vidsrc
+    // reports next to no maximum latency, below the audio source's minimum, and mp4mux then
+    // warns "Impossible to configure latency" for every buffer it aggregates.
     const QByteArray audioSource = recordingAudioSource();
     const QString avDesc = QStringLiteral(
-        "h264parse ! mp4mux name=recmux ! "
+        "queue ! h264parse ! mp4mux name=recmux ! "
         "filesink name=recsink async=false location=\"%1\" "
         "pulsesrc name=recaudio device=%2 ! audioconvert ! "
         "avenc_aac ! queue max-size-buffers=0 max-size-bytes=0 max-size-time=0 ! recmux.")
