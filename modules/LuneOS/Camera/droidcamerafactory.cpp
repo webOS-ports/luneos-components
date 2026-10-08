@@ -443,7 +443,24 @@ static bool hwRecordingWanted()
         : hwEnv == QLatin1String("1");
 }
 
-bool DroidCameraFactory::startRecording(const QString &filePath)
+/* Record in the file how the frames are to be turned for display: mp4mux writes the
+ * image-orientation tag into the video track's matrix. The frames themselves stay as the sensor
+ * delivers them, so this costs nothing at record time. */
+static void tagRecordingRotation(GstElement *rec, int rotation)
+{
+    rotation = ((rotation % 360) + 360) % 360;
+    if (rotation % 90)
+        return;
+    GstElement *mux = gst_bin_get_by_name(GST_BIN(rec), "recmux");
+    if (!mux)
+        return;
+    const QByteArray orientation = "rotate-" + QByteArray::number(rotation);
+    gst_tag_setter_add_tags(GST_TAG_SETTER(mux), GST_TAG_MERGE_REPLACE,
+                            GST_TAG_IMAGE_ORIENTATION, orientation.constData(), nullptr);
+    gst_object_unref(mux);
+}
+
+bool DroidCameraFactory::startRecording(const QString &filePath, int rotation)
 {
 #ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
     auto *source = qobject_cast<QGStreamerVideoSource *>(m_videoSource);
@@ -451,6 +468,7 @@ bool DroidCameraFactory::startRecording(const QString &filePath)
         emit videoCaptureError(QStringLiteral("cannot start recording"));
         return false;
     }
+    m_recordingRotation = rotation;
 
     GstElement *bin = source->gstElement();
 
@@ -496,6 +514,7 @@ bool DroidCameraFactory::startRecording(const QString &filePath)
     return startSwRecording(bin, filePath);
 #else
     Q_UNUSED(filePath);
+    Q_UNUSED(rotation);
     return false;
 #endif
 }
@@ -553,6 +572,7 @@ bool DroidCameraFactory::startSwRecording(GstElement *bin, const QString &filePa
         return false;
     }
     gst_element_set_name(rec, "recbin");
+    tagRecordingRotation(rec, m_recordingRotation);
 
     gst_bin_add(GST_BIN(bin), rec);
     if (!gst_element_sync_state_with_parent(rec)) {
@@ -816,6 +836,7 @@ GstElement *DroidCameraFactory::startHwRecording(GstElement *bin,
         return nullptr;
     }
     gst_element_set_name(rec, "hwrecbin");
+    tagRecordingRotation(rec, m_recordingRotation);
 
     // vidsrc is quiescent outside recording, so relinking it is safe.
     GstPad *vidsrcpad = gst_element_get_static_pad(cam, "vidsrc");
@@ -854,6 +875,27 @@ GstElement *DroidCameraFactory::startHwRecording(GstElement *bin,
     // hardware encoder; then start-capture begins the recording.
     clearVidsrcEos(cam);
     g_object_set(cam, "mode", 2, nullptr);
+
+    /* droidcamsrc asks the encoder for 12 Mbit/s unless told otherwise, which the TouchPad's
+     * encoder answered with about 5 Mbit/s at 640x480 - far more than the picture needs. Scale
+     * the target with the negotiated size instead: 6 bit/s per pixel is 1.8 Mbit/s at 640x480,
+     * 5.5 at 720p and 12 at 1080p. Not with the frame rate: the caps carry the top of the HAL's
+     * range (31 fps on the TouchPad), not what the sensor delivers (15 fps indoors), and the
+     * encoder spreads the target over the rate the caps claim, so the files come out at about
+     * half of it there. It must be set before start-capture, which creates the encoder. */
+    if (GstPad *pad = gst_element_get_static_pad(cam, "vidsrc")) {
+        if (GstCaps *caps = gst_pad_get_current_caps(pad)) {
+            int width = 0, height = 0;
+            const GstStructure *s = gst_caps_get_structure(caps, 0);
+            if (gst_structure_get_int(s, "width", &width)
+                && gst_structure_get_int(s, "height", &height) && width > 0 && height > 0) {
+                const qint64 bitrate = qBound(qint64(1000000), qint64(width) * height * 6, qint64(12000000));
+                g_object_set(cam, "target-bitrate", int(bitrate), nullptr);
+            }
+            gst_caps_unref(caps);
+        }
+        gst_object_unref(pad);
+    }
 
     GstElement *filesink = gst_bin_get_by_name(GST_BIN(rec), "recsink");
     GstPad *fspad = gst_element_get_static_pad(filesink, "sink");

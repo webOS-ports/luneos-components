@@ -59,9 +59,11 @@ public:
 
     /* Video recording through a dynamic encode branch on the viewfinder
      * tee - QMediaRecorder has the same hard QCamera dependency as
-     * QImageCapture and never records from a native video source. */
+     * QImageCapture and never records from a native video source.
+     * rotation is how far, clockwise, a player has to turn the recorded frames to show them
+     * upright (0, 90, 180 or 270); it goes into the file as its display matrix. */
     bool recording() const;
-    Q_INVOKABLE bool startRecording(const QString &filePath);
+    Q_INVOKABLE bool startRecording(const QString &filePath, int rotation = 0);
     Q_INVOKABLE void stopRecording();
 
 signals:
@@ -94,6 +96,8 @@ private:
     bool m_starting = false;
     bool m_stopAfterStart = false;
     QString m_pendingVideoPath;
+    // The rotation startRecording() was given, for the recording being set up.
+    int m_recordingRotation = 0;
     /* Written from a GStreamer streaming thread, read from the watchdog. */
     std::atomic<unsigned> m_hwFrames{0};
 };
