@@ -20,7 +20,10 @@
 
 #include "settingsadapter.h"
 
+#include <QGuiApplication>
 #include <QRect>
+#include <QScreen>
+#include <QSize>
 #include <QString>
 #include <QStringList>
 
@@ -46,14 +49,35 @@ qreal SettingsAdapter::dpi() const
     return Settings::LunaSettings()->dpi;
 }
 
+/*
+ * DisplayWidth/DisplayHeight of 0 mean "not measured": luneos-device-config
+ * leaves them at the template's 0 when it finds no panel size, which is every
+ * virtual machine - there the output mode is only settled once surface-manager
+ * has the display, long after the config was generated (vmwgfx still reports
+ * 1280x800 then, and the output comes up at 1920x1080).
+ *
+ * Passing the 0 on gave every QML app a 0x0 window that Qt never exposes, and
+ * any guessed size that differs from the output makes the compositor scale the
+ * card, so touches land in the wrong place. Use the screen this process
+ * actually has instead: in an app that is the compositor's wl_output, in the
+ * compositor itself the DRM output.
+ */
+static QSize screenSize()
+{
+    const QScreen *screen = QGuiApplication::primaryScreen();
+    return screen ? screen->size() : QSize(0, 0);
+}
+
 int SettingsAdapter::displayWidth() const
 {
-    return Settings::LunaSettings()->displayWidth;
+    const int width = Settings::LunaSettings()->displayWidth;
+    return width > 0 ? width : screenSize().width();
 }
 
 int SettingsAdapter::displayHeight() const
 {
-    return Settings::LunaSettings()->displayHeight;
+    const int height = Settings::LunaSettings()->displayHeight;
+    return height > 0 ? height : screenSize().height();
 }
 
 bool SettingsAdapter::displayFps() const
