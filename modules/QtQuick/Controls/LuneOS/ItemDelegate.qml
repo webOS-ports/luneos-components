@@ -81,8 +81,10 @@ T.ItemDelegate {
     //! [background]
 
     //! [background]
+    // No size of its own: the control then resizes its background to cover
+    // the whole delegate. Bound to implicitHeight, it covered only the text's
+    // height, so a row given a taller height highlighted just its top part.
     background: Image {
-            height: control.implicitHeight
             source: "images/item-highlight.png"
             visible: control.down || control.highlighted || control.visualFocus
     }
