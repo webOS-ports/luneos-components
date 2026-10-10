@@ -37,6 +37,7 @@
 #include "droidcamerafactory.h"
 #include "camerasensorinfo.h"
 #include "camerageometry.h"
+#include "barcodescanner.h"
 
 static QObject *droidCameraFactorySingleton(QQmlEngine *engine,
                                             QJSEngine *scriptEngine)
@@ -103,6 +104,10 @@ public:
          * for tap-to-focus. See camerageometry.h. */
         qmlRegisterSingletonType<CameraGeometry>(uri, 1, 0,
                         "CameraGeometry", cameraGeometrySingleton);
+
+        /* QR codes and barcodes from any viewfinder's video sink, through
+         * zbar. See barcodescanner.h. */
+        qmlRegisterType<BarcodeScanner>(uri, 1, 0, "BarcodeScanner");
     }
 };
 
