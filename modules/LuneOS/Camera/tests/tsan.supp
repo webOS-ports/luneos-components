@@ -1,0 +1,23 @@
+# ThreadSanitizer suppressions for luneos-camera-tests.
+#
+# The Qt libraries in the sysroot are not built with -fsanitize=thread, so the
+# synchronisation inside them is invisible to TSan: QMutex is a bare futex,
+# and QThreadPool and the event queue hand work between threads under it.
+# Anything handed over that way looks unsynchronised:
+#
+# - a queued call: BarcodeScanner's worker builds the call (the guard and the
+#   decoded symbol) in QMetaObject::invokeMethod() and the GUI thread runs it
+#   from QObject::event(); every access to it, and to the strings it carries,
+#   is reported. invokeMethodCallableHelper(), where the worker builds it, is
+#   in every one of those reports.
+race:invokeMethodCallableHelper
+#   ... and the event that carries it, deleted by the GUI thread once run.
+race:QMetaObject::invokeMethodImpl
+#
+#   The decoded text itself: its QString data is allocated on the worker and
+#   reference-counted on the GUI thread once the queued call runs.
+race:QArrayData::allocate2
+#
+# - QThreadPool's own wait condition, destroyed on the GUI thread after its
+#   worker has left it.
+race:QWaitCondition
