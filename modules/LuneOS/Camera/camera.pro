@@ -12,15 +12,24 @@ uri = LuneOS.Camera
 QT += qml quick multimedia multimedia-private
 
 CONFIG += link_pkgconfig
-PKGCONFIG += gstreamer-1.0
+PKGCONFIG += gstreamer-1.0 gstreamer-photography-1.0
+
+# GstPhotography is still marked unstable; Qt's own GStreamer backend
+# defines the same to use it.
+DEFINES += GST_USE_UNSTABLE_API
 
 SOURCES += \
     plugin.cpp \
     droidcamerafactory.cpp \
+    droidcamerabin.cpp \
+    cameracontrols.cpp \
     camerasensorinfo.cpp
 
 HEADERS += \
     droidcamerafactory.h \
+    droidcamerabin.h \
+    cameracontrols.h \
+    camerageometry.h \
     camerasensorinfo.h
 
 OTHER_FILES += qmldir

@@ -36,6 +36,7 @@
 
 #include "droidcamerafactory.h"
 #include "camerasensorinfo.h"
+#include "camerageometry.h"
 
 static QObject *droidCameraFactorySingleton(QQmlEngine *engine,
                                             QJSEngine *scriptEngine)
@@ -44,6 +45,15 @@ static QObject *droidCameraFactorySingleton(QQmlEngine *engine,
     Q_UNUSED(scriptEngine);
 
     return new DroidCameraFactory();
+}
+
+static QObject *cameraGeometrySingleton(QQmlEngine *engine,
+                                        QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
+
+    return new CameraGeometry();
 }
 
 static QObject *cameraSensorInfoSingleton(QQmlEngine *engine,
@@ -88,6 +98,11 @@ public:
          */
         qmlRegisterSingletonType<CameraSensorInfo>(uri, 1, 0,
                         "CameraInfo", cameraSensorInfoSingleton);
+
+        /* Turns a tap on the viewfinder into a point of the camera frame,
+         * for tap-to-focus. See camerageometry.h. */
+        qmlRegisterSingletonType<CameraGeometry>(uri, 1, 0,
+                        "CameraGeometry", cameraGeometrySingleton);
     }
 };
 
