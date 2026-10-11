@@ -207,6 +207,16 @@ qreal maximumZoomRatio(const QList<int> &ratiosPercent)
     return *std::max_element(ratiosPercent.cbegin(), ratiosPercent.cend()) / 100.0;
 }
 
+qreal appliedExposure(qreal ev, qreal minEv, qreal maxEv, qreal step)
+{
+    if (!(step > 0) || !std::isfinite(ev))
+        return 0;
+    const float clamped = std::clamp(static_cast<float>(ev), static_cast<float>(std::min(minEv, maxEv)),
+                                     static_cast<float>(std::max(minEv, maxEv)));
+    const int steps = static_cast<int>(clamped / static_cast<float>(step));
+    return static_cast<qreal>(static_cast<float>(steps) * static_cast<float>(step));
+}
+
 QRect focusRegion(const QPointF &normalisedPoint, const QSize &frame, qreal boxFraction)
 {
     if (frame.isEmpty()

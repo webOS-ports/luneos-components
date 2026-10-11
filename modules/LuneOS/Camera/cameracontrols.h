@@ -67,6 +67,17 @@ int zoomIndexForRatio(const QList<int> &ratiosPercent, qreal ratio);
 qreal maximumZoomRatio(const QList<int> &ratiosPercent);
 
 /*
+ * The exposure compensation, in EV, that the camera really applies when asked
+ * for `ev`. Android takes it as a whole number of steps of `step` EV;
+ * gst-droid clamps `ev` to [minEv, maxEv] and divides by the step in single
+ * precision, dropping the fraction, and this does the same. Some HALs (the
+ * Q25's) write that step count into the photo's EXIF as if it were EV, so the
+ * camera app writes this value instead. 0 when the step is unknown, as
+ * gst-droid then applies nothing.
+ */
+qreal appliedExposure(qreal ev, qreal minEv, qreal maxEv, qreal step);
+
+/*
  * The focus/metering rectangle for a tap, in frame pixels: a square whose side
  * is boxFraction of the frame's shorter side, centred on the normalised point
  * and pushed back inside the frame when the point is near an edge. Returns an

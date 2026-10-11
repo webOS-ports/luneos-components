@@ -357,7 +357,7 @@ QObject *DroidCameraFactory::createVideoSource(int cameraDevice)
         m_supportedColorTone.clear();
         m_supportedFlicker.clear();
         m_supportedIso.clear();
-        m_minEv = m_maxEv = 0;
+        m_minEv = m_maxEv = m_evStep = 0;
         m_zoomRatios.clear();
         m_maxFocusAreas = 0;
         m_hdrSceneMode = m_hdrImageMode = m_zslImageMode = false;
@@ -1323,6 +1323,7 @@ void DroidCameraFactory::connectCamera(GstElement *cam, unsigned generation)
                 if (value("zoom-supported") == QLatin1String("true"))
                     caps.zoomRatios = CameraControls::parseZoomRatios(value("zoom-ratios"));
                 caps.maxFocusAreas = value("max-num-focus-areas").toInt();
+                caps.evStep = value("exposure-compensation-step").toDouble();
                 /* The flicker modes are not part of droidcamsrc's capability
                  * properties; the HAL lists them as "antibanding-values". */
                 const QStringList antibanding = value("antibanding-values").split(QLatin1Char(','), Qt::SkipEmptyParts);
@@ -1389,6 +1390,7 @@ void DroidCameraFactory::capabilitiesReady(const Capabilities &caps, unsigned ge
     }
     m_minEv = caps.minEv;
     m_maxEv = caps.maxEv;
+    m_evStep = caps.evStep;
     m_zoomRatios = caps.zoomRatios;
     m_maxFocusAreas = caps.maxFocusAreas;
     m_hdrImageMode = caps.hdrImageMode;
@@ -1585,6 +1587,13 @@ void DroidCameraFactory::setExposureCompensation(qreal ev)
         setExposureOn(cam, ev);
         gst_object_unref(cam);
     }
+}
+
+qreal DroidCameraFactory::appliedExposureCompensation() const
+{
+    if (!m_controlsReady || m_maxEv <= m_minEv)
+        return 0;
+    return CameraControls::appliedExposure(m_ev, m_minEv, m_maxEv, m_evStep);
 }
 
 qreal DroidCameraFactory::maximumZoom() const

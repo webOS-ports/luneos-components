@@ -242,3 +242,33 @@ TEST(ViewToFrame, InvertsTheViewfinderEverywhere)
         }
     }
 }
+
+/* What gst-droid sends is a whole number of the HAL's steps, the fraction
+ * dropped; the EV written into a photo has to be that, not what was asked. */
+TEST(AppliedExposure, WholeStepsOfTheHalsStep)
+{
+    EXPECT_NEAR(CameraControls::appliedExposure(2.0, -2.0, 2.0, 0.2), 2.0, 1e-6);
+    EXPECT_NEAR(CameraControls::appliedExposure(0.6, -2.0, 2.0, 0.2), 0.6, 1e-6);
+    EXPECT_NEAR(CameraControls::appliedExposure(0.0, -2.0, 2.0, 0.2), 0.0, 1e-6);
+    EXPECT_NEAR(CameraControls::appliedExposure(-0.3, -2.0, 2.0, 0.1), -0.3, 1e-6);
+}
+
+TEST(AppliedExposure, DropsTheFractionTowardsZero)
+{
+    // 2.8 and -2.8 steps: the fraction goes, it is not rounded to 3.
+    EXPECT_NEAR(CameraControls::appliedExposure(1.4, -2.0, 2.0, 0.5), 1.0, 1e-6);
+    EXPECT_NEAR(CameraControls::appliedExposure(-1.4, -2.0, 2.0, 0.5), -1.0, 1e-6);
+}
+
+TEST(AppliedExposure, ClampedToTheRange)
+{
+    EXPECT_NEAR(CameraControls::appliedExposure(5.0, -2.0, 2.0, 0.5), 2.0, 1e-6);
+    EXPECT_NEAR(CameraControls::appliedExposure(-5.0, -2.0, 2.0, 0.5), -2.0, 1e-6);
+}
+
+TEST(AppliedExposure, NothingWithoutAStep)
+{
+    EXPECT_EQ(CameraControls::appliedExposure(1.0, -2.0, 2.0, 0.0), 0.0);
+    EXPECT_EQ(CameraControls::appliedExposure(1.0, -2.0, 2.0, -0.5), 0.0);
+    EXPECT_EQ(CameraControls::appliedExposure(std::nan(""), -2.0, 2.0, 0.5), 0.0);
+}

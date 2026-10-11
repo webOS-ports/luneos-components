@@ -144,6 +144,10 @@ public:
     QVariantList supportedIsoSpeeds() const { return m_supportedIso; }
     qreal minimumExposureCompensation() const { return m_minEv; }
     qreal maximumExposureCompensation() const { return m_maxEv; }
+    /* The exposure compensation the HAL really applies for the one asked for,
+     * whole steps of its exposure-compensation-step; see
+     * CameraControls::appliedExposure(). */
+    Q_INVOKABLE qreal appliedExposureCompensation() const;
     qreal maximumZoom() const;
     bool hdrSupported() const { return m_hdrSceneMode || m_hdrImageMode; }
     bool zslSupported() const { return m_zslImageMode; }
@@ -208,7 +212,7 @@ private:
      * thread that opened it and handed to the GUI thread in one piece. */
     struct Capabilities {
         QList<int> flash, focus, wb, scene, colorTone, flicker, iso;
-        qreal minEv = 0, maxEv = 0;
+        qreal minEv = 0, maxEv = 0, evStep = 0;
         QList<int> zoomRatios;
         int maxFocusAreas = 0;
         bool hdrImageMode = false;
@@ -262,7 +266,7 @@ private:
     QStringList m_supportedFlash, m_supportedFocus, m_supportedWb,
         m_supportedScene, m_supportedColorTone, m_supportedFlicker;
     QVariantList m_supportedIso;
-    qreal m_minEv = 0, m_maxEv = 0;
+    qreal m_minEv = 0, m_maxEv = 0, m_evStep = 0;
     QList<int> m_zoomRatios;
     int m_maxFocusAreas = 0;
     bool m_hdrSceneMode = false;
