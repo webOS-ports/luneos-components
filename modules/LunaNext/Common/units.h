@@ -56,7 +56,9 @@ Q_SIGNALS:
 private:
     static float mGridUnit;
     static float mUiScale;
+    static bool mInitialised;
 
+    static void initialise();
     static float _dp(float value);
     friend class FontUtils;
 };
