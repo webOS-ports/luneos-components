@@ -115,6 +115,21 @@ Item {
             compare(shown[0].y, late.y + late.height - 1);
         }
 
+        function test_group_shrinks_when_rows_hide() {
+            var before = group.height;
+            try {
+                r3.visible = false;
+                r4.visible = false;
+                tryVerify(function() { return group.height < before; }, 1000,
+                          "the group stayed " + group.height + " high with two rows gone");
+                compare(group.height, before - r3.height - r4.height);
+            } finally {
+                r3.visible = true;
+                r4.visible = true;
+            }
+            tryCompare(group, "height", before);
+        }
+
         function test_selector_works_in_values() {
             compare(selector.currentIndex, 1);
             selector.value = 10;
