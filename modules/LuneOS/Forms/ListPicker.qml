@@ -142,8 +142,8 @@ Item {
                         }
                         Label {
                             width: parent.width
+                            // The Column leaves it out when there is none
                             visible: !!modelData.sublabel
-                            height: visible ? implicitHeight : 0
                             text: modelData.sublabel ? modelData.sublabel : ""
                             elide: Text.ElideRight
                             color: Colors.secondaryText
