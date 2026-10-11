@@ -1,0 +1,6 @@
+module LuneOS.System
+
+AppLauncher 1.0 AppLauncher.qml
+ServiceStatus 1.0 ServiceStatus.qml
+SystemPreferences 1.0 SystemPreferences.qml
+Services 1.0 Services.js
