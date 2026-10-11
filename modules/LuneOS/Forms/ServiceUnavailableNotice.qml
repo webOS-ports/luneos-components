@@ -94,8 +94,11 @@ Rectangle {
 
         Label {
             width: parent.width
+            // No "height: visible ? implicitHeight : 0": the Column already
+            // leaves an invisible row out, and tying a wrapping label's
+            // height to its implicitHeight is a binding loop (see
+            // ExplanationText)
             visible: notice.serviceName !== ""
-            height: visible ? implicitHeight : 0
             text: notice.serviceName + " did not answer."
             wrapMode: Text.WrapAnywhere
             color: Colors.noticeSecondaryText
