@@ -15,16 +15,22 @@
  */
 
 #include "droidcamerafactory.h"
+#include "droidcamerabin.h"
+#include "cameracontrols.h"
 
+#include <QCoreApplication>
 #include <QFile>
 #include <QFileInfo>
 #include <QDir>
 #include <QDebug>
+#include <QPointer>
 #include <QTimer>
 
+#include <cmath>
 #include <thread>
 
 #include <gst/gst.h>
+#include <gst/interfaces/photography.h>
 
 #if __has_include(<QtMultimedia/spi/qgstreamervideosource.h>)
 #include <QtMultimedia/spi/qgstreamervideosource.h>
@@ -72,7 +78,7 @@ static QByteArray recordingAudioSource()
     for (int attempt = 0; attempt < 40 && !devices; attempt++) {
         devices = gst_device_monitor_get_devices(monitor);
         if (!devices)
-            g_usleep(50 * 1000);
+            g_usleep(50 * G_TIME_SPAN_MILLISECOND);
     }
 
     /* Prefer the source PulseAudio calls default, but do not depend on it:
@@ -192,7 +198,7 @@ static const int kHwRecordingGraceMs = 2500;
 
 bool DroidCameraFactory::droidPluginAvailable()
 {
-    static const bool available = [] {
+    static const bool found = [] {
         gst_init(nullptr, nullptr);
 
         GstElementFactory *factory = gst_element_factory_find("droidcamsrc");
@@ -203,12 +209,47 @@ bool DroidCameraFactory::droidPluginAvailable()
         return true;
     }();
 
-    return available;
+    return found;
 }
+
+/* How long a still waits for autofocus before it is taken regardless. Long
+ * enough for a HAL's contrast sweep in poor light, short enough that a shutter
+ * press never feels ignored. */
+static const int kFocusBeforeCaptureMs = 2000;
+/* How long a tap-to-focus may run before it is reported as failed: some HALs
+ * never answer a focus request at all. */
+static const int kFocusResultMs = 4000;
+/* How long a HAL gets to hand over a still once the shutter is released. HDR
+ * and night scene modes merge several frames, which takes seconds on older
+ * phones. */
+static const int kCaptureTimeoutMs = 15000;
 
 DroidCameraFactory::DroidCameraFactory(QObject *parent)
     : QObject(parent)
 {
+    m_focusTimeout.setSingleShot(true);
+    connect(&m_focusTimeout, &QTimer::timeout, this, [this] {
+        if (m_focusStatus == FocusRunning)
+            setFocusStatus(FocusFailed);
+        if (m_captureAfterFocus)
+            releaseShutter();
+    });
+}
+
+DroidCameraFactory::~DroidCameraFactory()
+{
+#ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
+    /* The image sink's handler is the one that holds a plain pointer to the
+     * factory (the camera's own handlers go through a QPointer); nothing may
+     * call back into a factory that is gone. */
+    auto *source = qobject_cast<QGStreamerVideoSource *>(m_videoSource);
+    if (source && source->gstElement()) {
+        if (GstElement *sink = gst_bin_get_by_name(GST_BIN(source->gstElement()), "droidimgsink")) {
+            g_signal_handlers_disconnect_by_data(sink, this);
+            gst_object_unref(sink);
+        }
+    }
+#endif
 }
 
 /* The camera count, taken from gst-droid rather than from droidmedia
@@ -302,6 +343,27 @@ QObject *DroidCameraFactory::createVideoSource(int cameraDevice)
         m_videoSource->deleteLater();
     m_videoSource = nullptr;
 
+    // The next camera's capabilities are not known until its HAL opens.
+    ++m_generation;
+    m_focusTimeout.stop();
+    m_captureAfterFocus = false;
+    setFocusStatus(FocusIdle);
+    if (m_controlsReady) {
+        m_controlsReady = false;
+        m_supportedFlash.clear();
+        m_supportedFocus.clear();
+        m_supportedWb.clear();
+        m_supportedScene.clear();
+        m_supportedColorTone.clear();
+        m_supportedFlicker.clear();
+        m_supportedIso.clear();
+        m_minEv = m_maxEv = m_evStep = 0;
+        m_zoomRatios.clear();
+        m_maxFocusAreas = 0;
+        m_hdrSceneMode = m_hdrImageMode = m_zslImageMode = false;
+        emit controlsChanged();
+    }
+
     // Park imgsrc and vidsrc on fakesinks so the viewfinder chain's tail is
     // the bin's only unlinked pad, which QGStreamerVideoSource ghosts as the
     // source pad. async=false because those pads only produce data during a
@@ -328,7 +390,48 @@ QObject *DroidCameraFactory::createVideoSource(int cameraDevice)
         "tee name=vftee ! queue ! videoconvert").arg(cameraDevice);
 
     qInfo() << "DroidCameraFactory: creating gst-droid video source:" << desc;
-    auto *source = new QGStreamerVideoSource(desc, this);
+
+    // The same bin Qt would parse from the description, inside one of ours
+    // that shows us droidcamsrc's autofocus messages (see droidcamerabin.h).
+    GError *error = nullptr;
+    GstElement *inner = gst_parse_bin_from_description(desc.toUtf8().constData(), TRUE, &error);
+    if (!inner) {
+        qWarning() << "DroidCameraFactory: cannot build the camera bin:"
+                   << (error ? error->message : "unknown");
+        g_clear_error(&error);
+        return nullptr;
+    }
+    g_clear_error(&error);
+
+    const unsigned generation = m_generation;
+    QPointer<DroidCameraFactory> guard(this);
+    GstElement *outer = droid_camera_bin_new("droidcamerabin", inner, [guard, generation](GstMessage *message) {
+        const GstStructure *s = gst_message_get_structure(message);
+        if (!s)
+            return;
+        const QString name = QString::fromLatin1(gst_structure_get_name(s));
+        if (name != QLatin1String(GST_PHOTOGRAPHY_AUTOFOCUS_DONE) && name != QLatin1String("focus-move"))
+            return;
+        int status = 0;
+        gst_structure_get_int(s, "status", &status);
+        // A HAL thread: the factory is only touched on the GUI thread.
+        QMetaObject::invokeMethod(QCoreApplication::instance(), [guard, name, status, generation] {
+            if (guard)
+                guard->handleElementMessage(name, status, generation);
+        }, Qt::QueuedConnection);
+    });
+    if (!outer) {
+        qWarning() << "DroidCameraFactory: the camera bin has no source pad";
+        return nullptr;
+    }
+
+    if (GstElement *cam = gst_bin_get_by_name(GST_BIN(outer), "droidcam")) {
+        connectCamera(cam, generation);
+        gst_object_unref(cam);
+    }
+
+    // Qt takes the floating reference.
+    auto *source = new QGStreamerVideoSource(outer, this);
     m_videoSource = source;
 
     // Full-resolution JPEGs from the HAL arrive on the imgsrc appsink when
@@ -337,7 +440,7 @@ QObject *DroidCameraFactory::createVideoSource(int cameraDevice)
         GstElement *sink = gst_bin_get_by_name(GST_BIN(bin), "droidimgsink");
         if (sink) {
             g_signal_connect(sink, "new-sample",
-                G_CALLBACK(+[](GstElement *appsink, gpointer user) -> GstFlowReturn {
+                G_CALLBACK((+[](GstElement *appsink, gpointer user) -> GstFlowReturn {
                     auto *self = static_cast<DroidCameraFactory *>(user);
                     GstSample *sample = nullptr;
                     g_signal_emit_by_name(appsink, "pull-sample", &sample);
@@ -357,7 +460,7 @@ QObject *DroidCameraFactory::createVideoSource(int cameraDevice)
                             self->saveImage(data);
                         }, Qt::QueuedConnection);
                     return GST_FLOW_OK;
-                }), this);
+                })), this);
             gst_object_unref(sink);
         }
     }
@@ -384,15 +487,66 @@ bool DroidCameraFactory::takePicture(const QString &filePath)
         emit imageCaptureError(QStringLiteral("droidcamsrc not found"));
         return false;
     }
+    if (!m_pendingImagePath.isEmpty() || m_captureAfterFocus) {
+        gst_object_unref(cam);
+        emit imageCaptureError(QStringLiteral("a capture is already in progress"));
+        return false;
+    }
 
     m_pendingImagePath = filePath;
-    g_signal_emit_by_name(cam, "start-capture");
+
+    /* In a one-shot focus mode the lens sits wherever the last focus left it,
+     * so focus first and shoot when the HAL says it is done - as the camera
+     * app of the legacy webOS phones did. Continuous modes are already in
+     * focus, and a focus that just succeeded on a tap is kept. */
+    if (autofocusBeforeCapture()) {
+        m_captureAfterFocus = true;
+        setFocusStatus(FocusRunning);
+        gst_photography_set_autofocus(GST_PHOTOGRAPHY(cam), TRUE);
+        m_focusTimeout.start(kFocusBeforeCaptureMs);
+    } else {
+        releaseShutter();
+    }
     gst_object_unref(cam);
     return true;
 #else
     Q_UNUSED(filePath);
     return false;
 #endif
+}
+
+bool DroidCameraFactory::autofocusBeforeCapture() const
+{
+    if (m_focusStatus == FocusSucceeded || !m_supportedFocus.contains(m_focusMode))
+        return false;
+    return m_focusMode == QLatin1String("auto") || m_focusMode == QLatin1String("macro");
+}
+
+void DroidCameraFactory::releaseShutter()
+{
+    m_captureAfterFocus = false;
+    m_focusTimeout.stop();
+    GstElement *cam = camera();
+    if (!cam) {
+        m_pendingImagePath.clear();
+        emit imageCaptureError(QStringLiteral("no active droid camera"));
+        return;
+    }
+    emit captureStarted();
+    g_signal_emit_by_name(cam, "start-capture");
+    gst_object_unref(cam);
+
+    /* A HAL that takes the capture and never delivers the JPEG would otherwise
+     * leave every later shutter press refused as "already in progress". */
+    const unsigned serial = ++m_captureSerial;
+    const QString path = m_pendingImagePath;
+    QTimer::singleShot(kCaptureTimeoutMs, this, [this, serial, path] {
+        if (m_captureSerial != serial || m_pendingImagePath.isEmpty())
+            return;
+        m_pendingImagePath.clear();
+        qWarning() << "DroidCameraFactory: no image arrived for" << path;
+        emit imageCaptureError(QStringLiteral("the camera did not deliver the picture"));
+    });
 }
 
 void DroidCameraFactory::saveImage(const QByteArray &data)
@@ -410,6 +564,16 @@ void DroidCameraFactory::saveImage(const QByteArray &data)
     }
     f.close();
     qInfo() << "DroidCameraFactory: saved capture to" << path;
+
+    /* A focus the shot locked is the shot's; the next one focuses afresh. */
+    if (m_focusStatus != FocusIdle) {
+        if (GstElement *cam = camera()) {
+            gst_photography_set_autofocus(GST_PHOTOGRAPHY(cam), FALSE);
+            gst_object_unref(cam);
+        }
+        setFocusStatus(FocusIdle);
+    }
+
     emit imageSaved(path);
 }
 
@@ -460,6 +624,30 @@ static void tagRecordingRotation(GstElement *rec, int rotation)
     gst_object_unref(mux);
 }
 
+/* gst-droid tags its viewfinder with the sensor's mounting ("rotate-90"). Through the tee that tag
+ * reaches the software recorder's muxer and takes the place of the one tagRecordingRotation() set,
+ * which also knows how the device is held. Take it out on the way in. */
+static GstPadProbeReturn dropOrientationTag(GstPad *, GstPadProbeInfo *info, gpointer)
+{
+    GstEvent *event = GST_PAD_PROBE_INFO_EVENT(info);
+    if (GST_EVENT_TYPE(event) != GST_EVENT_TAG)
+        return GST_PAD_PROBE_OK;
+    GstTagList *tags = nullptr;
+    gst_event_parse_tag(event, &tags);
+    if (!gst_tag_list_get_tag_size(tags, GST_TAG_IMAGE_ORIENTATION))
+        return GST_PAD_PROBE_OK;
+
+    GstTagList *rest = gst_tag_list_copy(tags);
+    gst_tag_list_remove_tag(rest, GST_TAG_IMAGE_ORIENTATION);
+    if (gst_tag_list_is_empty(rest)) {
+        gst_tag_list_unref(rest);
+        return GST_PAD_PROBE_DROP;
+    }
+    gst_event_unref(event);
+    GST_PAD_PROBE_INFO_DATA(info) = gst_event_new_tag(rest);
+    return GST_PAD_PROBE_OK;
+}
+
 bool DroidCameraFactory::startRecording(const QString &filePath, int rotation)
 {
 #ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
@@ -470,7 +658,12 @@ bool DroidCameraFactory::startRecording(const QString &filePath, int rotation)
     }
     m_recordingRotation = rotation;
 
-    GstElement *bin = source->gstElement();
+    // The recorders are linked to elements of the camera's own bin, so they go in there.
+    GstElement *bin = droid_camera_bin_contents(source->gstElement());
+    if (!bin) {
+        emit videoCaptureError(QStringLiteral("cannot start recording"));
+        return false;
+    }
 
     QDir().mkpath(QFileInfo(filePath).absolutePath());
 
@@ -573,6 +766,11 @@ bool DroidCameraFactory::startSwRecording(GstElement *bin, const QString &filePa
     }
     gst_element_set_name(rec, "recbin");
     tagRecordingRotation(rec, m_recordingRotation);
+    if (GstPad *recsink = gst_element_get_static_pad(rec, "sink")) {
+        gst_pad_add_probe(recsink, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, dropOrientationTag,
+                          nullptr, nullptr);
+        gst_object_unref(recsink);
+    }
 
     gst_bin_add(GST_BIN(bin), rec);
     if (!gst_element_sync_state_with_parent(rec)) {
@@ -760,8 +958,7 @@ void DroidCameraFactory::finishRecording()
         return;
 
     gst_element_set_state(rec, GST_STATE_NULL);
-    if (source && source->gstElement()) {
-        GstElement *bin = source->gstElement();
+    if (GstElement *bin = source ? droid_camera_bin_contents(source->gstElement()) : nullptr) {
         gst_bin_remove(GST_BIN(bin), rec);
         GstElement *tee = gst_bin_get_by_name(GST_BIN(bin), "vftee");
         if (tee) {
@@ -1004,8 +1201,7 @@ void DroidCameraFactory::finishHwRecording(bool saved)
         return;
 
     gst_element_set_state(rec, GST_STATE_NULL);
-    if (source && source->gstElement()) {
-        GstElement *bin = source->gstElement();
+    if (GstElement *bin = source ? droid_camera_bin_contents(source->gstElement()) : nullptr) {
         GstElement *cam = gst_bin_get_by_name(GST_BIN(bin), "droidcam");
         GstElement *vidsink = gst_bin_get_by_name(GST_BIN(bin), "vidsink");
         gst_bin_remove(GST_BIN(bin), rec);
@@ -1039,4 +1235,578 @@ void DroidCameraFactory::finishHwRecording(bool saved)
         emit videoCaptureError(QStringLiteral("the hardware recorder produced no video"));
     }
 #endif
+}
+
+GstElement *DroidCameraFactory::camera() const
+{
+#ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
+    auto *source = qobject_cast<QGStreamerVideoSource *>(m_videoSource);
+    if (!source || !source->gstElement())
+        return nullptr;
+    return gst_bin_get_by_name(GST_BIN(source->gstElement()), "droidcam");
+#else
+    return nullptr;
+#endif
+}
+
+/* A GVariant "ai" property as a list; gst-droid leaves it NULL when the HAL
+ * listed nothing. */
+static QList<int> intListProperty(GstElement *cam, const char *property)
+{
+    QList<int> values;
+    GVariant *variant = nullptr;
+    g_object_get(cam, property, &variant, nullptr);
+    if (!variant)
+        return values;
+    if (g_variant_is_of_type(variant, G_VARIANT_TYPE("ai"))) {
+        gsize n = 0;
+        const gint32 *items = static_cast<const gint32 *>(
+            g_variant_get_fixed_array(variant, &n, sizeof(gint32)));
+        for (gsize i = 0; i < n; ++i)
+            values.append(items[i]);
+    }
+    g_variant_unref(variant);
+    return values;
+}
+
+void DroidCameraFactory::connectCamera(GstElement *cam, unsigned generation)
+{
+    struct Context {
+        QPointer<DroidCameraFactory> factory;
+        unsigned generation;
+    };
+    auto *context = new Context{ QPointer<DroidCameraFactory>(this), generation };
+
+    /* droidcamsrc announces "supported-image-modes" right after it has opened
+     * the HAL and read its parameters, on the thread changing its state from
+     * NULL to READY - before the preview starts. Everything the HAL can do is
+     * read here, in that thread, while nothing else is touching the camera's
+     * parameter table: "device-parameters" hands out that table itself, not a
+     * copy, and the GUI thread must not walk it while droidcamsrc writes it. */
+    g_signal_connect_data(cam, "notify::supported-image-modes",
+        G_CALLBACK((+[](GstElement *element, GParamSpec *, gpointer user) {
+            auto *ctx = static_cast<Context *>(user);
+            Capabilities caps;
+            caps.flash = intListProperty(element, "supported-flash-modes");
+            caps.focus = intListProperty(element, "supported-focus-modes");
+            caps.wb = intListProperty(element, "supported-wb-modes");
+            caps.scene = intListProperty(element, "supported-scene-modes");
+            caps.colorTone = intListProperty(element, "supported-color-tones");
+            caps.iso = intListProperty(element, "supported-iso-speeds");
+
+            gfloat minEv = 0, maxEv = 0;
+            g_object_get(element, "min-ev-compensation", &minEv,
+                         "max-ev-compensation", &maxEv, nullptr);
+            caps.minEv = minEv;
+            caps.maxEv = maxEv;
+
+            gpointer modes = nullptr;
+            g_object_get(element, "supported-image-modes", &modes, nullptr);
+            if (auto *array = static_cast<GArray *>(modes)) {
+                for (guint i = 0; i < array->len; ++i) {
+                    const gint mode = g_array_index(array, gint, i);
+                    // Combinations are listed as well; only the single modes matter here.
+                    if (mode == 0x1)
+                        caps.zslImageMode = true;
+                    else if (mode == 0x2)
+                        caps.hdrImageMode = true;
+                }
+                g_array_unref(array);
+            }
+
+            gpointer table = nullptr;
+            g_object_get(element, "device-parameters", &table, nullptr);
+            if (auto *params = static_cast<GHashTable *>(table)) {
+                auto value = [params](const char *key) {
+                    return QString::fromUtf8(static_cast<const char *>(g_hash_table_lookup(params, key)));
+                };
+                if (value("zoom-supported") == QLatin1String("true"))
+                    caps.zoomRatios = CameraControls::parseZoomRatios(value("zoom-ratios"));
+                caps.maxFocusAreas = value("max-num-focus-areas").toInt();
+                caps.evStep = value("exposure-compensation-step").toDouble();
+                /* The flicker modes are not part of droidcamsrc's capability
+                 * properties; the HAL lists them as "antibanding-values". */
+                const QStringList antibanding = value("antibanding-values").split(QLatin1Char(','), Qt::SkipEmptyParts);
+                for (const QString &mode : antibanding) {
+                    const int v = CameraControls::modeValue(CameraControls::ModeKind::Flicker, mode);
+                    if (v >= 0)
+                        caps.flicker.append(v);
+                }
+            }
+
+            const QPointer<DroidCameraFactory> factory = ctx->factory;
+            const unsigned gen = ctx->generation;
+            QMetaObject::invokeMethod(QCoreApplication::instance(), [factory, caps, gen] {
+                if (factory)
+                    factory->capabilitiesReady(caps, gen);
+            }, Qt::QueuedConnection);
+        })),
+        context,
+        +[](gpointer data, GClosure *) { delete static_cast<Context *>(data); },
+        GConnectFlags(0));
+
+    /* The zoom range is only set once the preview has started (READY to
+     * PAUSED); a zoom asked for before then is refused by the property's
+     * range, so apply it again now. */
+    auto *zoomContext = new Context{ QPointer<DroidCameraFactory>(this), generation };
+    g_signal_connect_data(cam, "notify::max-zoom",
+        G_CALLBACK((+[](GstElement *, GParamSpec *, gpointer user) {
+            auto *ctx = static_cast<Context *>(user);
+            const QPointer<DroidCameraFactory> factory = ctx->factory;
+            const unsigned gen = ctx->generation;
+            QMetaObject::invokeMethod(QCoreApplication::instance(), [factory, gen] {
+                if (factory && factory->m_generation == gen && factory->m_controlsReady)
+                    factory->setZoom(factory->m_zoom);
+            }, Qt::QueuedConnection);
+        })),
+        zoomContext,
+        +[](gpointer data, GClosure *) { delete static_cast<Context *>(data); },
+        GConnectFlags(0));
+}
+
+void DroidCameraFactory::capabilitiesReady(const Capabilities &caps, unsigned generation)
+{
+    if (generation != m_generation)
+        return;
+
+    using namespace CameraControls;
+    m_supportedFlash = modeNames(ModeKind::Flash, caps.flash);
+    m_supportedFocus = modeNames(ModeKind::Focus, caps.focus);
+    m_supportedWb = modeNames(ModeKind::WhiteBalance, caps.wb);
+    m_supportedColorTone = modeNames(ModeKind::ColorTone, caps.colorTone);
+    m_supportedFlicker = modeNames(ModeKind::Flicker, caps.flicker);
+
+    /* HDR is offered as its own switch rather than as one scene among many:
+     * that is how people look for it, and some HALs only have it as an image
+     * mode. */
+    QStringList scenes = modeNames(ModeKind::Scene, caps.scene);
+    m_hdrSceneMode = scenes.removeAll(QStringLiteral("hdr")) > 0;
+    m_supportedScene = scenes;
+
+    m_supportedIso.clear();
+    for (int iso : caps.iso) {
+        if (!m_supportedIso.contains(iso))
+            m_supportedIso.append(iso);
+    }
+    m_minEv = caps.minEv;
+    m_maxEv = caps.maxEv;
+    m_evStep = caps.evStep;
+    m_zoomRatios = caps.zoomRatios;
+    m_maxFocusAreas = caps.maxFocusAreas;
+    m_hdrImageMode = caps.hdrImageMode;
+    m_zslImageMode = caps.zslImageMode;
+    m_controlsReady = true;
+
+    qInfo() << "DroidCameraFactory: flash" << m_supportedFlash << "focus" << m_supportedFocus
+            << "wb" << m_supportedWb << "scene" << m_supportedScene << "hdr scene" << m_hdrSceneMode
+            << "image modes hdr/zsl" << m_hdrImageMode << m_zslImageMode
+            << "tones" << m_supportedColorTone << "iso" << m_supportedIso
+            << "ev" << m_minEv << m_maxEv << "zoom x" << maximumZoom()
+            << "focus areas" << m_maxFocusAreas;
+
+    emit controlsChanged();
+    applyControls();
+}
+
+void DroidCameraFactory::setEnumProperty(const char *property, int value)
+{
+    GstElement *cam = camera();
+    if (!cam)
+        return;
+    g_object_set(cam, property, value, nullptr);
+    gst_object_unref(cam);
+}
+
+/* Exposure compensation, clamped to the property's own range rather than to
+ * min/max-ev-compensation: those are computed from the HAL's step in a
+ * different precision (4.0000081 against a range ending at 4.0 on the Pixel
+ * 3a), and a value a hair outside the range is refused outright. */
+static void setExposureOn(GstElement *cam, qreal ev)
+{
+    GParamSpec *spec = g_object_class_find_property(G_OBJECT_GET_CLASS(cam), GST_PHOTOGRAPHY_PROP_EV_COMP);
+    if (!spec || !G_IS_PARAM_SPEC_FLOAT(spec))
+        return;
+    const GParamSpecFloat *range = G_PARAM_SPEC_FLOAT(spec);
+    g_object_set(cam, GST_PHOTOGRAPHY_PROP_EV_COMP,
+                 qBound(range->minimum, gfloat(ev), range->maximum), nullptr);
+}
+
+void DroidCameraFactory::applyControls()
+{
+    if (!m_controlsReady)
+        return;
+
+    using namespace CameraControls;
+    if (m_supportedFlash.contains(m_flashMode))
+        setEnumProperty(GST_PHOTOGRAPHY_PROP_FLASH_MODE, modeValue(ModeKind::Flash, m_flashMode));
+    if (m_supportedFocus.contains(m_focusMode))
+        setEnumProperty(GST_PHOTOGRAPHY_PROP_FOCUS_MODE, modeValue(ModeKind::Focus, m_focusMode));
+    if (m_supportedWb.contains(m_wbMode))
+        setEnumProperty(GST_PHOTOGRAPHY_PROP_WB_MODE, modeValue(ModeKind::WhiteBalance, m_wbMode));
+    if (m_supportedColorTone.contains(m_colorTone))
+        setEnumProperty(GST_PHOTOGRAPHY_PROP_COLOR_TONE, modeValue(ModeKind::ColorTone, m_colorTone));
+    if (m_supportedFlicker.contains(m_flickerMode))
+        setEnumProperty(GST_PHOTOGRAPHY_PROP_FLICKER_MODE, modeValue(ModeKind::Flicker, m_flickerMode));
+    applySceneMode();
+    applyImageMode();
+
+    if (GstElement *cam = camera()) {
+        if (m_isoSpeed == 0 || m_supportedIso.contains(m_isoSpeed))
+            g_object_set(cam, GST_PHOTOGRAPHY_PROP_ISO_SPEED, guint(m_isoSpeed), nullptr);
+        if (m_maxEv > m_minEv)
+            setExposureOn(cam, m_ev);
+        g_object_set(cam, "video-torch", gboolean(m_torch), nullptr);
+        applyJpegQuality(cam);
+        gst_object_unref(cam);
+    }
+    setZoom(m_zoom);
+}
+
+void DroidCameraFactory::applySceneMode()
+{
+    if (!m_controlsReady)
+        return;
+    using namespace CameraControls;
+    QString scene = m_supportedScene.contains(m_sceneMode) ? m_sceneMode : QStringLiteral("auto");
+    // An HDR scene mode is the HAL's own multi-frame merge; it replaces the scene.
+    if (m_hdrEnabled && m_hdrSceneMode)
+        scene = QStringLiteral("hdr");
+    if (scene == QLatin1String("hdr") || m_supportedScene.contains(scene))
+        setEnumProperty(GST_PHOTOGRAPHY_PROP_SCENE_MODE, modeValue(ModeKind::Scene, scene));
+}
+
+void DroidCameraFactory::applyImageMode()
+{
+    if (!m_controlsReady || (!m_zslImageMode && !m_hdrImageMode))
+        return;
+    guint flags = 0;
+    if (m_zslEnabled && m_zslImageMode)
+        flags |= 0x1;
+    // Only when there is no HDR scene mode, which is preferred (see applySceneMode()).
+    if (m_hdrEnabled && m_hdrImageMode && !m_hdrSceneMode)
+        flags |= 0x2;
+    // ZSL and HDR together is a combination of its own that few HALs have.
+    if (flags == 0x3)
+        flags = 0x2;
+    GstElement *cam = camera();
+    if (!cam)
+        return;
+    g_object_set(cam, "image-mode", flags, nullptr);
+    gst_object_unref(cam);
+}
+
+/* Records a newly chosen mode; false when it is the one already chosen. */
+static bool chooseMode(QString &chosen, const QString &mode)
+{
+    if (chosen == mode)
+        return false;
+    chosen = mode;
+    return true;
+}
+
+void DroidCameraFactory::setFlashMode(const QString &mode)
+{
+    if (!chooseMode(m_flashMode, mode))
+        return;
+    emit flashModeChanged();
+    if (m_supportedFlash.contains(mode))
+        setEnumProperty(GST_PHOTOGRAPHY_PROP_FLASH_MODE,
+                        CameraControls::modeValue(CameraControls::ModeKind::Flash, mode));
+}
+
+void DroidCameraFactory::setFocusMode(const QString &mode)
+{
+    if (!chooseMode(m_focusMode, mode))
+        return;
+    emit focusModeChanged();
+    if (m_supportedFocus.contains(mode))
+        setEnumProperty(GST_PHOTOGRAPHY_PROP_FOCUS_MODE,
+                        CameraControls::modeValue(CameraControls::ModeKind::Focus, mode));
+}
+
+void DroidCameraFactory::setWhiteBalanceMode(const QString &mode)
+{
+    if (!chooseMode(m_wbMode, mode))
+        return;
+    emit whiteBalanceModeChanged();
+    if (m_supportedWb.contains(mode))
+        setEnumProperty(GST_PHOTOGRAPHY_PROP_WB_MODE,
+                        CameraControls::modeValue(CameraControls::ModeKind::WhiteBalance, mode));
+}
+
+void DroidCameraFactory::setColorTone(const QString &tone)
+{
+    if (!chooseMode(m_colorTone, tone))
+        return;
+    emit colorToneChanged();
+    if (m_supportedColorTone.contains(tone))
+        setEnumProperty(GST_PHOTOGRAPHY_PROP_COLOR_TONE,
+                        CameraControls::modeValue(CameraControls::ModeKind::ColorTone, tone));
+}
+
+void DroidCameraFactory::setFlickerMode(const QString &mode)
+{
+    if (!chooseMode(m_flickerMode, mode))
+        return;
+    emit flickerModeChanged();
+    if (m_supportedFlicker.contains(mode))
+        setEnumProperty(GST_PHOTOGRAPHY_PROP_FLICKER_MODE,
+                        CameraControls::modeValue(CameraControls::ModeKind::Flicker, mode));
+}
+
+void DroidCameraFactory::setSceneMode(const QString &mode)
+{
+    if (!chooseMode(m_sceneMode, mode))
+        return;
+    emit sceneModeChanged();
+    applySceneMode();
+}
+
+void DroidCameraFactory::setIsoSpeed(int iso)
+{
+    if (m_isoSpeed == iso)
+        return;
+    m_isoSpeed = iso;
+    emit isoSpeedChanged();
+    if (!m_controlsReady || (iso != 0 && !m_supportedIso.contains(iso)))
+        return;
+    if (GstElement *cam = camera()) {
+        g_object_set(cam, GST_PHOTOGRAPHY_PROP_ISO_SPEED, guint(iso), nullptr);
+        gst_object_unref(cam);
+    }
+}
+
+void DroidCameraFactory::setExposureCompensation(qreal ev)
+{
+    if (qFuzzyCompare(m_ev + 1.0, ev + 1.0))
+        return;
+    m_ev = ev;
+    emit exposureCompensationChanged();
+    if (!m_controlsReady || m_maxEv <= m_minEv)
+        return;
+    if (GstElement *cam = camera()) {
+        setExposureOn(cam, ev);
+        gst_object_unref(cam);
+    }
+}
+
+qreal DroidCameraFactory::appliedExposureCompensation() const
+{
+    if (!m_controlsReady || m_maxEv <= m_minEv)
+        return 0;
+    return CameraControls::appliedExposure(m_ev, m_minEv, m_maxEv, m_evStep);
+}
+
+qreal DroidCameraFactory::maximumZoom() const
+{
+    return CameraControls::maximumZoomRatio(m_zoomRatios);
+}
+
+void DroidCameraFactory::setZoom(qreal zoom)
+{
+    zoom = std::max(zoom, 1.0);
+    if (m_controlsReady && !m_zoomRatios.isEmpty())
+        zoom = std::min(zoom, maximumZoom());
+    if (!qFuzzyCompare(m_zoom, zoom)) {
+        m_zoom = zoom;
+        emit zoomChanged();
+    }
+    if (!m_controlsReady || m_zoomRatios.isEmpty())
+        return;
+
+    /* droidcamsrc's "zoom" is the Android zoom index plus one (its range is
+     * 1 .. max-zoom + 1); the index picks an entry of "zoom-ratios". */
+    const int index = CameraControls::zoomIndexForRatio(m_zoomRatios, zoom);
+    GstElement *cam = camera();
+    if (!cam)
+        return;
+    GParamSpec *spec = g_object_class_find_property(G_OBJECT_GET_CLASS(cam), GST_PHOTOGRAPHY_PROP_ZOOM);
+    const gfloat value = gfloat(index + 1);
+    // Before the preview starts the range is still the default; notify::max-zoom re-applies.
+    if (spec && G_IS_PARAM_SPEC_FLOAT(spec) && value <= G_PARAM_SPEC_FLOAT(spec)->maximum)
+        g_object_set(cam, GST_PHOTOGRAPHY_PROP_ZOOM, value, nullptr);
+    gst_object_unref(cam);
+}
+
+void DroidCameraFactory::setHdrEnabled(bool enabled)
+{
+    if (m_hdrEnabled == enabled)
+        return;
+    m_hdrEnabled = enabled;
+    emit hdrEnabledChanged();
+    applySceneMode();
+    applyImageMode();
+}
+
+void DroidCameraFactory::setZslEnabled(bool enabled)
+{
+    if (m_zslEnabled == enabled)
+        return;
+    m_zslEnabled = enabled;
+    emit zslEnabledChanged();
+    applyImageMode();
+}
+
+void DroidCameraFactory::setTorch(bool on)
+{
+    if (m_torch == on)
+        return;
+    m_torch = on;
+    emit torchChanged();
+    if (GstElement *cam = camera()) {
+        g_object_set(cam, "video-torch", gboolean(on), nullptr);
+        gst_object_unref(cam);
+    }
+}
+
+void DroidCameraFactory::setJpegQuality(int quality)
+{
+    quality = CameraControls::jpegQuality(quality);
+    if (m_jpegQuality == quality)
+        return;
+    m_jpegQuality = quality;
+    emit jpegQualityChanged();
+    if (GstElement *cam = camera()) {
+        applyJpegQuality(cam);
+        gst_object_unref(cam);
+    }
+}
+
+/* droidcamsrc hands the quality to the HAL at once when the property is set,
+ * and again whenever it applies its settings. */
+void DroidCameraFactory::applyJpegQuality(GstElement *cam) const
+{
+    gint current = 0;
+    g_object_get(cam, "jpeg-quality", &current, nullptr);
+    if (current == m_jpegQuality)
+        return;
+    g_object_set(cam, "jpeg-quality", gint(m_jpegQuality), nullptr);
+    g_object_get(cam, "jpeg-quality", &current, nullptr);
+    if (current != m_jpegQuality)
+        qWarning() << "DroidCameraFactory: droidcamsrc kept JPEG quality" << current << "for" << m_jpegQuality
+                   << "- gst-droid without LuneOS patch 0005?";
+}
+
+/* The coordinate space the regions are given in. droidcamsrc scales it to
+ * Android's -1000..1000 itself, so a square of this size maps one to one. */
+static const int kRoiSpace = 2000;
+
+static void sendRegion(GstElement *cam, const QRect &region, guint priority)
+{
+    GstStructure *regionStruct = gst_structure_new("region0",
+        "region-x", G_TYPE_UINT, guint(region.x()),
+        "region-y", G_TYPE_UINT, guint(region.y()),
+        "region-w", G_TYPE_UINT, guint(region.width()),
+        "region-h", G_TYPE_UINT, guint(region.height()),
+        "region-priority", G_TYPE_UINT, priority,
+        nullptr);
+
+    GValue regions = G_VALUE_INIT;
+    g_value_init(&regions, GST_TYPE_LIST);
+    GValue item = G_VALUE_INIT;
+    g_value_init(&item, GST_TYPE_STRUCTURE);
+    gst_value_set_structure(&item, regionStruct);
+    gst_value_list_append_and_take_value(&regions, &item);
+    gst_structure_free(regionStruct);
+
+    GstStructure *s = gst_structure_new("regions-of-interest",
+        "frame-width", G_TYPE_UINT, guint(kRoiSpace),
+        "frame-height", G_TYPE_UINT, guint(kRoiSpace),
+        nullptr);
+    gst_structure_take_value(s, "regions", &regions);
+
+    gst_element_send_event(cam, gst_event_new_custom(GST_EVENT_CUSTOM_UPSTREAM, s));
+}
+
+void DroidCameraFactory::focusAt(qreal x, qreal y)
+{
+    const QRect region = CameraControls::focusRegion(QPointF(x, y), QSize(kRoiSpace, kRoiSpace));
+    if (region.isEmpty() || !m_controlsReady)
+        return;
+    GstElement *cam = camera();
+    if (!cam)
+        return;
+
+    if (m_maxFocusAreas > 0)
+        sendRegion(cam, region, 1000);
+
+    /* A fixed-focus lens has nothing to do; the metering area still applies. */
+    if (m_focusMode == QLatin1String("auto") || m_focusMode == QLatin1String("macro")
+        || m_focusMode == QLatin1String("continuous")) {
+        gst_photography_set_autofocus(GST_PHOTOGRAPHY(cam), TRUE);
+        setFocusStatus(FocusRunning);
+        if (!m_captureAfterFocus)
+            m_focusTimeout.start(kFocusResultMs);
+    }
+    gst_object_unref(cam);
+}
+
+void DroidCameraFactory::resetFocus()
+{
+    GstElement *cam = camera();
+    if (!cam)
+        return;
+    if (m_maxFocusAreas > 0)
+        sendRegion(cam, QRect(0, 0, 1, 1), 0);
+    gst_photography_set_autofocus(GST_PHOTOGRAPHY(cam), FALSE);
+    gst_object_unref(cam);
+    if (!m_captureAfterFocus)
+        m_focusTimeout.stop();
+    setFocusStatus(FocusIdle);
+}
+
+void DroidCameraFactory::handleElementMessage(const QString &name, int status, unsigned generation)
+{
+    if (generation != m_generation)
+        return;
+
+    if (name == QLatin1String(GST_PHOTOGRAPHY_AUTOFOCUS_DONE)) {
+        // Only answers to a focus we asked for; continuous focus reports through focus-move.
+        if (m_focusStatus != FocusRunning)
+            return;
+        setFocusStatus(status == GST_PHOTOGRAPHY_FOCUS_STATUS_SUCCESS ? FocusSucceeded : FocusFailed);
+        m_focusTimeout.stop();
+        if (m_captureAfterFocus)
+            releaseShutter();
+    }
+}
+
+void DroidCameraFactory::setFocusStatus(FocusStatus status)
+{
+    if (m_focusStatus == status)
+        return;
+    m_focusStatus = status;
+    emit focusStatusChanged();
+}
+
+QVariantList DroidCameraFactory::cameras() const
+{
+    static const QVariantList list = [this] {
+        QVariantList result;
+        const int count = cameraCount();
+        if (count <= 0)
+            return result;
+
+        /* An element in the NULL state answers these from the HAL's static
+         * camera info; no camera is opened. */
+        GstElement *probe = gst_element_factory_make("droidcamsrc", nullptr);
+        if (!probe)
+            return result;
+        gst_object_ref_sink(probe);
+        for (int i = 0; i < count; ++i) {
+            g_object_set(probe, "camera-device", i, nullptr);
+            gint direction = 0, orientation = 0;
+            g_object_get(probe, "sensor-direction", &direction,
+                         "sensor-mount-angle", &orientation, nullptr);
+            result.append(QVariantMap{
+                { QStringLiteral("index"), i },
+                // NEMO_GST_META_DEVICE_DIRECTION_FRONT = 1
+                { QStringLiteral("facing"), direction == 1 ? QStringLiteral("front") : QStringLiteral("back") },
+                { QStringLiteral("orientation"), orientation },
+            });
+        }
+        gst_object_unref(probe);
+        return result;
+    }();
+    return list;
 }
