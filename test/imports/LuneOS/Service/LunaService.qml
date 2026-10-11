@@ -90,14 +90,28 @@ QtObject {
            serviceURI === "luna://com.webos.service.applicationManager/listLaunchPoints") {
             listLaunchPoints_call(args, returnFct, handleError);
         }
+        else if(serviceURI === "luna://com.palm.applicationManager/openQuirk") {
+            // The reply the older manager gives after a successful open.
+            if(typeof returnFct !== 'undefined')
+                returnFct({"payload": JSON.stringify({"returnValue": false, "errorText": ""})});
+        }
+        else if(serviceURI === "luna://com.palm.applicationManager/open") {
+            // Only the older application manager has "open" on a device; the
+            // OSE one answers "Unknown method", so the stub only answers here.
+            if(typeof returnFct !== 'undefined')
+                returnFct({"payload": JSON.stringify(args.target || args.id ? {"returnValue": true} :
+                    {"returnValue": false, "errorText": "Unable to process command. Provide a valid \"id\" or \"target\" field"})});
+        }
         else if(serviceURI === "palm://com.palm.appinstaller/remove" || serviceURI === "luna://com.palm.appinstaller/remove") {
             removeApp_call(args, returnFct, handleError);
         }
         else if(serviceURI === "luna://com.palm.applicationManager/launch" ||
-                serviceURI === "luna://com.webos.service.applicationManager/launch") {
+                serviceURI === "luna://com.webos.service.applicationManager/launch" ||
+                serviceURI === "luna://com.webos.service.applicationmanager/launch") {
             launchApp_call(args, returnFct, handleError);
         }
-        else if(serviceURI === "palm://com.palm.applicationManager/getAppInfo" || serviceURI === "luna://com.webos.service.applicationManager/getAppInfo") {
+        else if(serviceURI === "palm://com.palm.applicationManager/getAppInfo" || serviceURI === "luna://com.webos.service.applicationManager/getAppInfo" ||
+                serviceURI === "luna://com.webos.service.applicationmanager/getAppInfo") {
             giveFakeAppInfo_call(args, returnFct, handleError);
         }
         else if(serviceURI === "palm://com.palm.applicationManager/getAppBasePath" || serviceURI === "luna://com.webos.service.applicationManager/getAppBasePath") {
@@ -442,7 +456,8 @@ QtObject {
         if(/^luna:\/\/com\.palm\.(whatsapp|telegram|signal|teams)\/callStateQuery$/.test(serviceURI)) {
             connector_watchCallState(serviceURI, returnFct);
         }
-        else if(serviceURI === "palm://com.palm.bus/signal/registerServerStatus" || serviceURI === "luna://com.palm.bus/signal/registerServerStatus") {
+        else if(serviceURI === "palm://com.palm.bus/signal/registerServerStatus" || serviceURI === "luna://com.palm.bus/signal/registerServerStatus" ||
+                serviceURI === "luna://com.webos.service.bus/signal/registerServerStatus") {
             if(typeof returnFct !== 'undefined') {
                 returnFct({"payload": JSON.stringify({"connected": true})});
             }
