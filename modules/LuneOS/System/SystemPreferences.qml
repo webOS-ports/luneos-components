@@ -30,7 +30,9 @@ import "Services.js" as Services
  *     Switch { onToggled: prefs.set("rotationLock", checked ? 0 : 400) }
  *
  * "values" holds the latest answer for each key and is replaced as a whole,
- * so bindings to it follow every change. A write before the first read is
+ * so bindings to it follow every change. changed() fires per key; updated()
+ * once per answer with the answer as it came, for a page that maps several
+ * keys at once. A write before the first read is
  * refused: a page that sets a default from its own state while the real
  * value is still on its way would otherwise overwrite the user's setting -
  * the guard the shell's own Preferences.qml keeps.
@@ -50,6 +52,7 @@ QtObject {
     readonly property bool loaded: _loaded
 
     signal changed(string key, var value)
+    signal updated(var response)
     signal error(string message)
 
     property var _values: ({})
@@ -120,6 +123,7 @@ QtObject {
                                       prefs._loaded = true;
                                       for (var j = 0; j < changedKeys.length; j++)
                                           prefs.changed(changedKeys[j], next[changedKeys[j]]);
+                                      prefs.updated(response);
                                   },
                                   function (message) { prefs.error(typeof message === "string" ? message : message.payload); });
     }

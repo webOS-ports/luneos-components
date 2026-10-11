@@ -29,6 +29,7 @@ TestCase {
 
     SystemPreferences { id: prefs; keys: ["timeFormat"] }
     SignalSpy { id: changedSpy; target: prefs; signalName: "changed" }
+    SignalSpy { id: updatedSpy; target: prefs; signalName: "updated" }
 
     SystemPreferences { id: unread }
 
@@ -55,6 +56,8 @@ TestCase {
         compare(prefs.value("notAKey", "fallback"), "fallback");
         verify(changedSpy.count >= 1);
         compare(changedSpy.signalArguments[0][0], "timeFormat");
+        verify(updatedSpy.count >= 1);
+        compare(updatedSpy.signalArguments[0][0].timeFormat, prefs.values.timeFormat);
     }
 
     function test_no_write_before_the_first_read() {
