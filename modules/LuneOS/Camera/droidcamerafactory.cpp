@@ -624,6 +624,30 @@ static void tagRecordingRotation(GstElement *rec, int rotation)
     gst_object_unref(mux);
 }
 
+/* gst-droid tags its viewfinder with the sensor's mounting ("rotate-90"). Through the tee that tag
+ * reaches the software recorder's muxer and takes the place of the one tagRecordingRotation() set,
+ * which also knows how the device is held. Take it out on the way in. */
+static GstPadProbeReturn dropOrientationTag(GstPad *, GstPadProbeInfo *info, gpointer)
+{
+    GstEvent *event = GST_PAD_PROBE_INFO_EVENT(info);
+    if (GST_EVENT_TYPE(event) != GST_EVENT_TAG)
+        return GST_PAD_PROBE_OK;
+    GstTagList *tags = nullptr;
+    gst_event_parse_tag(event, &tags);
+    if (!gst_tag_list_get_tag_size(tags, GST_TAG_IMAGE_ORIENTATION))
+        return GST_PAD_PROBE_OK;
+
+    GstTagList *rest = gst_tag_list_copy(tags);
+    gst_tag_list_remove_tag(rest, GST_TAG_IMAGE_ORIENTATION);
+    if (gst_tag_list_is_empty(rest)) {
+        gst_tag_list_unref(rest);
+        return GST_PAD_PROBE_DROP;
+    }
+    gst_event_unref(event);
+    GST_PAD_PROBE_INFO_DATA(info) = gst_event_new_tag(rest);
+    return GST_PAD_PROBE_OK;
+}
+
 bool DroidCameraFactory::startRecording(const QString &filePath, int rotation)
 {
 #ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
@@ -742,6 +766,11 @@ bool DroidCameraFactory::startSwRecording(GstElement *bin, const QString &filePa
     }
     gst_element_set_name(rec, "recbin");
     tagRecordingRotation(rec, m_recordingRotation);
+    if (GstPad *recsink = gst_element_get_static_pad(rec, "sink")) {
+        gst_pad_add_probe(recsink, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, dropOrientationTag,
+                          nullptr, nullptr);
+        gst_object_unref(recsink);
+    }
 
     gst_bin_add(GST_BIN(bin), rec);
     if (!gst_element_sync_state_with_parent(rec)) {
