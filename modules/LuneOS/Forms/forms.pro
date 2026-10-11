@@ -8,6 +8,7 @@ installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 QML_FILES = AppHeader.qml \
             AppPage.qml \
             AppWindow.qml \
+            DoneBar.qml \
             Colors.qml \
             ExplanationText.qml \
             FormGroup.qml \

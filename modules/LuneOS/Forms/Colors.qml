@@ -50,6 +50,9 @@ QtObject {
     readonly property color fieldDisabledBackground: "#e4e4e4"
     readonly property color fieldBorder: "#9a9a9a"
 
+    // The strip along the foot of a page that holds its Done button
+    readonly property color footerBackground: "#b1b1b1"
+
     // A notice about the page as a whole (a missing service, a failed send)
     readonly property color noticeBackground: "#f4ecd0"
     readonly property color noticeBorder: "#c9b980"
