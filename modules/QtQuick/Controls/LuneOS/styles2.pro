@@ -11,6 +11,8 @@ QML_FILES = \
     CheckIndicatorLuneOS.qml \
     ComboBox.qml \
     Dial.qml \
+    Dialog.qml \
+    DialogButtonBox.qml \
     Drawer.qml \
     Frame.qml \
     GroupBox.qml \

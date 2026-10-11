@@ -17,6 +17,8 @@ CheckBox 2.0 CheckBox.qml
 CheckDelegate 2.0 CheckDelegate.qml
 ComboBox 2.0 ComboBox.qml
 Dial 2.0 Dial.qml
+Dialog 2.0 Dialog.qml
+DialogButtonBox 2.0 DialogButtonBox.qml
 Drawer 2.0 Drawer.qml
 Frame 2.0 Frame.qml
 GroupBox 2.0 GroupBox.qml
