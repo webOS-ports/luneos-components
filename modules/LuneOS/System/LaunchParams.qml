@@ -70,15 +70,29 @@ QtObject {
         _handle(params);
     }
 
+    // The palm-command a launch carries, or "" for none. The status bar puts
+    // it at the top level or one "params" down.
+    function commandOf(params) {
+        if (!params || typeof params !== "object")
+            return "";
+        return params["palm-command"]
+                || (params.params ? params.params["palm-command"] : undefined)
+                || "";
+    }
+
+    // Whether a launch is a palm-command (the app menu or another) rather
+    // than something to show or act on
+    function isCommand(params) {
+        return commandOf(params) !== "";
+    }
+
     function _handle(params) {
         if (!params || typeof params !== "object")
             return;
         _params = params;
         launched(params);
 
-        // The status bar puts the command at the top level or one "params" down
-        var name = params["palm-command"]
-                || (params.params ? params.params["palm-command"] : undefined);
+        var name = commandOf(params);
         if (name === "open-app-menu")
             appMenuRequested();
         else if (name)

@@ -78,6 +78,15 @@ TestCase {
         compare(command.signalArguments[0][0], "something-else");
     }
 
+    function test_commands_are_recognised_at_either_level() {
+        compare(launch.commandOf({ "palm-command": "open-app-menu" }), "open-app-menu");
+        compare(launch.commandOf({ "params": { "palm-command": "x" } }), "x");
+        verify(launch.isCommand({ "params": { "palm-command": "x" } }));
+        verify(!launch.isCommand({ "action": "dial", "address": "123" }));
+        verify(!launch.isCommand({}));
+        verify(!launch.isCommand(null));
+    }
+
     function test_garbage_is_ignored() {
         ignoreWarning(new RegExp("LaunchParams: cannot parse"));
         window.launchParams = "{not json";
