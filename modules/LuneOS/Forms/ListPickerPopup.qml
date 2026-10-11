@@ -16,6 +16,9 @@
 
 import QtQuick 2.9
 import QtQuick.Controls 2.2
+// Drawn by the LuneOS style even in an app that runs with Qt's default
+// style (Phone does): these are the platform's rows, not the app's
+import QtQuick.Controls.LuneOS 2.0
 import QtQuick.Layouts 1.3
 
 // Units & font sizes
