@@ -23,6 +23,17 @@ import LunaNext.Common 0.1
  * A label with a list of choices on the right, the ListSelector rows of the
  * Mojo settings apps. "activated" only fires for a choice the user made, so
  * binding currentIndex to a setting cannot write it straight back.
+ *
+ * A row can also work in values rather than indices - model is what is
+ * shown, values what each entry stands for:
+ *
+ *     LabelAndSelector {
+ *         label: "Self-timer"
+ *         model: ["Off", "3 seconds", "10 seconds"]
+ *         values: [0, 3, 10]
+ *         value: prefs.selfTimerDelay
+ *         onChosen: (v) => prefs.selfTimerDelay = v
+ *     }
  */
 Item {
     id: labelAndSelector
@@ -30,8 +41,20 @@ Item {
     property alias label: labelName.text
     property alias model: selector.model
     property alias currentIndex: selector.currentIndex
+    // Optional: what each entry of model stands for, and the one in force
+    property var values: []
+    property var value
 
     signal activated(int index)
+    // With values set: the value the user chose
+    signal chosen(var value)
+
+    Binding {
+        target: selector
+        property: "currentIndex"
+        value: labelAndSelector.values.indexOf(labelAndSelector.value)
+        when: labelAndSelector.values.length > 0
+    }
 
     // Both, so the row is sized correctly whether it is laid out by a
     // Column (which reads height) or by a GroupBox (which reads implicit).
@@ -71,6 +94,10 @@ Item {
                         Math.min(Units.gu(24),
                                  labelAndSelector.width - labelName.implicitWidth - Units.gu(2)))
 
-        onActivated: (index) => labelAndSelector.activated(index)
+        onActivated: (index) => {
+            labelAndSelector.activated(index);
+            if (labelAndSelector.values.length > 0)
+                labelAndSelector.chosen(labelAndSelector.values[index]);
+        }
     }
 }

@@ -10,6 +10,7 @@ QML_FILES = AppHeader.qml \
             AppWindow.qml \
             Colors.qml \
             ExplanationText.qml \
+            FormGroup.qml \
             FormTextField.qml \
             HorizontalSeparator.qml \
             LabelAndSelector.qml \

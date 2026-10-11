@@ -18,6 +18,7 @@ import QtQuick 2.9
 import QtQuick.Controls 2.2
 // Units & font sizes
 import LunaNext.Common 0.1
+import LuneOS.Forms 1.0
 
 /*
  * A label with a slider underneath, the way the volume rows of the legacy
@@ -37,9 +38,20 @@ Item {
     // screen brightness has a floor, for one.
     property alias from: slider.from
     property alias to: slider.to
+    // 1 by default, with whole numbers reported; a finer step (Camera's
+    // exposure moves in half or third stops) reports the value as it is
+    property alias stepSize: slider.stepSize
+    readonly property bool wholeNumbers: slider.stepSize >= 1 && Math.round(slider.stepSize) === slider.stepSize
+    // Optional: function(value) giving the text shown right of the label,
+    // e.g. "+0.5 EV"
+    property var format: null
 
-    signal moved(int value)
-    signal released(int value)
+    signal moved(real value)
+    signal released(real value)
+
+    function _report(v) {
+        return wholeNumbers ? Math.round(v) : v;
+    }
 
     height: labelName.height + slider.height + Units.gu(1)
     implicitHeight: labelName.height + slider.height + Units.gu(1)
@@ -48,6 +60,15 @@ Item {
         id: labelName
         anchors.left: parent.left
         anchors.top: parent.top
+        font.pixelSize: FontUtils.sizeToPixels("16pt")
+    }
+
+    Label {
+        anchors.right: parent.right
+        anchors.baseline: labelName.baseline
+        visible: labelAndSlider.format !== null
+        text: labelAndSlider.format ? labelAndSlider.format(slider.value) : ""
+        color: Colors.secondaryText
         font.pixelSize: FontUtils.sizeToPixels("16pt")
     }
 
@@ -62,7 +83,11 @@ Item {
         to: 100
         stepSize: 1
 
-        onMoved: labelAndSlider.moved(Math.round(slider.value))
-        onPressedChanged: if (!pressed) labelAndSlider.released(Math.round(slider.value))
+        // Whole numbers are rounded when reported, as they always were; a
+        // finer step snaps, so the handle sits on a value the setting takes
+        snapMode: labelAndSlider.wholeNumbers ? Slider.NoSnap : Slider.SnapAlways
+
+        onMoved: labelAndSlider.moved(labelAndSlider._report(slider.value))
+        onPressedChanged: if (!pressed) labelAndSlider.released(labelAndSlider._report(slider.value))
     }
 }
