@@ -5,6 +5,7 @@ SUBDIRS += \
     LuneOS/Camera/camera.pro \
     LuneOS/Components/components.pro \
     LuneOS/Forms/forms.pro \
+    LuneOS/Passcode/passcode.pro \
     LuneOS/System/system.pro \
     LuneOS/Telephony/telephony.pro
     
