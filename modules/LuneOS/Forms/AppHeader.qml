@@ -19,6 +19,8 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 
+// Theme specific properties
+import QtQuick.Controls.LuneOS 2.0
 // Units & font sizes
 import LunaNext.Common 0.1
 
@@ -28,7 +30,9 @@ import LunaNext.Common 0.1
  * CategoryHeader, with Messwerk's additions - a title that elides before it
  * reaches the action, and a smaller title for a narrow window.
  *
- * Going back is left to the back gesture.
+ * Going back is normally left to the back gesture. "showBack" puts a Back
+ * key in front as well, for an app that is often driven without the gesture
+ * area (Remote, on a tablet in a stand); it emits backClicked().
  */
 Pane {
     id: root
@@ -42,6 +46,9 @@ Pane {
     // A smaller title, for a header that has little room - set it from the
     // window, e.g. "compact: width < Units.gu(50)".
     property bool compact: false
+    property bool showBack: false
+
+    signal backClicked()
 
     padding: 0
 
@@ -50,15 +57,32 @@ Pane {
         fillMode: Image.Stretch
     }
 
+    Button {
+        id: backButton
+
+        anchors.left: parent.left
+        anchors.leftMargin: visible ? Units.gu(1) : 0
+        anchors.verticalCenter: parent.verticalCenter
+        width: visible ? implicitWidth : 0
+
+        visible: root.showBack
+        text: "Back"
+        LuneOSButton.mainColor: LuneOSButton.secondaryColor
+
+        onClicked: root.backClicked()
+    }
+
     Image {
         id: iconImage
 
-        anchors.left: parent.left
+        anchors.left: backButton.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.margins: Units.gu(1)
         width: visible ? height : 0
-        visible: root.icon.toString() !== ""
+        // In a compact header the icon gives way to the Back key: the title
+        // is what says where you are
+        visible: root.icon.toString() !== "" && !(root.compact && root.showBack)
 
         source: root.icon
         fillMode: Image.PreserveAspectFit
