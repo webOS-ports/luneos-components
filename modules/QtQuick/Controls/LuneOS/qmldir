@@ -5,7 +5,6 @@ depends QtQuick.Controls 2.0
 import QtQuick.Controls.Basic auto
 
 internal SwitchIndicatorLuneOS SwitchIndicatorLuneOS.qml
-internal ScrollIndicatorLuneOS ScrollIndicatorLuneOS.qml
 internal CheckIndicatorLuneOS CheckIndicatorLuneOS.qml
 internal RadioIndicatorLuneOS RadioIndicatorLuneOS.qml
 internal ListDelegateSeparator ListDelegateSeparator.qml
@@ -35,6 +34,7 @@ RadioButton 2.0 RadioButton.qml
 RadioDelegate 2.0 RadioDelegate.qml
 RangeSlider 2.0 RangeSlider.qml
 ScrollBar 2.0 ScrollBar.qml
+ScrollIndicator 2.0 ScrollIndicator.qml
 Slider 2.0 Slider.qml
 SpinBox 2.0 SpinBox.qml
 StackView 2.0 StackView.qml
