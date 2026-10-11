@@ -51,6 +51,10 @@ Item {
                      format: function(v) { return v.toFixed(1) + " EV"; } }
     SignalSpy { id: fineMoved; target: fine; signalName: "moved" }
 
+    LabelAndTextField { id: textRow; y: 700; width: 400; label: "Forward to"; text: "123" }
+    SignalSpy { id: committed; target: textRow; signalName: "committed" }
+    SignalSpy { id: edited; target: textRow; signalName: "edited" }
+
     TestCase {
         name: "FormsRows"
         when: windowShown
@@ -93,6 +97,35 @@ Item {
             combo.activated(0);
             compare(chosen.count, 1);
             compare(chosen.signalArguments[0][0], 0);
+        }
+
+        function test_text_commits_once_and_only_after_a_change() {
+            var field = findChildren(textRow, function(o) { return o.hasOwnProperty("echoMode"); })[0];
+            committed.clear(); edited.clear();
+
+            // Leaving a field untouched writes nothing back
+            field.forceActiveFocus();
+            field.editingFinished();
+            compare(committed.count, 0);
+
+            // A new value set from outside is not the user's either
+            textRow.text = "456";
+            field.editingFinished();
+            compare(committed.count, 0);
+
+            // Typing: one edited per keystroke, one committed at the end
+            field.forceActiveFocus();
+            field.selectAll();
+            keyClick(Qt.Key_7); keyClick(Qt.Key_8);
+            compare(edited.count, 2);
+            compare(committed.count, 0);
+            keyClick(Qt.Key_Return);
+            compare(committed.count, 1);
+            compare(committed.signalArguments[0][0], "78");
+
+            // And not again for the same edit
+            field.editingFinished();
+            compare(committed.count, 1);
         }
 
         function test_slider_rounds_whole_steps_only() {

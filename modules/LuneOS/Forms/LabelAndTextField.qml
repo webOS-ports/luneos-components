@@ -25,7 +25,10 @@ import LunaNext.Common 0.1
  * picked, as in the legacy Wi-Fi app's static IP scene.
  *
  * "edited" only fires for a change the user made, so binding "text" to a
- * setting cannot write it straight back.
+ * setting cannot write it straight back. "committed" fires once the user is
+ * done - Enter, or the field losing focus - and only if they changed
+ * something: for a setting that costs a round trip to write (Phone's call
+ * forwarding goes to the network), rather than one write per keystroke.
  */
 Item {
     id: labelAndTextField
@@ -38,8 +41,14 @@ Item {
     // Drawn by the field itself rather than by the page, so a row cannot be
     // left looking valid while the button that depends on it is disabled.
     property bool acceptable: true
+    // Narrower leaves the label more of the row: a phone number needs less
+    // room than a Wi-Fi passphrase
+    property real fieldWidth: Units.gu(24)
 
     signal edited(string text)
+    signal committed(string text)
+
+    property bool _changed: false
 
     // Both, so the row is sized correctly whether it is laid out by a
     // Column (which reads height) or by a GroupBox (which reads implicit).
@@ -63,13 +72,22 @@ Item {
         id: field
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        width: Units.gu(24)
+        width: labelAndTextField.fieldWidth
         height: Units.gu(5)
 
         horizontalAlignment: Text.AlignRight
         font.pixelSize: FontUtils.sizeToPixels("16pt")
         acceptable: labelAndTextField.acceptable
 
-        onTextEdited: labelAndTextField.edited(text)
+        onTextEdited: {
+            labelAndTextField._changed = true;
+            labelAndTextField.edited(text);
+        }
+        onEditingFinished: {
+            if (!labelAndTextField._changed)
+                return;
+            labelAndTextField._changed = false;
+            labelAndTextField.committed(text);
+        }
     }
 }
