@@ -17,6 +17,8 @@ QML_FILES = AppHeader.qml \
             LabelAndSwitch.qml \
             LabelAndTextField.qml \
             LabelAndValue.qml \
+            ListPicker.qml \
+            ListPickerPopup.qml \
             ServiceUnavailableNotice.qml \
             SettingsPageContent.qml \
             StatusNotice.qml
