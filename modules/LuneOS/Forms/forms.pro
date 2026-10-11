@@ -6,6 +6,8 @@ uri = LuneOS.Forms
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 
 QML_FILES = AppHeader.qml \
+            AppPage.qml \
+            AppWindow.qml \
             Colors.qml \
             ExplanationText.qml \
             FormTextField.qml \

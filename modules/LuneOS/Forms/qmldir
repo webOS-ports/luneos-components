@@ -1,6 +1,8 @@
 module LuneOS.Forms
 
 AppHeader 1.0 AppHeader.qml
+AppPage 1.0 AppPage.qml
+AppWindow 1.0 AppWindow.qml
 ExplanationText 1.0 ExplanationText.qml
 FormTextField 1.0 FormTextField.qml
 HorizontalSeparator 1.0 HorizontalSeparator.qml
