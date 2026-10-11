@@ -36,6 +36,20 @@ Item {
         LabelAndValue { id: r4; label: "four" }
     }
 
+    // Rows from a Repeater whose model arrives after the fixed row: the
+    // Column stacks them above it, but they come last in its children
+    FormGroup {
+        id: lateGroup
+        y: 300; width: 400
+        title: "Late"
+        Repeater {
+            id: lateRepeater
+            model: []
+            delegate: LabelAndValue { required property var modelData; label: modelData }
+        }
+        LabelAndValue { id: lateFixed; label: "fixed" }
+    }
+
     LabelAndSelector {
         id: selector
         y: 400; width: 400
@@ -87,6 +101,18 @@ Item {
             shown = separators().filter(function(s) { return s.visible; });
             compare(shown.length, 1);
             r4.visible = true;
+        }
+
+        function test_rules_follow_the_rows_as_laid_out() {
+            lateRepeater.model = ["late"];
+            var late = lateRepeater.itemAt(0);
+            tryVerify(function() { return late.y < lateFixed.y; });
+            var shown = findChildren(lateGroup, function(o) { return o.hasOwnProperty("lastShown") && o.visible; });
+            // One rule, under the repeated row, none under the fixed row
+            // that is now last on screen
+            compare(shown.length, 1);
+            verify(shown[0].row === late, "the rule is under " + shown[0].row);
+            compare(shown[0].y, late.y + late.height - 1);
         }
 
         function test_selector_works_in_values() {

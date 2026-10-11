@@ -63,10 +63,15 @@ GroupBox {
                 readonly property Item row: rowsColumn.children[index]
 
                 readonly property bool shown: !!row && row.visible && row.height > 0
+                // Last on screen, not last in the list: rows a Repeater makes
+                // after the fixed ones are stacked where the Repeater is but
+                // come last in children (Phone's dialing shortcuts)
                 readonly property bool lastShown: {
-                    for (var i = index + 1; i < rowsColumn.children.length; ++i) {
+                    if (!row)
+                        return true;
+                    for (var i = 0; i < rowsColumn.children.length; ++i) {
                         var other = rowsColumn.children[i];
-                        if (other && other.visible && other.height > 0)
+                        if (other && other !== row && other.visible && other.height > 0 && other.y > row.y)
                             return false;
                     }
                     return true;

@@ -58,6 +58,10 @@ Switch {
     leftPadding: 0
     rightPadding: 0
 
+    // As tall as the other rows (LabelAndValue, LabelAndTextField), so a
+    // group that mixes them has even rows, as the legacy row groups did
+    implicitHeight: Math.max(Units.gu(6), (indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
+
     font.pixelSize: FontUtils.sizeToPixels("16pt")
     font.weight: Font.Normal
 }

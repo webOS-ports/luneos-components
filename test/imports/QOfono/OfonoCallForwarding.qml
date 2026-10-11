@@ -11,6 +11,8 @@ Item {
     id: callForwarding
 
     property string modemPath: ""
+    // As libqofono's: the properties have been read from oFono
+    property bool ready: true
 
     property string voiceUnconditional: ""
     property string voiceBusy: ""
