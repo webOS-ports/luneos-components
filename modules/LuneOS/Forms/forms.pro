@@ -15,7 +15,9 @@ QML_FILES = AppHeader.qml \
             LabelAndSwitch.qml \
             LabelAndTextField.qml \
             LabelAndValue.qml \
-            SettingsPageContent.qml
+            ServiceUnavailableNotice.qml \
+            SettingsPageContent.qml \
+            StatusNotice.qml
 
 RESOURCE_FILES = images/toolbar-light.png
 

@@ -9,5 +9,7 @@ LabelAndSlider 1.0 LabelAndSlider.qml
 LabelAndSwitch 1.0 LabelAndSwitch.qml
 LabelAndTextField 1.0 LabelAndTextField.qml
 LabelAndValue 1.0 LabelAndValue.qml
+ServiceUnavailableNotice 1.0 ServiceUnavailableNotice.qml
 SettingsPageContent 1.0 SettingsPageContent.qml
+StatusNotice 1.0 StatusNotice.qml
 singleton Colors 1.0 Colors.qml
