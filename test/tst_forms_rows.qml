@@ -65,6 +65,16 @@ Item {
             return acc;
         }
 
+        function test_rows_stack_and_rules_sit_under_them() {
+            // Rows that set no width of their own still take the group's and
+            // are laid out one under the next (a zero-width row was skipped)
+            verify(r1.width > 0);
+            compare(r3.y, r1.y + r1.height);
+            compare(r4.y, r3.y + r3.height);
+            var under = separators().filter(function(s) { return s.visible && s.row === r1; })[0];
+            compare(under.y, r1.y + r1.height - 1);
+        }
+
         function test_rules_only_between_visible_rows() {
             var shown = separators().filter(function(s) { return s.visible; });
             // one, three, four are visible: a rule after one and after three

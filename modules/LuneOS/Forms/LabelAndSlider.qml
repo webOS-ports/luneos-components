@@ -53,6 +53,9 @@ Item {
         return wholeNumbers ? Math.round(v) : v;
     }
 
+    // As wide as what it sits in, like LabelAndSwitch: a Column (FormGroup's)
+    // leaves an item with no width out of its layout
+    width: parent ? parent.width : implicitWidth
     height: labelName.height + slider.height + Units.gu(1)
     implicitHeight: labelName.height + slider.height + Units.gu(1)
 

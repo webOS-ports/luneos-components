@@ -43,6 +43,9 @@ Item {
 
     // Both, so the row is sized correctly whether it is laid out by a
     // Column (which reads height) or by a GroupBox (which reads implicit).
+    // As wide as what it sits in, like LabelAndSwitch: a Column (FormGroup's)
+    // leaves an item with no width out of its layout
+    width: parent ? parent.width : implicitWidth
     height: Units.gu(6)
     implicitHeight: Units.gu(6)
 
