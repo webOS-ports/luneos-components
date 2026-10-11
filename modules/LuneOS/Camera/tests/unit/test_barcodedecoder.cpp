@@ -157,3 +157,58 @@ TEST(Decode, NothingInABlankFrame)
     EXPECT_TRUE(decode(blank).isEmpty());
     EXPECT_TRUE(decode(LumaImage()).isEmpty());
 }
+
+/* An Interleaved 2 of 5 code: digit pairs, the first in the widths of five
+ * bars, the second in the five spaces between them; two of each five wide. */
+static LumaImage drawInterleaved2of5(const std::string &digits, int narrow = 3, int height = 80)
+{
+    static const char *const kWidths[] = { "nnwwn", "wnnnw", "nwnnw", "wwnnn", "nnwnw",
+                                           "wnwnn", "nwwnn", "nnnww", "wnnwn", "nwnwn" };
+    const int wide = narrow * 3;
+    std::vector<std::pair<bool, int>> runs = { { true, narrow }, { false, narrow },
+                                               { true, narrow }, { false, narrow } };
+    for (size_t i = 0; i + 1 < digits.size(); i += 2) {
+        for (int k = 0; k < 5; ++k) {
+            runs.push_back({ true, kWidths[digits[i] - '0'][k] == 'w' ? wide : narrow });
+            runs.push_back({ false, kWidths[digits[i + 1] - '0'][k] == 'w' ? wide : narrow });
+        }
+    }
+    runs.push_back({ true, wide });
+    runs.push_back({ false, narrow });
+    runs.push_back({ true, narrow });
+
+    const int quiet = 10 * narrow;
+    std::string row(size_t(quiet), char(255));
+    for (const auto &run : runs)
+        row.append(size_t(run.second), run.first ? char(0) : char(255));
+    row.append(size_t(quiet), char(255));
+
+    LumaImage image;
+    image.width = int(row.size());
+    image.height = height;
+    for (int y = 0; y < height; ++y)
+        image.pixels.append(row.data(), qsizetype(row.size()));
+    return image;
+}
+
+/* The drawing is a valid code: with every symbology on, zbar reads it. */
+TEST(Decode, EverySymbologyReadsInterleaved2of5)
+{
+    const QList<Symbol> symbols = decode(drawInterleaved2of5("12345670"), Symbologies::All);
+    ASSERT_EQ(symbols.size(), 1);
+    EXPECT_EQ(symbols[0].text, QStringLiteral("12345670"));
+    EXPECT_EQ(symbols[0].format, QStringLiteral("I2/5"));
+}
+
+/* What reads codes in faces is left out of what a phone looks for. */
+TEST(Decode, PhoneSymbologiesIgnoreInterleaved2of5)
+{
+    EXPECT_TRUE(decode(drawInterleaved2of5("12345670")).isEmpty());
+}
+
+TEST(NeedsConfirmation, LinearCodesDoQrCodesDoNot)
+{
+    EXPECT_TRUE(needsConfirmation(QStringLiteral("EAN-13")));
+    EXPECT_TRUE(needsConfirmation(QStringLiteral("CODE-128")));
+    EXPECT_FALSE(needsConfirmation(QStringLiteral("QR-Code")));
+}

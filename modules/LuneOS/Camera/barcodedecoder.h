@@ -58,8 +58,25 @@ struct Symbol {
     QString format; // zbar's name for the symbology: "QR-Code", "EAN-13" ...
 };
 
+/*
+ * Which symbologies to look for. Phone: what a phone meets on products, tickets
+ * and screens (QR, EAN/UPC, Code 128 and Code 39 of six characters or more).
+ * The others zbar knows, Interleaved 2 of 5, Codabar and DataBar above all,
+ * have short codes and weak checks, and read them in the noise of a face. All:
+ * everything, for tests.
+ */
+enum class Symbologies { Phone, All };
+
 /* Every barcode zbar finds in the image. */
-QList<Symbol> decode(const LumaImage &image);
+QList<Symbol> decode(const LumaImage &image, Symbologies symbologies = Symbologies::Phone);
+
+/*
+ * Whether a code of this format must be read twice in a row before it is
+ * believed. Linear codes have at most a check digit, and a noisy frame now and
+ * then yields one; the same text from two scans does not happen by chance. A
+ * QR code carries error correction and is taken at once.
+ */
+bool needsConfirmation(const QString &format);
 
 } // namespace BarcodeDecoder
 

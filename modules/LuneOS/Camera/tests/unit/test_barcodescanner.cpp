@@ -76,6 +76,14 @@ static bool spinUntil(Pred done, int timeoutMs = 3000)
     return done();
 }
 
+/* Shows a fresh frame of the code and lets the worker finish, as one scan. */
+static void scanOnce(QVideoSink &sink, const std::string &digits)
+{
+    sink.setVideoFrame(ean13Frame(digits));
+    QThreadPool::globalInstance()->waitForDone();
+    QCoreApplication::processEvents();
+}
+
 class BarcodeScannerTest : public ::testing::Test
 {
 protected:
@@ -101,9 +109,29 @@ protected:
 TEST_F(BarcodeScannerTest, ReportsACodeInView)
 {
     scanner.setActive(true);
-    sink.setVideoFrame(ean13Frame("4006381333931"));
-    ASSERT_TRUE(spinUntil([this] { return !texts.isEmpty(); }));
+    scanOnce(sink, "4006381333931");
+    scanOnce(sink, "4006381333931");
     EXPECT_EQ(texts, QStringList({ "4006381333931" }));
+}
+
+/* A linear code read in one scan only is what a noisy frame produces. */
+TEST_F(BarcodeScannerTest, OneSightingOfABarcodeIsNotEnough)
+{
+    scanner.setActive(true);
+    scanOnce(sink, "4006381333931");
+    spinUntil([] { return false; }, 100);
+    EXPECT_TRUE(texts.isEmpty());
+}
+
+/* Two different codes in a row confirm neither. */
+TEST_F(BarcodeScannerTest, TwoDifferentSightingsConfirmNothing)
+{
+    scanner.setActive(true);
+    scanOnce(sink, "4006381333931");
+    scanOnce(sink, "5901234123457");
+    EXPECT_TRUE(texts.isEmpty());
+    scanOnce(sink, "5901234123457");
+    EXPECT_EQ(texts, QStringList({ "5901234123457" }));
 }
 
 TEST_F(BarcodeScannerTest, InactiveLooksAtNothing)
@@ -130,10 +158,12 @@ TEST_F(BarcodeScannerTest, ACodeThatStaysInViewIsReportedOnce)
 TEST_F(BarcodeScannerTest, AnotherCodeIsReportedToo)
 {
     scanner.setActive(true);
-    sink.setVideoFrame(ean13Frame("4006381333931"));
-    ASSERT_TRUE(spinUntil([this] { return texts.size() == 1; }));
-    sink.setVideoFrame(ean13Frame("5901234123457"));
-    ASSERT_TRUE(spinUntil([this] { return texts.size() == 2; }));
+    scanOnce(sink, "4006381333931");
+    scanOnce(sink, "4006381333931");
+    ASSERT_EQ(texts.size(), 1);
+    scanOnce(sink, "5901234123457");
+    scanOnce(sink, "5901234123457");
+    ASSERT_EQ(texts.size(), 2);
     EXPECT_EQ(texts.last(), QStringLiteral("5901234123457"));
 }
 
@@ -151,6 +181,8 @@ TEST_F(BarcodeScannerTest, ABurstOfFramesIsReportedOnce)
         sink.setVideoFrame(frame);
     QThreadPool::globalInstance()->waitForDone();
     QCoreApplication::processEvents();
+    // However many of them were decoded, one more scan has the code confirmed.
+    scanOnce(sink, "4006381333931");
     EXPECT_EQ(texts.size(), 1);
 }
 

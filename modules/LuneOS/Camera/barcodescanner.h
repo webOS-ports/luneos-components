@@ -37,7 +37,8 @@ class QVideoFrame;
  * costs nothing while inactive. Frames are sampled every `interval` ms and
  * decoded with zbar on a worker thread; while a decode runs newer frames are
  * dropped, never queued. The same code is reported once, not on every frame
- * it stays in view.
+ * it stays in view, and a linear code only once two scans in a row read it
+ * (see BarcodeDecoder::needsConfirmation()).
  */
 class BarcodeScanner : public QObject
 {
@@ -76,6 +77,9 @@ private:
 
     QString m_lastText;
     QElapsedTimer m_sinceLastText;
+    /* A linear code seen once, waiting for the next scan to read it again. */
+    QString m_unconfirmedText;
+    QElapsedTimer m_sinceUnconfirmed;
 };
 
 #endif // BARCODESCANNER_H

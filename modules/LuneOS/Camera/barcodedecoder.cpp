@@ -62,7 +62,26 @@ int stepFor(int width, int height, int maxSide)
     return step;
 }
 
-QList<Symbol> decode(const LumaImage &image)
+static void enableSymbologies(zbar_image_scanner_t *scanner, Symbologies symbologies)
+{
+    if (symbologies == Symbologies::All) {
+        zbar_image_scanner_set_config(scanner, ZBAR_NONE, ZBAR_CFG_ENABLE, 1);
+        return;
+    }
+    zbar_image_scanner_set_config(scanner, ZBAR_NONE, ZBAR_CFG_ENABLE, 0);
+    for (const zbar_symbol_type_t type : { ZBAR_QRCODE, ZBAR_EAN13, ZBAR_EAN8, ZBAR_UPCA,
+                                           ZBAR_UPCE, ZBAR_ISBN13, ZBAR_CODE128, ZBAR_CODE39 })
+        zbar_image_scanner_set_config(scanner, type, ZBAR_CFG_ENABLE, 1);
+    for (const zbar_symbol_type_t type : { ZBAR_CODE128, ZBAR_CODE39 })
+        zbar_image_scanner_set_config(scanner, type, ZBAR_CFG_MIN_LEN, 6);
+}
+
+bool needsConfirmation(const QString &format)
+{
+    return format != QLatin1String("QR-Code");
+}
+
+QList<Symbol> decode(const LumaImage &image, Symbologies symbologies)
 {
     QList<Symbol> symbols;
     if (!image.isValid())
@@ -71,7 +90,7 @@ QList<Symbol> decode(const LumaImage &image)
     zbar_image_scanner_t *scanner = zbar_image_scanner_create();
     if (!scanner)
         return symbols;
-    zbar_image_scanner_set_config(scanner, ZBAR_NONE, ZBAR_CFG_ENABLE, 1);
+    enableSymbologies(scanner, symbologies);
 
     zbar_image_t *zimage = zbar_image_create();
     if (!zimage) {

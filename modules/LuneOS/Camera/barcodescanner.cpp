@@ -28,6 +28,9 @@
 static const int kMaxDecodeSide = 1280;
 /* How long the same code stays quiet after it has been reported. */
 static const int kRepeatQuietMs = 3000;
+/* How long a linear code seen once waits for its second sighting: a few scans
+ * at the default interval, and much less than it takes to aim at another code. */
+static const int kConfirmWithinMs = 1500;
 
 BarcodeScanner::BarcodeScanner(QObject *parent)
     : QObject(parent)
@@ -60,6 +63,7 @@ void BarcodeScanner::setActive(bool active)
         return;
     m_active = active;
     m_lastText.clear();
+    m_unconfirmedText.clear();
     emit activeChanged();
 }
 
@@ -161,6 +165,16 @@ void BarcodeScanner::reportResult(const QString &text, const QString &format)
 {
     if (!m_active || text.isEmpty())
         return;
+    if (BarcodeDecoder::needsConfirmation(format) && text != m_lastText) {
+        const bool confirmed = text == m_unconfirmedText && m_sinceUnconfirmed.isValid()
+            && m_sinceUnconfirmed.elapsed() < kConfirmWithinMs;
+        if (!confirmed) {
+            m_unconfirmedText = text;
+            m_sinceUnconfirmed.start();
+            return;
+        }
+    }
+    m_unconfirmedText.clear();
     if (text == m_lastText && m_sinceLastText.isValid() && m_sinceLastText.elapsed() < kRepeatQuietMs) {
         m_sinceLastText.start();
         return;
