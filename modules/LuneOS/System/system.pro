@@ -12,6 +12,7 @@ uri = LuneOS.System
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 
 QML_FILES = AppLauncher.qml \
+            LaunchParams.qml \
             ServiceStatus.qml \
             SystemPreferences.qml
 
