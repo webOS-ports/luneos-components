@@ -10,3 +10,4 @@ LabelAndSwitch 1.0 LabelAndSwitch.qml
 LabelAndTextField 1.0 LabelAndTextField.qml
 LabelAndValue 1.0 LabelAndValue.qml
 SettingsPageContent 1.0 SettingsPageContent.qml
+singleton Colors 1.0 Colors.qml

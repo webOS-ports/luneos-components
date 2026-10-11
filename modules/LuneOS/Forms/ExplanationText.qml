@@ -18,6 +18,7 @@ import QtQuick 2.9
 import QtQuick.Controls 2.2
 // Units & font sizes
 import LunaNext.Common 0.1
+import LuneOS.Forms 1.0
 
 /*
  * The small grey paragraph the legacy apps put underneath a group to say what
@@ -28,7 +29,7 @@ Label {
     width: parent ? parent.width : implicitWidth
 
     wrapMode: Text.WordWrap
-    color: "#666666"
+    color: Colors.secondaryText
     font.pixelSize: FontUtils.sizeToPixels("small")
 
     /*

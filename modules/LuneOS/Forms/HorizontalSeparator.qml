@@ -15,6 +15,7 @@
  */
 
 import QtQuick 2.9
+import LuneOS.Forms 1.0
 
 Item {
     height: 1
@@ -22,12 +23,12 @@ Item {
         y: 0
         height: 1
         width: parent.width
-        color: '#ADADAD'
+        color: Colors.ruleDark
     }
     Rectangle {
         y: 1
         height: 1
         width: parent.width
-        color: '#ECECEC'
+        color: Colors.ruleLight
     }
 }

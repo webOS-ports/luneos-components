@@ -18,6 +18,7 @@ import QtQuick 2.9
 import QtQuick.Controls 2.2
 // Units & font sizes
 import LunaNext.Common 0.1
+import LuneOS.Forms 1.0
 
 /*
  * A text field for a light page or popup: white, rounded, a thin grey edge.
@@ -36,14 +37,14 @@ TextField {
 
     property bool acceptable: true
 
-    color: "#2a2929"
+    color: Colors.text
     leftPadding: Units.gu(1)
     rightPadding: Units.gu(1)
 
     background: Rectangle {
-        color: field.enabled ? "#ffffff" : "#e4e4e4"
+        color: field.enabled ? Colors.fieldBackground : Colors.fieldDisabledBackground
         radius: Units.gu(0.6)
-        border.color: field.acceptable ? "#9a9a9a" : "#be0003"
+        border.color: field.acceptable ? Colors.fieldBorder : Colors.error
         border.width: 1
     }
 }
