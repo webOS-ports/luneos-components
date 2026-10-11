@@ -1,0 +1,12 @@
+module LuneOS.Forms
+
+AppHeader 1.0 AppHeader.qml
+ExplanationText 1.0 ExplanationText.qml
+FormTextField 1.0 FormTextField.qml
+HorizontalSeparator 1.0 HorizontalSeparator.qml
+LabelAndSelector 1.0 LabelAndSelector.qml
+LabelAndSlider 1.0 LabelAndSlider.qml
+LabelAndSwitch 1.0 LabelAndSwitch.qml
+LabelAndTextField 1.0 LabelAndTextField.qml
+LabelAndValue 1.0 LabelAndValue.qml
+SettingsPageContent 1.0 SettingsPageContent.qml
