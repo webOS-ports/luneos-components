@@ -46,8 +46,34 @@ T.BusyIndicator {
     padding: 6
 
     //! [contentItem]
-    contentItem: AnimatedImage {
-        source: "images/spinner-light.gif"
+    //! The legacy spinner's first frame, turned on the render thread. Its GIF
+    //! was eight frames of the same ring a 45 degree step apart, and an
+    //! AnimatedImage only steps while the main thread is free - so a page
+    //! busy loading, which is when a spinner is shown, froze it. An Animator
+    //! keeps turning regardless (Camera measured 857 frames during a 3s
+    //! block). It turns smoothly at the GIF's own speed, one turn in 800ms,
+    //! rather than in steps.
+    contentItem: Item {
+        implicitWidth: ring.implicitWidth
+        implicitHeight: ring.implicitHeight
+        opacity: control.running ? 1 : 0
+        visible: opacity > 0
+
+        Behavior on opacity { OpacityAnimator { duration: 250 } }
+
+        Image {
+            id: ring
+            anchors.centerIn: parent
+            source: "images/spinner-light.png"
+
+            RotationAnimator on rotation {
+                running: control.running && control.visible
+                loops: Animation.Infinite
+                from: 0
+                to: 360
+                duration: 800
+            }
+        }
     }
     //! [contentItem]
 }
