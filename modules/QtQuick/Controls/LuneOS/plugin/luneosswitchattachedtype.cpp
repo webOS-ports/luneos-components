@@ -5,6 +5,11 @@
 LuneOSSwitchAttachedType::LuneOSSwitchAttachedType(QObject *parent) : QObject(parent)
 {
     mTextColor = QColor("#26282a");
+    // The legacy toggle always said which way it was set. Every app set these
+    // two by hand to get that, and one that forgot drew a blank pill; a switch
+    // that should be blank can still set them to "".
+    mLabelOn = QStringLiteral("On");
+    mLabelOff = QStringLiteral("Off");
 }
 
 QString LuneOSSwitchAttachedType::labelOn() const
