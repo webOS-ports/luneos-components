@@ -30,7 +30,8 @@ Item {
     function makeEntries(n) {
         var list = [];
         for (var i = 0; i < n; i++)
-            list.push({ "key": "k" + i, "label": "Entry " + i, "sublabel": i === 3 ? "special" : "" });
+            list.push({ "key": "k" + i, "label": "Entry " + i, "sublabel": i === 3 ? "special" : "",
+                        "note": i === 7 ? "GMT+5:30" : "" });
         return list;
     }
 
@@ -76,6 +77,9 @@ Item {
             input.text = "special";
             compare(picker.visibleEntries.length, 1);
             compare(picker.visibleEntries[0].key, "k3");
+            input.text = "gmt+5";
+            compare(picker.visibleEntries.length, 1);
+            compare(picker.visibleEntries[0].key, "k7");
             input.text = "nothing like it";
             compare(picker.visibleEntries.length, 0);
             picker.clearSearch();

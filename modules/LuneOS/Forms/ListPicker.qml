@@ -26,9 +26,10 @@ import LuneOS.Forms 1.0
 
 /*
  * Pick one entry out of a list, with a search box above it once the list is
- * long enough to be worth searching - the shape the Mojo apps used for
- * languages, regions, time zones and keyboards alike. ListPickerPopup puts
- * it in a popup; a page can use it as it is (Remote's device pickers).
+ * long enough to be worth searching (it matches label, sublabel and note) -
+ * the shape the Mojo apps used for languages, regions, time zones and
+ * keyboards alike. ListPickerPopup puts it in a popup; a page can use it as
+ * it is (Remote's device pickers).
  *
  * Entries are { key, label, sublabel, note }: "label" is the line you read,
  * "sublabel" the greyed line under it, "note" the value on the right. Only
@@ -72,7 +73,8 @@ Item {
         for (var i = 0; i < entries.length; i++) {
             var entry = entries[i];
             if (_label(entry).toLowerCase().indexOf(filter) >= 0 ||
-                (entry.sublabel || "").toLowerCase().indexOf(filter) >= 0)
+                (entry.sublabel || "").toLowerCase().indexOf(filter) >= 0 ||
+                _note(entry).toLowerCase().indexOf(filter) >= 0)
                 matches.push(entry);
         }
         return matches;
