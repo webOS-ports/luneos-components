@@ -35,6 +35,11 @@ import LuneOS.Forms 1.0
  * A page sets its title, and an AppPage its headerAction. Anything declared
  * inside lands between the header and the pages (Remote's status notice);
  * give it a height and the pages start below it.
+ *
+ * A page in the stack reaches the window as "appWindow" - functions and
+ * properties the app adds to it included - and the stack as "pageStack"
+ * (Remote's pages load data and push the next page that way). A page can
+ * also use its own StackView.view.
  */
 WebOSWindow {
     id: appWindow
