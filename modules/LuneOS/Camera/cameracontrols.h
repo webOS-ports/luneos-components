@@ -78,6 +78,13 @@ qreal maximumZoomRatio(const QList<int> &ratiosPercent);
 qreal appliedExposure(qreal ev, qreal minEv, qreal maxEv, qreal step);
 
 /*
+ * A JPEG quality droidcamsrc takes: its jpeg-quality property runs from 10 to
+ * 100. kDefaultJpegQuality is what it uses when nobody sets it.
+ */
+constexpr int kDefaultJpegQuality = 90;
+int jpegQuality(int wanted);
+
+/*
  * The focus/metering rectangle for a tap, in frame pixels: a square whose side
  * is boxFraction of the frame's shorter side, centred on the normalised point
  * and pushed back inside the frame when the point is near an edge. Returns an

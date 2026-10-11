@@ -272,3 +272,13 @@ TEST(AppliedExposure, NothingWithoutAStep)
     EXPECT_EQ(CameraControls::appliedExposure(1.0, -2.0, 2.0, -0.5), 0.0);
     EXPECT_EQ(CameraControls::appliedExposure(std::nan(""), -2.0, 2.0, 0.5), 0.0);
 }
+
+TEST(JpegQuality, WithinDroidcamsrcsRange)
+{
+    EXPECT_EQ(CameraControls::jpegQuality(85), 85);
+    EXPECT_EQ(CameraControls::jpegQuality(100), 100);
+    EXPECT_EQ(CameraControls::jpegQuality(10), 10);
+    EXPECT_EQ(CameraControls::jpegQuality(0), 10);
+    EXPECT_EQ(CameraControls::jpegQuality(150), 100);
+    EXPECT_EQ(CameraControls::kDefaultJpegQuality, 90);
+}

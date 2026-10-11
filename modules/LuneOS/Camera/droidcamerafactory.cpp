@@ -1456,6 +1456,7 @@ void DroidCameraFactory::applyControls()
         if (m_maxEv > m_minEv)
             setExposureOn(cam, m_ev);
         g_object_set(cam, "video-torch", gboolean(m_torch), nullptr);
+        applyJpegQuality(cam);
         gst_object_unref(cam);
     }
     setZoom(m_zoom);
@@ -1656,6 +1657,34 @@ void DroidCameraFactory::setTorch(bool on)
         g_object_set(cam, "video-torch", gboolean(on), nullptr);
         gst_object_unref(cam);
     }
+}
+
+void DroidCameraFactory::setJpegQuality(int quality)
+{
+    quality = CameraControls::jpegQuality(quality);
+    if (m_jpegQuality == quality)
+        return;
+    m_jpegQuality = quality;
+    emit jpegQualityChanged();
+    if (GstElement *cam = camera()) {
+        applyJpegQuality(cam);
+        gst_object_unref(cam);
+    }
+}
+
+/* droidcamsrc hands the quality to the HAL at once when the property is set,
+ * and again whenever it applies its settings. */
+void DroidCameraFactory::applyJpegQuality(GstElement *cam) const
+{
+    gint current = 0;
+    g_object_get(cam, "jpeg-quality", &current, nullptr);
+    if (current == m_jpegQuality)
+        return;
+    g_object_set(cam, "jpeg-quality", gint(m_jpegQuality), nullptr);
+    g_object_get(cam, "jpeg-quality", &current, nullptr);
+    if (current != m_jpegQuality)
+        qWarning() << "DroidCameraFactory: droidcamsrc kept JPEG quality" << current << "for" << m_jpegQuality
+                   << "- gst-droid without LuneOS patch 0005?";
 }
 
 /* The coordinate space the regions are given in. droidcamsrc scales it to

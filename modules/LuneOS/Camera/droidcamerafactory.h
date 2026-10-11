@@ -24,6 +24,8 @@
 
 #include <atomic>
 
+#include "cameracontrols.h"
+
 /*
  * On Halium devices the cameras are not visible to QtMultimedia's device
  * enumeration: they sit behind the Android camera HAL, reached through
@@ -34,9 +36,11 @@
  * It also drives the camera's controls. Qt's QCamera would do that through
  * GstPhotography, but a native video source has no QCamera, so flash, focus,
  * exposure, white balance, scene, colour effect, ISO, zoom and the HAL's own
- * HDR/ZSL modes are set on droidcamsrc here instead. Not the JPEG quality:
- * droidcamsrc's jpeg-quality property is declared int but read as uint, so
- * setting it stores 0; its default of 90 is left alone.
+ * HDR/ZSL modes are set on droidcamsrc here instead, and so is the JPEG
+ * quality. That one needs gst-droid with LuneOS's patch 0005: unpatched,
+ * droidcamsrc declares jpeg-quality as int but reads it as uint, and setting
+ * it stores 0. So it is only set when it differs from droidcamsrc's own
+ * default of 90, and a value that does not read back is reported.
  *
  * What a camera supports is only known once the HAL has been opened; until controlsReady the lists are
  * empty, and values set before then are kept and applied when it opens - so
@@ -62,6 +66,8 @@ class DroidCameraFactory : public QObject
     Q_PROPERTY(QVariantList supportedIsoSpeeds READ supportedIsoSpeeds NOTIFY controlsChanged)
     Q_PROPERTY(qreal minimumExposureCompensation READ minimumExposureCompensation NOTIFY controlsChanged)
     Q_PROPERTY(qreal maximumExposureCompensation READ maximumExposureCompensation NOTIFY controlsChanged)
+    // The HAL's exposure-compensation-step: the only EV values it takes are whole multiples of it.
+    Q_PROPERTY(qreal exposureCompensationStep READ exposureCompensationStep NOTIFY controlsChanged)
     Q_PROPERTY(qreal maximumZoom READ maximumZoom NOTIFY controlsChanged)
     Q_PROPERTY(bool hdrSupported READ hdrSupported NOTIFY controlsChanged)
     Q_PROPERTY(bool zslSupported READ zslSupported NOTIFY controlsChanged)
@@ -79,6 +85,7 @@ class DroidCameraFactory : public QObject
     Q_PROPERTY(bool hdrEnabled READ hdrEnabled WRITE setHdrEnabled NOTIFY hdrEnabledChanged)
     Q_PROPERTY(bool zslEnabled READ zslEnabled WRITE setZslEnabled NOTIFY zslEnabledChanged)
     Q_PROPERTY(bool torch READ torch WRITE setTorch NOTIFY torchChanged)
+    Q_PROPERTY(int jpegQuality READ jpegQuality WRITE setJpegQuality NOTIFY jpegQualityChanged)
 
     Q_PROPERTY(FocusStatus focusStatus READ focusStatus NOTIFY focusStatusChanged)
 
@@ -144,6 +151,7 @@ public:
     QVariantList supportedIsoSpeeds() const { return m_supportedIso; }
     qreal minimumExposureCompensation() const { return m_minEv; }
     qreal maximumExposureCompensation() const { return m_maxEv; }
+    qreal exposureCompensationStep() const { return m_evStep; }
     /* The exposure compensation the HAL really applies for the one asked for,
      * whole steps of its exposure-compensation-step; see
      * CameraControls::appliedExposure(). */
@@ -177,6 +185,8 @@ public:
     void setZslEnabled(bool enabled);
     bool torch() const { return m_torch; }
     void setTorch(bool on);
+    int jpegQuality() const { return m_jpegQuality; }
+    void setJpegQuality(int quality);
 
     FocusStatus focusStatus() const { return m_focusStatus; }
 
@@ -205,6 +215,7 @@ signals:
     void hdrEnabledChanged();
     void zslEnabledChanged();
     void torchChanged();
+    void jpegQualityChanged();
     void focusStatusChanged();
 
 private:
@@ -223,6 +234,7 @@ private:
     void connectCamera(struct _GstElement *cam, unsigned generation);
     void capabilitiesReady(const Capabilities &caps, unsigned generation);
     void applyControls();
+    void applyJpegQuality(struct _GstElement *cam) const;
     void applyImageMode();
     void applySceneMode();
     void setEnumProperty(const char *property, int value);
@@ -289,6 +301,7 @@ private:
     bool m_hdrEnabled = false;
     bool m_zslEnabled = false;
     bool m_torch = false;
+    int m_jpegQuality = CameraControls::kDefaultJpegQuality;
 
     FocusStatus m_focusStatus = FocusIdle;
     /* A takePicture() waiting for autofocus to finish; m_focusTimeout shoots

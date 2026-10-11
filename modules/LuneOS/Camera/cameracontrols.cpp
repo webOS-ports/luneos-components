@@ -217,6 +217,11 @@ qreal appliedExposure(qreal ev, qreal minEv, qreal maxEv, qreal step)
     return static_cast<qreal>(static_cast<float>(steps) * static_cast<float>(step));
 }
 
+int jpegQuality(int wanted)
+{
+    return std::clamp(wanted, 10, 100);
+}
+
 QRect focusRegion(const QPointF &normalisedPoint, const QSize &frame, qreal boxFraction)
 {
     if (frame.isEmpty()
