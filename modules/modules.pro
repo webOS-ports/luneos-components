@@ -4,6 +4,9 @@ SUBDIRS += \
     QtQuick/Controls/LuneOS/styles2.pro \
     LuneOS/Camera/camera.pro \
     LuneOS/Components/components.pro \
+    LuneOS/Forms/forms.pro \
+    LuneOS/Passcode/passcode.pro \
+    LuneOS/System/system.pro \
     LuneOS/Telephony/telephony.pro
     
 qtHaveModule(BluezQt): SUBDIRS += LuneOS/Bluetooth/bluetooth.pro

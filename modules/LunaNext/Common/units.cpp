@@ -51,6 +51,7 @@ namespace luna
 
 float Units::mGridUnit = DEFAULT_GRID_UNIT_PX;
 float Units::mUiScale = 1.0f;
+bool Units::mInitialised = false;
 
 static float getEnvFloat(const char* name, float defaultValue)
 {
@@ -84,15 +85,23 @@ static float readUiScale()
     return scale;
 }
 
+void Units::initialise()
+{
+    mUiScale = readUiScale();
+    mGridUnit = getEnvFloat(ENV_GRID_UNIT_PX, Settings::LunaSettings()->gridUnit) * mUiScale;
+    mInitialised = true;
+}
+
 Units::Units()
 {
     // This will eventually rewrite the static value, but within the same process we should always get the same value
-    mUiScale = readUiScale();
-    mGridUnit = getEnvFloat(ENV_GRID_UNIT_PX, Settings::LunaSettings()->gridUnit) * mUiScale;
+    initialise();
 }
 
 float Units::uiScale()
 {
+    if (!mInitialised)
+        initialise();
     return mUiScale;
 }
 
@@ -140,6 +149,13 @@ float Units::dp(float value)
 
 float Units::_dp(float value)
 {
+    /* FontUtils reaches this without a Units ever having been made, and a QML
+     * file that sizes its text before it touches Units.gu() gets there first.
+     * The grid unit was then still the 8px default, so that text came out at
+     * half size on a GridUnit=16 device until something else created Units. */
+    if (!mInitialised)
+        initialise();
+
     const float ratio = mGridUnit / DEFAULT_GRID_UNIT_PX;
     if (value <= 2.0)
         // for values under 2dp, return only multiples of the value

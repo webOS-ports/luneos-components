@@ -65,6 +65,22 @@ var profiles = {
     "asymmetric": { tabletUi: false, displayWidth:  400, displayHeight: 800, dpi: 262, gridUnit: 15,
                     cutouts: [ { x: 0, y: 0, width: 40, height: 60 } ],
                     cornerRadii: [ 10, 20, 30, 40 ] },
+    /*
+     * Zinwa Q25 - square, with a hardware keyboard. Read off the device's
+     * luna.conf: DisplayWidth/Height 720, DPI 291, GridUnit 16. The panel
+     * with the least height of any LuneOS device, so the one where a popup
+     * sized against the page instead of the window runs out of room.
+     */
+    "q25":     { tabletUi: false, displayWidth:  720, displayHeight:  720, dpi: 291, gridUnit: 16 },
+    /*
+     * GreenTouch MindPhone (mindset) - 480x800, the smallest panel LuneOS
+     * runs on, with a T9 keypad. From meta-greentouch: the panel size is
+     * mindphone.conf's; DPI 190 is mindset-deviceinfo's, picked (instead of
+     * the panel's real 233 ppi) so that GridUnit comes out at
+     * round(190 * 1.44 / 25.4) = 11 and the shell's fixed-size chrome fits
+     * inside 480px. Where a layout runs out of width first.
+     */
+    "mindphone": { tabletUi: false, displayWidth:  480, displayHeight:  800, dpi: 190, gridUnit: 11 },
     /* For desktop debug */
     "desktop": { tabletUi: false, displayWidth:  600, displayHeight:  800, dpi: 148, gridUnit: 10 }
 };

@@ -1,0 +1,109 @@
+/*
+ * (c) 2026 Herman van Hazendonk <github.com@herrie.org>
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 3, as published
+ * by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranties of
+ * MERCHANTABILITY, SATISFACTORY QUALITY, or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import QtQuick 2.9
+import QtQuick.Controls 2.2
+// Drawn by the LuneOS style even in an app that runs with Qt's default
+// style (Phone does): these are the platform's rows, not the app's
+import QtQuick.Controls.LuneOS 2.0
+// Units & font sizes
+import LunaNext.Common 0.1
+
+/*
+ * A label with a list of choices on the right, the ListSelector rows of the
+ * Mojo settings apps. "activated" only fires for a choice the user made, so
+ * binding currentIndex to a setting cannot write it straight back.
+ *
+ * A row can also work in values rather than indices - model is what is
+ * shown, values what each entry stands for:
+ *
+ *     LabelAndSelector {
+ *         label: "Self-timer"
+ *         model: ["Off", "3 seconds", "10 seconds"]
+ *         values: [0, 3, 10]
+ *         value: prefs.selfTimerDelay
+ *         onChosen: (v) => prefs.selfTimerDelay = v
+ *     }
+ */
+Item {
+    id: labelAndSelector
+
+    property alias label: labelName.text
+    property alias model: selector.model
+    property alias currentIndex: selector.currentIndex
+    // Optional: what each entry of model stands for, and the one in force
+    property var values: []
+    property var value
+
+    signal activated(int index)
+    // With values set: the value the user chose
+    signal chosen(var value)
+
+    Binding {
+        target: selector
+        property: "currentIndex"
+        value: labelAndSelector.values.indexOf(labelAndSelector.value)
+        when: labelAndSelector.values.length > 0
+    }
+
+    // Both, so the row is sized correctly whether it is laid out by a
+    // Column (which reads height) or by a GroupBox (which reads implicit).
+    // As wide as what it sits in, like LabelAndSwitch: a Column (FormGroup's)
+    // leaves an item with no width out of its layout
+    width: parent ? parent.width : implicitWidth
+    height: Units.gu(6)
+    implicitHeight: Units.gu(6)
+
+    Label {
+        id: labelName
+        anchors.left: parent.left
+        anchors.right: selector.left
+        anchors.rightMargin: Units.gu(1)
+        anchors.verticalCenter: parent.verticalCenter
+        elide: Text.ElideRight
+        font.pixelSize: FontUtils.sizeToPixels("16pt")
+    }
+
+    ComboBox {
+        id: selector
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        /*
+         * gu(24) where there is room, otherwise whatever is left once the
+         * label has what it needs, down to a floor of gu(12) - which still
+         * holds the longest value any of these rows carries.
+         *
+         * A fixed gu(24) does not survive the interface scale. The row is
+         * capped in pixels by the screen while a grid unit, and the text in
+         * it, grow with the scale - so the picker took an ever larger share
+         * of an unchanging width and ate the label: "Turn off After" came
+         * out as "Turn off Af..." at Normal and "Tu..." at Largest.
+         *
+         * Sizing off the label's implicitWidth rather than its width is what
+         * keeps this from being a loop: implicitWidth is the text's natural
+         * width and does not depend on the width it is given.
+         */
+        width: Math.max(Units.gu(12),
+                        Math.min(Units.gu(24),
+                                 labelAndSelector.width - labelName.implicitWidth - Units.gu(2)))
+
+        onActivated: (index) => {
+            labelAndSelector.activated(index);
+            if (labelAndSelector.values.length > 0)
+                labelAndSelector.chosen(labelAndSelector.values[index]);
+        }
+    }
+}

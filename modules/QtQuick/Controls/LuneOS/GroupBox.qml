@@ -84,32 +84,38 @@ T.GroupBox {
     //! [label]
 
     //! [background]
-    background: Column {
+    // An Item around the Column: a Column's implicit height is the height it
+    // was last drawn at, which the group read back as its own minimum, so it
+    // could grow but never shrink back when a row was hidden
+    background: Item {
         id: groupBoxBg
-        width: parent.width
 
         // group-labeled-bottom.png starts with the seam that sits under the
         // title bar, so on its own it left an untitled group with a butchered
         // top edge. webOS ships a rounded box for that case; use it.
         readonly property bool titled: control.title.length > 0
 
-        BorderImage {
-            id: groupBoxTitleBg
-            visible: groupBoxBg.titled
-            source: "images/group-labeled-top.png"
-            width: parent.width; height: control.topPadding - control.padding
-            border.left: 12; border.top: 12
-            border.right: 12; border.bottom: 0
-        }
-        BorderImage {
-            id: groupBoxContentBg
-            source: groupBoxBg.titled ? "images/group-labeled-bottom.png"
-                                      : "images/group-unlabeled.png"
-            width: parent.width
-            height: groupBoxBg.titled ? parent.height - control.topPadding + control.padding
-                                      : parent.height
-            border.left: 12; border.top: groupBoxBg.titled ? 9 : 12
-            border.right: 12; border.bottom: 12
+        Column {
+            anchors.fill: parent
+
+            BorderImage {
+                id: groupBoxTitleBg
+                visible: groupBoxBg.titled
+                source: "images/group-labeled-top.png"
+                width: parent.width; height: control.topPadding - control.padding
+                border.left: 12; border.top: 12
+                border.right: 12; border.bottom: 0
+            }
+            BorderImage {
+                id: groupBoxContentBg
+                source: groupBoxBg.titled ? "images/group-labeled-bottom.png"
+                                          : "images/group-unlabeled.png"
+                width: parent.width
+                height: groupBoxBg.titled ? parent.height - control.topPadding + control.padding
+                                          : parent.height
+                border.left: 12; border.top: groupBoxBg.titled ? 9 : 12
+                border.right: 12; border.bottom: 12
+            }
         }
     }
     //! [background]

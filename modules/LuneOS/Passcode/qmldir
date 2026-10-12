@@ -1,0 +1,5 @@
+module LuneOS.Passcode
+
+PatternLockGrid 1.0 PatternLockGrid.qml
+PinPad 1.0 PinPad.qml
+internal PinButton PinButton.qml

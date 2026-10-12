@@ -5,6 +5,8 @@ Item {
     id: callSettings
 
     property string modemPath: ""
+    // As libqofono's: the properties have been read from oFono
+    property bool ready: true
 
     property string hideCallerId: "default"
     property string voiceCallWaiting: "disabled"

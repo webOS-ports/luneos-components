@@ -11,6 +11,8 @@ QML_FILES = \
     CheckIndicatorLuneOS.qml \
     ComboBox.qml \
     Dial.qml \
+    Dialog.qml \
+    DialogButtonBox.qml \
     Drawer.qml \
     Frame.qml \
     GroupBox.qml \
@@ -29,7 +31,7 @@ QML_FILES = \
     RadioIndicatorLuneOS.qml \
     RangeSlider.qml \
     ScrollBar.qml \
-    ScrollIndicatorLuneOS.qml \
+    ScrollIndicator.qml \
     Slider.qml \
     SpinBox.qml \
     StackView.qml \

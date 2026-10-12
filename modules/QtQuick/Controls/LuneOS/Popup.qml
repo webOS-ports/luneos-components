@@ -42,6 +42,23 @@ import LunaNext.Common 0.1
 T.Popup {
     id: control
 
+    // Every plain Popup in LuneOS is a centred dialog, and Qt's default
+    // parent - the item it is declared in - sizes and centres it against
+    // whatever page declared it. A page usually starts below an app header,
+    // so on a short screen (720x720) the dialog lost that header's height
+    // and showed barely two rows. The window overlay is what each of them
+    // meant; one that really wants a page can still set parent itself.
+    parent: T.Overlay.overlay
+
+    // Centred, since that is where every one of them was put by hand. A popup
+    // anchored to something - a menu under a button - sets its own x and y.
+    x: parent ? (parent.width - width) / 2 : 0
+    y: parent ? (parent.height - height) / 2 : 0
+    // No size cap here: squeezing a popup whose content does not scroll only
+    // pushes its buttons out of the box (First Use's feed warning on a
+    // 720x720 screen). A popup that can be taller than the screen caps
+    // itself and scrolls its content.
+
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentWidth > 0 ? contentWidth + leftPadding + rightPadding : 0)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
