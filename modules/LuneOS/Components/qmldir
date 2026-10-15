@@ -3,6 +3,7 @@ plugin LuneOSComponents
 
 AlertDialog 1.0 AlertDialog.qml
 AppMenuButton 1.0 AppMenuButton.qml
+ArtworkImage 1.0 ArtworkImage.qml
 AuthenticationDialog 1.0 AuthenticationDialog.qml
 CertDialog 1.0 CertDialog.qml
 ClippedImage 1.0 ClippedImage.qml

@@ -7,6 +7,7 @@ installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 
 QML_FILES = AlertDialog.qml \
             AppMenuButton.qml \
+            ArtworkImage.qml \
             AuthenticationDialog.qml \
             CertDialog.qml \
             ClippedImage.qml \

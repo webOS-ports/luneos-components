@@ -1,7 +1,7 @@
 TEMPLATE = lib
 TARGET = ../LuneOSComponents
 
-QT += core-private qml qml-private quick quick-private
+QT += core-private qml qml-private quick quick-private svg
 CONFIG += qt plugin
 
 CONFIG += qmltypes
@@ -12,9 +12,11 @@ TARGET = $$qtLibraryTarget($$TARGET)
 uri = LuneOS.Components
 
 HEADERS += \
+    artworkcache.h \
     plugin.h
 
 SOURCES += \
+    artworkcache.cpp \
     plugin.cpp
 
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)

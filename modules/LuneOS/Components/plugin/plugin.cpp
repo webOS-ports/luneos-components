@@ -16,8 +16,39 @@
  */
 
 #include <QtQml>
+#include <QQuickImageProvider>
+#include <QStandardPaths>
 
+#include "artworkcache.h"
 #include "plugin.h"
+
+namespace {
+
+/*
+ * image://artwork/<SVG>: an app's SVG artwork at the size the Image asks for
+ * with sourceSize, drawn once and then loaded as PNG; see ArtworkCache and
+ * ArtworkImage.qml. The id is the SVG's absolute path or file: URL,
+ * percent-encoded. Loaded off the GUI thread, so the window never waits on it.
+ */
+class ArtworkProvider : public QQuickImageProvider
+{
+public:
+    explicit ArtworkProvider(const QString &cacheDir)
+        : QQuickImageProvider(QQuickImageProvider::Image, QQuickImageProvider::ForceAsynchronousImageLoading)
+        , m_cache(cacheDir)
+    {
+    }
+
+    QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) override
+    {
+        return m_cache.image(ArtworkCache::pathFromId(id), requestedSize, size);
+    }
+
+private:
+    ArtworkCache m_cache;
+};
+
+} // namespace
 
 Plugin::Plugin(QObject *parent) :
     QQmlExtensionPlugin(parent)
@@ -31,6 +62,8 @@ void Plugin::registerTypes(const char *uri)
 
 void Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
-    Q_UNUSED(engine);
     Q_UNUSED(uri);
+    // One cache for every app, each app's artwork in a folder of its own.
+    engine->addImageProvider(QStringLiteral("artwork"), new ArtworkProvider(
+        QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation) + QStringLiteral("/luneos-components/artwork")));
 }
