@@ -10,7 +10,6 @@ QML_FILES = PatternLockGrid.qml \
             PinPad.qml
 
 RESOURCE_FILES = images/icon-delete.png \
-                 images/pin-grid.png \
                  images/pin-key-highlight.png
 
 QMLDIR_FILE = qmldir
