@@ -35,6 +35,16 @@ signals:
     void volumeUp();
     void volumeDown();
 
+    /*!
+     * A volume key went down or came up: Qt::Key_VolumeUp or
+     * Qt::Key_VolumeDown. Auto-repeat is left out, so a press is reported once
+     * however long the key is held. The keys are still taken here and step the
+     * volume as before; these are for whoever needs to know a key is held, such
+     * as a chord with the power key.
+     */
+    void keyPressed(int key);
+    void keyReleased(int key);
+
 private slots:
     void changeVolume();
 
