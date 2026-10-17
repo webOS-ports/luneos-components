@@ -20,4 +20,6 @@ import QtQuick 2.0
 QtObject {
     signal volumeUp
     signal volumeDown
+    signal keyPressed(int key)
+    signal keyReleased(int key)
 }

@@ -55,6 +55,13 @@ bool VolumeKeys::eventFilter(QObject *, QEvent *event)
     if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
         if (keyEvent->key() == Qt::Key_VolumeUp || keyEvent->key() == Qt::Key_VolumeDown) {
+            if (!keyEvent->isAutoRepeat()) {
+                if (event->type() == QEvent::KeyPress)
+                    emit keyPressed(keyEvent->key());
+                else
+                    emit keyReleased(keyEvent->key());
+            }
+
             if (event->type() == QEvent::KeyPress) {
                 // Key down: set which way to change the volume on each repeat, start the repeat delay timer and change the volume once
                 mVolumeUp = keyEvent->key() == Qt::Key_VolumeUp;
