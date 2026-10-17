@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  A text selection handle as the rest of LuneOS draws them (its Chromium,
+  ui/touch_selection/vector_icons/text_selection_handle_*_custom.icon):
+  legacy webOS's shield, pointing up at the text, grey with a dark edge.
+  Turned over, it is the handle at the start of a selection.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="27.7" viewBox="0 0 32 27.7">
+  <path fill="#7E785B" d="M16 0 L32 14.9 V22.7 A5 5 0 0 1 27 27.7 H5 A5 5 0 0 1 0 22.7 V14.9 Z"/>
+  <path fill="#D9D9D8" d="M16 2.4 L30.4 15.6 V22.1 A4 4 0 0 1 26.4 26.1 H5.6 A4 4 0 0 1 1.6 22.1 V15.6 Z"/>
+</svg>

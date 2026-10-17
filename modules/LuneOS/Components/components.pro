@@ -18,16 +18,20 @@ QML_FILES = AlertDialog.qml \
             Dialog.qml \
             FilePicker.qml \
             ItemSelector.qml \
+            KeyboardInset.qml \
             ListDelegateSeparator.qml \
             Page.qml \
             PageStackWindow.qml \
             PromptDialog.qml \
             ProxyAuthenticationDialog.qml \
+            SelectionHandle.qml \
             SpriteIcon.qml \
             Tweak.qml \
             UserAgent.qml
 
-JS_FILES =  js/MultiSelect.js \
+JS_FILES =  js/AppFiles.js \
+            js/FileLists.js \
+            js/MultiSelect.js \
             js/ua-overrides.js
 
 RESOURCE_FILES = images/button-up-center.png images/button-up-left.png images/button-up-right.png \
@@ -36,7 +40,8 @@ RESOURCE_FILES = images/button-up-center.png images/button-up-left.png images/bu
                  images/dialog-center-bottom.png images/dialog-center-middle.png images/dialog-center-top.png \
                  images/dialog-left-bottom.png images/dialog-left-middle.png images/dialog-left-top.png \
                  images/dialog-right-bottom.png images/dialog-right-middle.png images/dialog-right-top.png \
-                 images/icon-file.png images/icon-folder.png images/icon-warning.png
+                 images/icon-file.png images/icon-folder.png images/icon-warning.png \
+                 images/selection-handle.svg
 
 QMLDIR_FILE = qmldir
 

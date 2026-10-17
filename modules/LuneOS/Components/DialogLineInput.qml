@@ -30,7 +30,20 @@ Rectangle {
     anchors.verticalCenterOffset: Units.gu(-2)
     property alias text: input.text
     property alias echoMode: input.echoMode
+    property alias inputMethodHints: input.inputMethodHints
+    property alias passwordCharacter: input.passwordCharacter
+    // The line's TextInput, for what is not passed on here.
+    readonly property alias textInput: input
     signal accepted()
+
+    // What the line holds with what the keyboard has not committed yet put
+    // in at the cursor: in T9 the last letter waits there, and a tap on a
+    // dialog's key would otherwise leave it out ("secre" for "secret").
+    function typedText() {
+        var text = input.text;
+        var at = Math.max(0, Math.min(text.length, input.cursorPosition));
+        return text.substring(0, at) + input.preeditText + text.substring(at);
+    }
     height: Units.gu(3)
     color: "#fefefe"
 
@@ -47,6 +60,9 @@ Rectangle {
         id: input
         width: parent.width
         anchors.left: parent.left
+        // Room between the frame and the first and last letters.
+        leftPadding: Units.gu(1)
+        rightPadding: Units.gu(1)
         clip: true
         anchors.verticalCenter: parent.verticalCenter
         anchors.horizontalCenter: parent.horizontalCenter

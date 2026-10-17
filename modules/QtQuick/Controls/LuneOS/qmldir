@@ -8,6 +8,7 @@ internal SwitchIndicatorLuneOS SwitchIndicatorLuneOS.qml
 internal CheckIndicatorLuneOS CheckIndicatorLuneOS.qml
 internal RadioIndicatorLuneOS RadioIndicatorLuneOS.qml
 internal ListDelegateSeparator ListDelegateSeparator.qml
+internal TextSelectionHandles TextSelectionHandles.qml
 
 ApplicationWindow 2.0 ApplicationWindow.qml
 BusyIndicator 2.0 BusyIndicator.qml

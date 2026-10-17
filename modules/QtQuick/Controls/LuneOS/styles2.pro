@@ -44,6 +44,7 @@ QML_FILES = \
     TabButton.qml \
     TextArea.qml \
     TextField.qml \
+    TextSelectionHandles.qml \
     ToolBar.qml \
     ToolButton.qml \
     ToolTip.qml \

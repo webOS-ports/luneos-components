@@ -8,6 +8,7 @@ ExplanationText 1.0 ExplanationText.qml
 FormGroup 1.0 FormGroup.qml
 FormTextField 1.0 FormTextField.qml
 HorizontalSeparator 1.0 HorizontalSeparator.qml
+IconToolButton 1.0 IconToolButton.qml
 LabelAndSelector 1.0 LabelAndSelector.qml
 LabelAndSlider 1.0 LabelAndSlider.qml
 LabelAndSwitch 1.0 LabelAndSwitch.qml

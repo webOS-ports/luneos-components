@@ -35,6 +35,14 @@ Item {
 
     signal accepted(string username, string pass, bool savePwd);
 
+    // For tests, which have no keyboard: one this tall, when not negative.
+    property alias keyboardHeightForTest: keyboard.heightForTest
+
+    KeyboardInset {
+        id: keyboard
+        item: authDialog
+    }
+
     Rectangle {
         id: dimBackground
         anchors.fill: parent
@@ -48,9 +56,12 @@ Item {
         height: confirmRect.y + confirmRect.height + 2*dialogHeader.anchors.margins
         color: "transparent"
         radius: 10
-        anchors.verticalCenter: parent.verticalCenter
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenterOffset: -Qt.inputMethod.keyboardRectangle.height/2
+        // Centred in what the on-screen keyboard leaves free above it, and
+        // never off the top: half the keyboard's height above the middle
+        // pushed a tall box off a short screen, and an input method that
+        // gives no rectangle moved it not at all.
+        y: Math.max(Units.gu(1), Math.round((keyboard.top - height) / 2))
 
         Image {
             id: leftImageTop

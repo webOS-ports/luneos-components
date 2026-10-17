@@ -88,6 +88,11 @@ T.TextField {
         elide: Text.ElideRight
     }
 
+    //! Legacy's selection handles, to drag either end of a selection.
+    TextSelectionHandles {
+        control: control
+    }
+
     //! [background]
     //! Darkens the artwork, keeping its alpha, until the field has focus.
     //! Colorizing with a black colour of alpha a scales the colour by 1 - a,
