@@ -81,6 +81,11 @@ T.TextArea {
         elide: Text.ElideRight
     }
 
+    //! Legacy's selection handles - see TextField.qml.
+    TextSelectionHandles {
+        control: control
+    }
+
     background: BorderImage {
         source: "images/input-focus.png"
         anchors.fill: control
