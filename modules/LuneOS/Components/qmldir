@@ -14,6 +14,7 @@ DialogLineInput 1.0 DialogLineInput.qml
 Dialog 1.0 Dialog.qml
 FilePicker 1.0 FilePicker.qml
 ItemSelector 1.0 ItemSelector.qml
+KeyboardInset 1.0 KeyboardInset.qml
 ListDelegateSeparator 1.0 ListDelegateSeparator.qml
 Page 1.0 Page.qml
 SpriteIcon 1.0 SpriteIcon.qml

@@ -18,6 +18,7 @@ QML_FILES = AlertDialog.qml \
             Dialog.qml \
             FilePicker.qml \
             ItemSelector.qml \
+            KeyboardInset.qml \
             ListDelegateSeparator.qml \
             Page.qml \
             PageStackWindow.qml \

@@ -24,7 +24,14 @@ import LunaNext.Common 0.1
 Item {
     id: dialog
 
-    anchors.fill: parent
+    // Covers the whole page, or with keepClearOfKeyboard the part of it
+    // above the keyboard.
+    anchors.fill: keepClearOfKeyboard ? undefined : parent
+    x: 0
+    y: 0
+    width: parent ? parent.width : 0
+    height: !parent ? 0 : keepClearOfKeyboard ? Math.max(shownHeight, parent.height - keyboard.height)
+                                             : parent.height
     z: 1000
 
     // We want to be a child of the root item so that we can cover
@@ -32,8 +39,52 @@ Item {
 
     property alias title: titleText.text
     property alias message: messageText.text
-    property alias dialogHeight: dialogWindow.height
+    property real dialogHeight: Units.gu(15.0)
     property alias dialogWidth: dialogWindow.width
+    // The title's size (16 pixels unless set) and how the message lines up.
+    property alias titlePixelSize: titleText.font.pixelSize
+    property alias messageAlignment: messageText.horizontalAlignment
+
+    /*
+     * Kept clear of the on-screen keyboard: the dialog covers only the part
+     * of the page above it and its box is centred there, so a field and the
+     * buttons under it stay in sight while typing. The page under the
+     * keyboard is dimmed as well, since an input method can say a keyboard
+     * is up when none shows (a Bluetooth one). Where the keyboard leaves
+     * less room than dialogHeight - on a square screen it takes nearly half
+     * - compact is true and the box is compactDialogHeight tall, when that
+     * is set; a dialog can lay its buttons side by side then.
+     */
+    property bool keepClearOfKeyboard: false
+    property real compactDialogHeight: -1
+    readonly property bool compact: keepClearOfKeyboard && !!parent
+                                    && parent.height - keyboard.height < dialogHeight
+    readonly property real shownHeight: compact && compactDialogHeight > 0 ? compactDialogHeight : dialogHeight
+    readonly property real keyboardHeight: keepClearOfKeyboard ? keyboard.height : 0
+    // For tests, which have no keyboard: one this tall, when not negative.
+    property alias keyboardHeightForTest: keyboard.heightForTest
+
+    readonly property bool opened: visible
+    signal aboutToShow()
+    signal closed()
+
+    function open() {
+        aboutToShow();
+        visible = true;
+    }
+
+    // The keyboard goes too: the field it was typing in is hidden, but
+    // would keep the focus and the keyboard with it.
+    function close() {
+        visible = false;
+        Qt.inputMethod.hide();
+        closed();
+    }
+
+    KeyboardInset {
+        id: keyboard
+        item: dialog.parent
+    }
 
     default property alias __children: dynamicColumn.children
 
@@ -53,11 +104,20 @@ Item {
         opacity: 0.4
     }
 
+    Rectangle {
+        y: dialog.height
+        width: dialog.width
+        height: dialog.keyboardHeight
+        visible: dialog.keyboardHeight > 0
+        color: "black"
+        opacity: 0.4
+    }
+
 
     Rectangle {
             id: dialogWindow
             color: "transparent"
-            height: Units.gu(15.0)
+            height: dialog.shownHeight
             smooth: true
             radius: 10
 
