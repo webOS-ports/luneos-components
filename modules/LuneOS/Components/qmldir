@@ -20,5 +20,8 @@ SpriteIcon 1.0 SpriteIcon.qml
 PageStackWindow 1.0 PageStackWindow.qml
 PromptDialog 1.0 PromptDialog.qml
 ProxyAuthenticationDialog 1.0 ProxyAuthenticationDialog.qml
+SelectionHandle 1.0 SelectionHandle.qml
 Tweak 1.0 Tweak.qml
 UserAgent 1.0 UserAgent.qml
+AppFiles 1.0 js/AppFiles.js
+FileLists 1.0 js/FileLists.js

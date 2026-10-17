@@ -14,6 +14,7 @@ QML_FILES = AppHeader.qml \
             FormGroup.qml \
             FormTextField.qml \
             HorizontalSeparator.qml \
+            IconToolButton.qml \
             LabelAndSelector.qml \
             LabelAndSlider.qml \
             LabelAndSwitch.qml \
