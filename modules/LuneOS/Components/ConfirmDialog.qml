@@ -31,13 +31,21 @@ Dialog {
     dialogHeight: Units.gu(19)
     dialogWidth: Units.gu(30)
 
+    // The buttons' words: say what happens ("Delete"), as the guidelines
+    // ask, rather than "OK".
+    property string acceptText: "OK"
+    property string rejectText: "Cancel"
+    // A red accept button, for something that cannot be undone.
+    property bool destructive: false
+
     signal accepted();
     signal rejected();
 
     Row {
         DialogButton {
-            text: "OK"
-            color: "#4B4B4B"
+            objectName: "confirmAcceptButton"
+            text: confirmDialog.acceptText
+            color: confirmDialog.destructive ? "#be0003" : "#4B4B4B"
             fontcolor: "white"
             buttonWidth: Units.gu(26.0)
 
@@ -46,7 +54,8 @@ Dialog {
     }
     Row {
         DialogButton {
-            text: "Cancel"
+            objectName: "confirmRejectButton"
+            text: confirmDialog.rejectText
             color: "white"
             fontcolor: "#292929"
             buttonWidth: Units.gu(26.0)
