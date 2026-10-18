@@ -39,14 +39,33 @@ Item {
      * away" message too. Those carry no value, so the last one stays rather
      * than snapping back to the default. handleError is only reached when the
      * call cannot be made at all.
+     *
+     * The subscription ends with the service. The tweaks service is started
+     * on demand, so it is called at once (which starts it) rather than waited
+     * for, and the bus is watched: once it has gone and comes back, whoever
+     * started it again, the key is subscribed to afresh.
      */
+    property var _call: null
+    property bool _lost: false
+
+    readonly property string _tweaksService: "org.webosports.service.tweaks.prefs"
+
+    function _subscribe() {
+        if (_call)
+            _call.cancel();
+        _call = service.subscribe("luna://" + _tweaksService + "/get",
+                                  JSON.stringify({owner: tweak.owner, keys: [tweak.key],
+                                                  subscribe: true}),
+                                  service.handleResult, service.handleError);
+    }
+
     LunaService {
         id: service
         onInitialized: {
-            service.subscribe("luna://org.webosports.service.tweaks.prefs/get",
-                              JSON.stringify({owner: tweak.owner, keys: [tweak.key],
-                                              subscribe: true}),
-                              handleResult, handleError)
+            tweak._subscribe();
+            service.subscribe("luna://com.webos.service.bus/signal/registerServerStatus",
+                              JSON.stringify({serviceName: tweak._tweaksService}),
+                              handleStatus, function (message) {});
         }
 
         function handleResult(message) {
@@ -57,6 +76,16 @@ Item {
 
         function handleError(message) {
             tweak.value = tweak.defaultValue;
+        }
+
+        function handleStatus(message) {
+            var response = JSON.parse(message.payload);
+            if (response.connected === false) {
+                tweak._lost = true;
+            } else if (response.connected === true && tweak._lost) {
+                tweak._lost = false;
+                tweak._subscribe();
+            }
         }
     }
 

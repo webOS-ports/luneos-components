@@ -40,6 +40,13 @@ import "Services.js" as Services
  * Reading needs the "systemsettings.query" ACG group and writing
  * "systemsettings.management" (Remote, which has neither, was refused
  * getPreferences on the Q25); a refusal arrives as error().
+ *
+ * A subscription ends when the system service goes off the bus, and a
+ * restarted service knows nothing of the old ones: the shell kept showing
+ * the old wallpaper after luna-sysservice was restarted on tissot, as no
+ * change reached it any more. So the service is watched, and when it is
+ * back the keys are subscribed to afresh; the first answer brings anything
+ * that changed meanwhile. Writes are refused again until it has come.
  */
 QtObject {
     id: prefs
@@ -59,6 +66,8 @@ QtObject {
     property bool _loaded: false
     property var _call: null
     property bool _ready: false
+    // The system service went off the bus since the last subscription
+    property bool _lost: false
 
     onKeysChanged: _subscribe()
 
@@ -126,6 +135,21 @@ QtObject {
                                       prefs.updated(response);
                                   },
                                   function (message) { prefs.error(typeof message === "string" ? message : message.payload); });
+    }
+
+    property ServiceStatus _status: ServiceStatus {
+        serviceName: Services.systemService.replace("luna://", "")
+        clientName: prefs.clientName
+        onAvailableChanged: {
+            if (!available) {
+                prefs._lost = true;
+            } else if (prefs._lost || !prefs._loaded) {
+                // Back, or there before the first answer, which then may
+                // never come: a call made while it was away was refused.
+                prefs._lost = false;
+                prefs._subscribe();
+            }
+        }
     }
 
     property LunaService _service: LunaService {
