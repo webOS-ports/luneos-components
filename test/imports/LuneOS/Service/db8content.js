@@ -55,7 +55,9 @@ function unregisterListener(kind, syncDb8Model)
 {
     if( !_internalDb8[kind] ) return;
     var idxFct = _internalDb8[kind].syncFct.indexOf(syncDb8Model);
-    _internalDb8[kind].syncFct.splice(idxFct,1);
+    // Not there: splice(-1) would drop someone else's listener.
+    if( idxFct >= 0 )
+        _internalDb8[kind].syncFct.splice(idxFct,1);
 }
 
 function put(kind, dataArray)
