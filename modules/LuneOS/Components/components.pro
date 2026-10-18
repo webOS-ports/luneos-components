@@ -5,7 +5,8 @@ SUBDIRS += plugin
 uri = LuneOS.Components
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 
-QML_FILES = AlertDialog.qml \
+QML_FILES = ActionSheet.qml \
+            AlertDialog.qml \
             AppMenuButton.qml \
             ArtworkImage.qml \
             AuthenticationDialog.qml \
@@ -16,6 +17,7 @@ QML_FILES = AlertDialog.qml \
             DialogCheckBox.qml \
             DialogLineInput.qml \
             Dialog.qml \
+            FastScroller.qml \
             FilePicker.qml \
             ItemSelector.qml \
             KeyboardInset.qml \

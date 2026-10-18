@@ -1,6 +1,7 @@
 module LuneOS.Components
 plugin LuneOSComponents
 
+ActionSheet 1.0 ActionSheet.qml
 AlertDialog 1.0 AlertDialog.qml
 AppMenuButton 1.0 AppMenuButton.qml
 ArtworkImage 1.0 ArtworkImage.qml
@@ -12,6 +13,7 @@ DialogButton 1.0 DialogButton.qml
 DialogCheckBox 1.0 DialogCheckBox.qml
 DialogLineInput 1.0 DialogLineInput.qml
 Dialog 1.0 Dialog.qml
+FastScroller 1.0 FastScroller.qml
 FilePicker 1.0 FilePicker.qml
 ItemSelector 1.0 ItemSelector.qml
 KeyboardInset 1.0 KeyboardInset.qml
