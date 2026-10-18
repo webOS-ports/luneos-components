@@ -30,12 +30,23 @@ Item {
     property variant value
     property variant defaultValue
 
+    /*
+     * Subscribed, so a value changed elsewhere (the Tweaks app, Settings'
+     * Appearance page) reaches whoever reads it without a restart. A service
+     * that does not know "subscribe" answers once, as before.
+     *
+     * Every reply comes through handleResult, the bus's own "service went
+     * away" message too. Those carry no value, so the last one stays rather
+     * than snapping back to the default. handleError is only reached when the
+     * call cannot be made at all.
+     */
     LunaService {
         id: service
         onInitialized: {
-            service.call("luna://org.webosports.service.tweaks.prefs/get",
-                         JSON.stringify({owner: tweak.owner, keys: [tweak.key]}),
-                         handleResult, handleError)
+            service.subscribe("luna://org.webosports.service.tweaks.prefs/get",
+                              JSON.stringify({owner: tweak.owner, keys: [tweak.key],
+                                              subscribe: true}),
+                              handleResult, handleError)
         }
 
         function handleResult(message) {
