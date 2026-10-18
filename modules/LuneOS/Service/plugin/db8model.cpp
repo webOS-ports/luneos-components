@@ -18,6 +18,7 @@
 #include <QCoreApplication>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QQmlEngine>
 #include <QDebug>
 
 #include <luna-service2/lunaservice.h>
@@ -27,8 +28,13 @@
 
 Db8Model::Db8Model(QObject *parent) :
     QAbstractListModel(parent),
-    mToken(LSMESSAGE_TOKEN_INVALID),
-    mHandle(0)
+    mWatch(false),
+    mAllPages(false),
+    mHandle(0),
+    mStatus(QStringLiteral("null")),
+    mErrorCode(0),
+    mGeneration(0),
+    mRestartQueued(false)
 {
     connect(this, &Db8Model::rowsInserted, [=]() { Q_EMIT countChanged(); });
     connect(this, &Db8Model::rowsRemoved, [=]() { Q_EMIT countChanged(); });
@@ -46,21 +52,23 @@ void Db8Model::componentComplete()
     mLS2Service.componentComplete();
 
     mHandle = mLS2Service.getInternalLSHandle();
-    if (mHandle) {
-        restart();
-    }
+    restart();
 }
 
 Db8Model::~Db8Model()
 {
-    if(mWatch && mToken != LSMESSAGE_TOKEN_INVALID) {
-        LSError error;
-        LSErrorInit(&error);
-        LSCallCancel(mHandle, mToken, &error);
-        if (LSErrorIsSet(&error)) {
-            LSErrorPrint(&error, stderr);
-            LSErrorFree(&error);
+    // Cancelled calls get no reply, so nothing can reach this model after
+    // it is gone.
+    for (auto it = mCalls.constBegin(); it != mCalls.constEnd(); ++it) {
+        if (mHandle) {
+            LSError lsError;
+            LSErrorInit(&lsError);
+            if (!LSCallCancel(mHandle, it.key(), &lsError)) {
+                LSErrorPrint(&lsError, stderr);
+                LSErrorFree(&lsError);
+            }
         }
+        delete it.value();
     }
 }
 
@@ -73,11 +81,27 @@ QVariant Db8Model::get(int index)
     return mValue.toVariant();
 }
 
+void Db8Model::refresh()
+{
+    restart();
+}
+
 void Db8Model::setWatch(bool watch)
 {
     if (mWatch != watch) {
         mWatch = watch;
-        watchChanged();
+        Q_EMIT watchChanged();
+        if (mHandle) {
+            restart();
+        }
+    }
+}
+
+void Db8Model::setAllPages(bool allPages)
+{
+    if (mAllPages != allPages) {
+        mAllPages = allPages;
+        Q_EMIT allPagesChanged();
         if (mHandle) {
             restart();
         }
@@ -88,7 +112,7 @@ void Db8Model::setQuery(const QJsonValue &query)
 {
     if (mQuery != query) {
         mQuery = query;
-        queryChanged();
+        Q_EMIT queryChanged();
         if (mHandle) {
             restart();
         }
@@ -99,46 +123,98 @@ void Db8Model::setKind(const QString &kind)
 {
     if (mKind != kind) {
         mKind = kind;
-        kindChanged();
+        Q_EMIT kindChanged();
         if (mHandle) {
             restart();
         }
     }
 }
 
+void Db8Model::setStatus(const QString &status, const QString &errorText, int errorCode)
+{
+    if (status == mStatus && errorText == mErrorText && errorCode == mErrorCode)
+        return;
+    mStatus = status;
+    mErrorText = errorText;
+    mErrorCode = errorCode;
+    Q_EMIT statusChanged();
+}
+
 bool Db8Model::cbProcessResults(LSHandle *handle, LSMessage *message, void *context)
 {
     Q_UNUSED(handle);
 
-    Db8Model *model = static_cast<Db8Model*>(context);
+    // Calls are cancelled before their model goes or a find is replaced,
+    // so a reply always finds both.
+    Call *call = static_cast<Call *>(context);
+    Db8Model *model = call->model.data();
+    const QJsonObject response = QJsonDocument::fromJson(LSMessageGetPayload(message)).object();
 
-    qDebug() << Q_FUNC_INFO << LSMessageGetPayload(message);
-
-    QJsonObject response = QJsonDocument::fromJson(LSMessageGetPayload(message)).object();
-
-    bool success = response.value("returnValue").toBool();
-    if (!success)
-        model->handleFailedDatabaseQuery(response.value("errorText").toString());
-
-    bool fired = response.value("fired").toBool(false);
-    if (fired) {
-        g_timeout_add(0, cbTriggerRestart, model);
+    if (call->find) {
+        const bool current = model && call->generation == model->mGeneration;
+        if (!call->keep) {
+            if (model)
+                model->mCalls.remove(LSMessageGetResponseToken(message));
+            delete call;
+        }
+        if (current)
+            model->handleFindReply(response);
         return true;
     }
 
-    model->processResults(response.value("results"));
-
+    // A write: db8's reply to the caller, as an object.
+    QJSValue callback = call->callback;
+    if (model)
+        model->mCalls.remove(LSMessageGetResponseToken(message));
+    delete call;
+    if (!model)
+        return true;
+    if (callback.isCallable()) {
+        QQmlEngine *engine = qmlEngine(model);
+        if (engine)
+            callback.call(QJSValueList() << engine->toScriptValue(response.toVariantMap()));
+    } else if (!response.value(QStringLiteral("returnValue")).toBool()) {
+        qWarning() << "db8 call failed:" << response.value(QStringLiteral("errorText")).toString();
+    }
     return true;
 }
 
-gboolean Db8Model::cbTriggerRestart(gpointer user_data)
+void Db8Model::handleFindReply(const QJsonObject &response)
 {
-    Db8Model *model = static_cast<Db8Model*>(user_data);
-    model->restart();
-    return FALSE;
+    if (!response.value(QStringLiteral("returnValue")).toBool()) {
+        handleFailedDatabaseQuery(response.value(QStringLiteral("errorText")).toString(),
+                                  response.value(QStringLiteral("errorCode")).toInt());
+        return;
+    }
+
+    // A watch answering again: the results would differ now. With all
+    // pages each page watches its own range, and several can fire at once.
+    if (response.value(QStringLiteral("fired")).toBool(false)) {
+        if (!mRestartQueued) {
+            mRestartQueued = true;
+            QMetaObject::invokeMethod(this, "refresh", Qt::QueuedConnection);
+        }
+        return;
+    }
+
+    const QJsonArray results = response.value(QStringLiteral("results")).toArray();
+    for (const auto &v : results)
+        mPending.append(v);
+
+    const QJsonValue next = response.value(QStringLiteral("next"));
+    if (mAllPages && next.isString() && !results.isEmpty()) {
+        // db8 watches the range of keys a page returned: every page watches,
+        // or a change past the first one would go unnoticed.
+        requestPage(next, mWatch);
+        return;
+    }
+
+    processResults(mPending);
+    mPending = QJsonArray();
+    setStatus(QStringLiteral("ready"));
 }
 
-void Db8Model::handleFailedDatabaseQuery(const QString &errorMessage)
+void Db8Model::handleFailedDatabaseQuery(const QString &errorMessage, int errorCode)
 {
     qWarning() << "Failed to query database for kind"
                << mKind
@@ -146,19 +222,18 @@ void Db8Model::handleFailedDatabaseQuery(const QString &errorMessage)
                << QJsonDocument(mQuery.toObject()).toJson()
                << ":"
                << errorMessage;
+
+    mPending = QJsonArray();
+    setStatus(QStringLiteral("error"), errorMessage, errorCode);
+    Q_EMIT error(errorMessage, errorCode);
 }
 
-void Db8Model::processResults(const QJsonValue &results)
+void Db8Model::processResults(const QJsonArray &results)
 {
-    qDebug() << Q_FUNC_INFO << "Got results" << results;
-
-    if (!results.isArray())
-        return;
-
     int oldCount = rowCount();
 
     beginResetModel();
-    mResults = results.toArray();
+    mResults = results;
     resetRoles();
     endResetModel();
 
@@ -178,63 +253,155 @@ void Db8Model::resetRoles()
         return;
 
     int n = 1;
-    Q_FOREACH(QString key, current.toObject().keys()) {
+    Q_FOREACH(const QString &key, current.toObject().keys()) {
         mRoles.insert(Qt::UserRole + n, key.toUtf8());
         n++;
     }
 }
 
+void Db8Model::cancelFind()
+{
+    for (auto it = mCalls.begin(); it != mCalls.end();) {
+        if (!it.value()->find) {
+            ++it;
+            continue;
+        }
+        if (mHandle) {
+            LSError lsError;
+            LSErrorInit(&lsError);
+            if (!LSCallCancel(mHandle, it.key(), &lsError)) {
+                LSErrorPrint(&lsError, stderr);
+                LSErrorFree(&lsError);
+            }
+        }
+        delete it.value();
+        it = mCalls.erase(it);
+    }
+}
+
 void Db8Model::restart()
 {
-    qDebug() << Q_FUNC_INFO;
+    mRestartQueued = false;
+    cancelFind();
+    ++mGeneration;
+    mPending = QJsonArray();
 
-    if (mKind.length() == 0)
+    if (mKind.length() == 0) {
+        setStatus(QStringLiteral("null"));
         return;
+    }
+
+    setStatus(QStringLiteral("loading"));
+    requestPage(QJsonValue(), mWatch);
+}
+
+void Db8Model::requestPage(const QJsonValue &page, bool subscribe)
+{
+    QJsonObject q;
+    if (mQuery.isObject())
+        q = mQuery.toObject();
+    q.insert(QStringLiteral("from"), mKind);
+    if (page.isString())
+        q.insert(QStringLiteral("page"), page);
 
     QJsonObject request;
-    QJsonObject query;
+    request.insert(QStringLiteral("query"), q);
+    if (subscribe)
+        request.insert(QStringLiteral("watch"), true);
 
-    if (mQuery.isObject())
-        query = mQuery.toObject();
+    Call *call = new Call{this, mGeneration, true, QJSValue(), subscribe};
+    if (!send(QStringLiteral("find"), request, call, subscribe))
+        handleFailedDatabaseQuery(QStringLiteral("Failed to call luna://com.palm.db/find"), -1);
+}
 
-    query.insert("from", mKind);
-    request.insert("query", query);
-
-    if (mWatch)
-        request.insert("watch", true);
-
-    QString payload = QJsonDocument(request).toJson();
-
-    if (mHandle) {
-        LSError error;
-        LSErrorInit(&error);
-        QString errorMessage;
-
-        if (!mWatch) {
-            if (!LSCallOneReply(mHandle, "luna://com.palm.db/find", payload.toUtf8().constData(),
-                                &Db8Model::cbProcessResults, this, &mToken, &error)) {
-                qWarning("Failed to call remote service luna://com.palm.db/find");
-                errorMessage = QString("Failed to call remote service: %0").arg(error.message);
-            }
-        }
-        else {
-            if (!LSCall(mHandle, "luna://com.palm.db/find", payload.toUtf8().constData(),
-                                &Db8Model::cbProcessResults, this, &mToken, &error)) {
-                qWarning("Failed to call remote service luna://com.palm.db/find");
-                errorMessage = QString("Failed to call remote service: %0").arg(error.message);
-            }
-        }
-
-        if (LSErrorIsSet(&error)) {
-            LSErrorPrint(&error, stderr);
-            LSErrorFree(&error);
-        }
+bool Db8Model::send(const QString &method, const QJsonObject &payload, Call *call, bool subscribe)
+{
+    if (!mHandle) {
+        delete call;
+        return false;
     }
+
+    const QByteArray uri = QStringLiteral("luna://com.palm.db/%1").arg(method).toUtf8();
+    const QByteArray json = QJsonDocument(payload).toJson(QJsonDocument::Compact);
+
+    LSError lsError;
+    LSErrorInit(&lsError);
+    LSMessageToken token = LSMESSAGE_TOKEN_INVALID;
+    const bool ok = subscribe
+        ? LSCall(mHandle, uri.constData(), json.constData(), &Db8Model::cbProcessResults, call, &token, &lsError)
+        : LSCallOneReply(mHandle, uri.constData(), json.constData(), &Db8Model::cbProcessResults, call, &token, &lsError);
+    if (!ok) {
+        qWarning() << "Failed to call remote service" << uri;
+        if (LSErrorIsSet(&lsError)) {
+            LSErrorPrint(&lsError, stderr);
+            LSErrorFree(&lsError);
+        }
+        delete call;
+        return false;
+    }
+    mCalls.insert(token, call);
+    return true;
+}
+
+void Db8Model::write(const QString &method, const QJsonObject &payload, const QJSValue &callback)
+{
+    Call *call = new Call{this, mGeneration, false, callback, false};
+    if (send(method, payload, call, false))
+        return;
+
+    // Not sent: the caller hears so as db8 would have said it.
+    QQmlEngine *engine = qmlEngine(this);
+    if (callback.isCallable() && engine) {
+        QVariantMap reply;
+        reply.insert(QStringLiteral("returnValue"), false);
+        reply.insert(QStringLiteral("errorCode"), -1);
+        reply.insert(QStringLiteral("errorText"), QStringLiteral("Failed to call luna://com.palm.db/%1").arg(method));
+        callback.call(QJSValueList() << engine->toScriptValue(reply));
+    }
+}
+
+QJsonArray Db8Model::withKind(const QJSValue &objects, const QString &kind) const
+{
+    QJsonArray out;
+    const QJsonArray in = QJsonValue::fromVariant(objects.toVariant()).toArray();
+    for (const auto &v : in) {
+        QJsonObject object = v.toObject();
+        if (!object.contains(QStringLiteral("_kind")) && !kind.isEmpty())
+            object.insert(QStringLiteral("_kind"), kind);
+        out.append(object);
+    }
+    return out;
+}
+
+void Db8Model::put(const QJSValue &objects, const QJSValue &callback)
+{
+    write(QStringLiteral("put"), QJsonObject{{QStringLiteral("objects"), withKind(objects, mKind)}}, callback);
+}
+
+void Db8Model::merge(const QJSValue &objects, const QJSValue &callback)
+{
+    write(QStringLiteral("merge"), QJsonObject{{QStringLiteral("objects"), withKind(objects, mKind)}}, callback);
+}
+
+void Db8Model::del(const QJSValue &ids, const QJSValue &callback)
+{
+    write(QStringLiteral("del"), QJsonObject{{QStringLiteral("ids"), QJsonValue::fromVariant(ids.toVariant())}}, callback);
+}
+
+void Db8Model::putOnKind(const QString &kind, const QJSValue &objects, const QJSValue &callback)
+{
+    write(QStringLiteral("put"), QJsonObject{{QStringLiteral("objects"), withKind(objects, kind)}}, callback);
+}
+
+void Db8Model::putKind(const QJSValue &kindDefinition, const QJSValue &callback)
+{
+    write(QStringLiteral("putKind"), QJsonValue::fromVariant(kindDefinition.toVariant()).toObject(), callback);
 }
 
 int Db8Model::rowCount(const QModelIndex &parent) const
 {
-    return mResults.count();
+    Q_UNUSED(parent);
+    return static_cast<int>(mResults.count());
 }
 
 QVariant Db8Model::data(const QModelIndex &index, int role) const
