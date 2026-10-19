@@ -113,11 +113,7 @@ WebOSWindow {
         anchors.bottom: parent.bottom
 
         focus: true
-
-        Component.onCompleted: {
-            if (appWindow.initialPage.toString() !== "")
-                push(appWindow.initialPage.toString());
-        }
+        initialItem: appWindow.initialPage.toString() !== "" ? appWindow.initialPage.toString() : null
 
         // The back gesture arrives as Escape (see LunaNext.Common's EventType)
         Keys.onReleased: function(event) {

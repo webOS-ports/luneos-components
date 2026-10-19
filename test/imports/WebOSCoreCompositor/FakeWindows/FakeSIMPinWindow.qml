@@ -23,7 +23,7 @@ FakeWindowBase {
     id: fakeSIMPinWindow
 
     appId: "org.webosports.tests.fakeSimPinWindow"
-    windowType: "_WEBOS_WINDOW_TYPE_SYSTEM_UI"
+    type: "_WEBOS_WINDOW_TYPE_SYSTEM_UI"
     windowProperties: { "LuneOS_window": "pin" }
 
 
