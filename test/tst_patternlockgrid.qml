@@ -36,6 +36,7 @@ Item {
     SignalSpy { id: drawn; target: grid; signalName: "patternDrawn" }
     SignalSpy { id: tooShortSpy; target: grid; signalName: "tooShort" }
     SignalSpy { id: started; target: grid; signalName: "started" }
+    SignalSpy { id: painted; signalName: "painted" }
 
     TestCase {
         name: "PatternLockGrid"
@@ -92,6 +93,48 @@ Item {
             compare(grid.drawing, true);
             mouseRelease(grid, p.x, p.y);
             compare(grid.drawing, false);
+        }
+
+        // Lets a paint already asked for land first
+        function settle() {
+            do {
+                painted.clear();
+                wait(100);
+            } while (painted.count > 0);
+        }
+
+        // Whatever the canvas draws with, changed, is drawn again
+        function test_a_change_is_painted() {
+            painted.target = findChild(grid, "canvas");
+            verify(painted.target);
+            var changes = [
+                function() { grid.dotColor = "red"; },
+                function() { grid.selectedColor = "green"; },
+                function() { grid.errorColor = "blue"; },
+                function() { grid.dotOpacity = 0.5; },
+                function() { grid.nodeSize = 0.2; },
+                function() { grid.showError(); },
+                function() { grid.reset(); },
+            ];
+            for (var i = 0; i < changes.length; i++) {
+                settle();
+                changes[i]();
+                painted.wait(1000);
+            }
+            var p = dot(0);
+            settle();
+            mousePress(grid, p.x, p.y);
+            painted.wait(1000);
+            settle();
+            mouseMove(grid, p.x + 30, p.y + 30);
+            painted.wait(1000);
+            settle();
+            mouseRelease(grid, p.x + 30, p.y + 30);
+            painted.wait(1000);
+            // Only the drawn dots change
+            settle();
+            grid.reset();
+            painted.wait(1000);
         }
     }
 }

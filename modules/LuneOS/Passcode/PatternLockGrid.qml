@@ -75,6 +75,12 @@ Item {
     property bool _showError: false
     property point _dragPoint: Qt.point(0, 0)
 
+    // Everything the canvas draws with: a change to any of it repaints
+    readonly property var _paintState: [_selected, _dragging, _showError, _dragPoint,
+                                        dotColor, selectedColor, errorColor, dotOpacity,
+                                        _cellSize, _nodeRadius]
+    on_PaintStateChanged: canvas.requestPaint()
+
     function _nodeCenter(index) {
         var col = index % _columns;
         var row = Math.floor(index / _columns);
@@ -99,12 +105,10 @@ Item {
         _selected = [];
         _dragging = false;
         _showError = false;
-        canvas.requestPaint();
     }
 
     function showError() {
         _showError = true;
-        canvas.requestPaint();
     }
 
     MouseArea {
@@ -116,7 +120,6 @@ Item {
             patternGrid._selected = node >= 0 ? [node] : [];
             patternGrid._dragging = true;
             patternGrid._dragPoint = Qt.point(mouse.x, mouse.y);
-            canvas.requestPaint();
             patternGrid.started();
         }
 
@@ -132,7 +135,6 @@ Item {
                 updated.push(node);
                 patternGrid._selected = updated;
             }
-            canvas.requestPaint();
         }
 
         onReleased: {
@@ -142,13 +144,12 @@ Item {
                 patternGrid.patternDrawn(patternGrid._selected.join("-"));
             else if (patternGrid._selected.length > 0)
                 patternGrid.tooShort();
-
-            canvas.requestPaint();
         }
     }
 
     Canvas {
         id: canvas
+        objectName: "canvas"
         anchors.fill: parent
 
         onPaint: {
