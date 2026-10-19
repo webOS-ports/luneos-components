@@ -23,7 +23,7 @@ FakeWindowBase {
     id: fakeKeyboardWindow
 
     appId: "org.webosports.tests.fakeKeyboardWindow"
-    windowType: "_WEBOS_WINDOW_TYPE_KEYBOARD"
+    type: "_WEBOS_WINDOW_TYPE_KEYBOARD"
 
     x: Math.random()*200
     y: parent.height - height
