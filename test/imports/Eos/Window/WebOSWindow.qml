@@ -40,6 +40,10 @@ Window {
     property int parentWinId: 0
 
     signal exposedChanged(bool exposed)
+    // The compositor asked the window to close (the shell's closeWindow: a
+    // card or dashboard swiped away). The device's WebOSQuickWindow emits it
+    // and then lets the window go without its visible turning false first.
+    signal windowCloseRequested(var event)
 
     function takeFocus() {
         window.focus = true;
