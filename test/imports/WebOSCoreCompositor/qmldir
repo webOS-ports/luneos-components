@@ -1,4 +1,5 @@
 module WebOSCoreCompositor
 Compositor 1.0 Compositor.qml
+KeyFilter 1.0 KeyFilter.qml
 WindowModel 1.0 WindowModel.qml
 
