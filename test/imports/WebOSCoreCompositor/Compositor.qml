@@ -8,6 +8,10 @@ QtObject {
 
     property ListModel surfaceModel: ListModel {}
 
+    // The size a new xdg_shell window is configured at, which
+    // luna-next-cardshell's CardView sets to the size of a maximized card.
+    property size defaultWindowSize
+
     signal surfaceMapped(variant window);
     signal surfaceUnmapped(variant window);
 
