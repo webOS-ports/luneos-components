@@ -226,3 +226,12 @@ var gestureAreaHeight = 64;
 var positiveSpaceTopPadding = 0;
 var positiveSpaceBottomPadding = 0;
 var hasBrightnessControl = true;
+/*
+ * What luneos-device-config's 50-luna-platform writes when an adaptation does
+ * not say otherwise: a phone has volume keys and a power key. Only the
+ * Raspberry Pis and the qemux86 VM declare them absent. Left undefined, the
+ * cardshell's "!Settings.hasPowerButton" came out true, and its system menu
+ * grew a volume slider and a Power entry that no phone shows.
+ */
+var hasVolumeButton = true;
+var hasPowerButton = true;
