@@ -12,6 +12,11 @@ QtObject {
     // luna-next-cardshell's CardView sets to the size of a maximized card.
     property size defaultWindowSize
 
+    // The compositor's key filter (a WebOSKeyFilter, KeyFilter here), unset
+    // until the shell installs one: luna-next-cardshell's HardwareKeys,
+    // KeyboardActivity and TrackpadScroll each put theirs here if it is empty.
+    property QtObject keyFilter: null
+
     signal surfaceMapped(variant window);
     signal surfaceUnmapped(variant window);
 
