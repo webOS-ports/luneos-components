@@ -115,7 +115,7 @@ ListModel { // should it inherit something else ? it looks like it holds a list 
     ]
 
     Component.onCompleted: {
-        _fillScanResults
+        _fillScanResults();
     }
     onPoweredChanged: _fillScanResults();
 
@@ -131,7 +131,6 @@ ListModel { // should it inherit something else ? it looks like it holds a list 
                 for(var s in _cellularServices) {
                     technologyModel.append({ "object": _cellularServices[s] });
                 }
-                technologyModel.append(cellularService1.createObject());
             }
         }
     }
