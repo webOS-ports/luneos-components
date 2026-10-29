@@ -217,6 +217,10 @@ Item {
             verify(title.visible);
             tryVerify(function() { return words.implicitHeight > before; }, 1000, "the title takes a line above the text");
             notice.title = "";
+            var dismissed = signalSpy.createObject(root, { target: notice, signalName: "dismissed" });
+            mouseClick(findChild(notice, "noticeCloseButton"));
+            compare(dismissed.count, 1, "the close key dismisses it");
+            dismissed.destroy();
         }
 
         function test_artwork_scale() {

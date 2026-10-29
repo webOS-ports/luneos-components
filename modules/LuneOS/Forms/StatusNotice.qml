@@ -76,6 +76,7 @@ Rectangle {
 
     Button {
         id: closeButton
+        objectName: "noticeCloseButton"
 
         anchors.right: parent.right
         anchors.rightMargin: Units.gu(1)
