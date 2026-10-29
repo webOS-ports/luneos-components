@@ -64,6 +64,14 @@ Item {
     // For tests, which have no keyboard: one this tall, when not negative.
     property alias keyboardHeightForTest: keyboard.heightForTest
 
+    // As tall as the title, the message and the dialog's own contents need,
+    // inside the frame: a dialog whose contents vary sets dialogHeight to
+    // this rather than a guess that the buttons, stacked against the foot,
+    // then grow over the title.
+    readonly property real fittedHeight: Units.gu(1.6) * 2
+        + (titleText.text.length > 0 ? titleText.height : 0)
+        + (messageText.text.length > 0 ? Units.gu(1) + messageText.height : 0)
+        + Units.gu(1) + dynamicColumn.height + Units.gu(1)
     readonly property bool opened: visible
     signal aboutToShow()
     signal closed()
