@@ -20,6 +20,9 @@
 
 #include <QQuickItem>
 
+class QDateTime;
+class QImage;
+
 namespace luna
 {
 
@@ -30,8 +33,35 @@ class ScreenShooter : public QQuickItem
 public:
     explicit ScreenShooter(QQuickItem *parent = 0);
 
+    /* Where capture() writes. */
+    static const char *const kDirectory;
+
+    /*
+     * True if name is a plain file name: not empty, at most NAME_MAX bytes
+     * of UTF-8, no '/', '\\', NUL or control characters, and no leading '.'
+     * (which also rules out "." and "..").
+     */
+    static bool isPlainFileName(const QString &name);
+
+    /*
+     * Writes image as dir/name, or as dir/<now as yyyyMMddhhmmss>.png when
+     * name is empty, and returns the path written, or an empty string.
+     *
+     * dir must be a real directory, not a symlink; it is created (0755) if
+     * missing. The file is created with O_EXCL | O_NOFOLLOW, so an existing
+     * file or symlink is never written through or replaced: an explicit name
+     * that exists fails, a generated name gets "-1", "-2", ... appended.
+     */
+    static QString save(const QImage &image, const QString &dir,
+                        const QString &name, const QDateTime &now);
+
 public slots:
-    QString capture(QString path) const;
+    /*
+     * Saves the window under kDirectory. path must be a plain file name
+     * (see isPlainFileName()) or empty for a timestamped name; anything
+     * else, such as an absolute path or one with "..", is refused.
+     */
+    QString capture(const QString &path) const;
 };
 
 } // namespace luna
