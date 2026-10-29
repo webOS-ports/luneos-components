@@ -69,7 +69,7 @@ Item {
     LaunchParams { id: launch; window: fakeWindow; snapshotItem: notice }
 
     ZoomableImage { id: zoom; y: 200; width: 200; height: 150; source: root.aPicture }
-    Toast { id: toast; duration: 200 }
+    Toast { id: toast; duration: 600 }
     PlaceholderImage { id: holder; x: 220; y: 200; width: 60; height: 60; placeholder: root.aPicture }
     Column {
         y: 400
@@ -310,9 +310,21 @@ Item {
         function test_toast() {
             verify(!toast.visible);
             toast.show("Wallpaper set");
-            verify(toast.visible);
+            verify(toast.visible, "shown at once, fading in");
             compare(findChild(toast, "toast").text, "Wallpaper set");
-            tryCompare(toast, "visible", false, 2000);
+            tryCompare(toast, "opacity", 1, 1000);
+            // Gone from showing, still there while it fades
+            tryCompare(toast, "showing", false, 2000);
+            verify(toast.visible && toast.opacity > 0, "fading out, not cut off");
+            tryCompare(toast, "visible", false, 1000);
+            compare(toast.opacity, 0);
+            // Without a fade it comes and goes at once
+            toast.fadeDuration = 0;
+            toast.show("Copied");
+            compare(toast.opacity, 1);
+            tryCompare(toast, "showing", false, 2000);
+            verify(!toast.visible);
+            toast.fadeDuration = 250;
         }
 
         function test_placeholder_image() {

@@ -21,15 +21,20 @@ import LunaNext.Common 0.1
 /*
  * A short word on top of the app for a moment - "Wallpaper set", "Copied" -
  * as webOS's banners said it inside the card. show() puts it up for
- * duration milliseconds; place it where it should be (centred by default).
+ * duration milliseconds, fading in and out over fadeDuration; place it where
+ * it should be (centred by default). It is a Rectangle: radius and color
+ * give it another shape, a pill say.
  *
  *   Toast { id: toast }   ...   toast.show("Wallpaper set")
+ *   Toast { radius: height / 2; color: "#d0202020" }
  */
 Rectangle {
     id: toast
 
     property alias text: label.text
     property int duration: 2500
+    // How long it takes to come and to go; 0 for at once
+    property int fadeDuration: 250
     readonly property bool showing: timer.running
 
     function show(newText) {
@@ -42,7 +47,12 @@ Rectangle {
     height: label.height + Units.gu(2)
     radius: Units.gu(1)
     color: "#d0000000"
-    visible: timer.running
+    // Shown from the moment it is asked for, and until it has faded out
+    visible: timer.running || opacity > 0
+    opacity: timer.running ? 1 : 0
+    Behavior on opacity {
+        NumberAnimation { duration: toast.fadeDuration }
+    }
     z: 100
 
     Label {
