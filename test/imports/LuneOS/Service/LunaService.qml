@@ -253,6 +253,11 @@ QtObject {
             if (returnFct)
                 returnFct({payload: JSON.stringify(DevMode.setStatus(args))});
         }
+        else if(/^luna:\/\/org\.webosports\.service\.devmode\/(respondAdbAuth|setDevPassword|addAuthorizedKey|removeAuthorizedKey|listAuthorizedKeys|sshOverWifi|revokeAdbKeys|getAccessStatus)$/.test(serviceURI)) {
+            var devmodeReply = DevMode[serviceURI.split("/").pop()](args, name);
+            if (returnFct)
+                returnFct({payload: JSON.stringify(devmodeReply)});
+        }
         else if(serviceURI === "luna://com.palm.storage/volumes/getSpaceInfo") {
             if (returnFct)
                 returnFct({payload: JSON.stringify(Volumes.spaceInfoPayload())});
@@ -456,10 +461,13 @@ QtObject {
         if(/^luna:\/\/com\.palm\.(whatsapp|telegram|signal|teams)\/callStateQuery$/.test(serviceURI)) {
             connector_watchCallState(serviceURI, returnFct);
         }
+        else if(serviceURI === "luna://org.webosports.service.devmode/adbAuthRequests" && returnFct) {
+            DevMode.subscribeAuth(returnFct, name);
+        }
         else if(serviceURI === "palm://com.palm.bus/signal/registerServerStatus" || serviceURI === "luna://com.palm.bus/signal/registerServerStatus" ||
                 serviceURI === "luna://com.webos.service.bus/signal/registerServerStatus") {
             if(typeof returnFct !== 'undefined') {
-                returnFct({"payload": JSON.stringify({"connected": true})});
+                returnFct({"payload": JSON.stringify({"connected": args.serviceName !== "org.webosports.service.devmode" || DevMode.running})});
             }
         }
         else if(serviceURI === "luna://com.palm.applicationManager/launchPointChanges" && args.subscribe) {
