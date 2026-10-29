@@ -32,6 +32,7 @@ QML_FILES = ActionSheet.qml \
             UserAgent.qml
 
 JS_FILES =  js/AppFiles.js \
+            js/ArtworkScale.js \
             js/FileLists.js \
             js/MultiSelect.js \
             js/ua-overrides.js
