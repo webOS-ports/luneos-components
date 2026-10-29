@@ -35,6 +35,7 @@ Item {
     property color backgroundColor: "#2b2b2b"
     // Fill the tile, cut to it; else fit inside it
     property bool crop: true
+    property real aspectRatio: picture.implicitHeight>0 ? picture.implicitWidth/picture.implicitHeight : 1
     readonly property alias status: picture.status
     signal broken()
 
