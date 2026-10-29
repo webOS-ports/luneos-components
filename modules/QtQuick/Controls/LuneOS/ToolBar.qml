@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import QtQuick.Templates 2.4 as T
+import QtQuick.Templates as T
 
 import LunaNext.Common 0.1
 
@@ -48,6 +48,10 @@ T.ToolBar {
     contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
+    // The bar's colour, as Qt's own styles take it: a bar of another
+    // shade sets palette.window (the player's bars, a dark panel's foot).
+    palette.window: "#343434"
+
     font.family: "Prelude"
     font.pixelSize: FontUtils.sizeToPixels("medium")
     font.weight: Font.Light
@@ -59,7 +63,7 @@ T.ToolBar {
     //! [background]
     background: Rectangle {
         implicitHeight: 40
-        color: "#343434"
+        color: control.palette.window
 
         BorderImage {
             anchors.fill: parent

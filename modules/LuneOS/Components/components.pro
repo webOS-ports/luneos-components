@@ -19,19 +19,25 @@ QML_FILES = ActionSheet.qml \
             Dialog.qml \
             FastScroller.qml \
             FilePicker.qml \
+            IconListRow.qml \
             ItemSelector.qml \
             KeyboardInset.qml \
             ListDelegateSeparator.qml \
             Page.qml \
             PageStackWindow.qml \
+            PlaceholderImage.qml \
             PromptDialog.qml \
             ProxyAuthenticationDialog.qml \
+            SectionDivider.qml \
             SelectionHandle.qml \
             SpriteIcon.qml \
+            Toast.qml \
             Tweak.qml \
-            UserAgent.qml
+            UserAgent.qml \
+            ZoomableImage.qml
 
 JS_FILES =  js/AppFiles.js \
+            js/ArtworkScale.js \
             js/FileLists.js \
             js/MultiSelect.js \
             js/ua-overrides.js

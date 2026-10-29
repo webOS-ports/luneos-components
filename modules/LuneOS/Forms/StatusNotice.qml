@@ -26,16 +26,18 @@ import LuneOS.Forms 1.0
 /*
  * One line of trouble under the header that the user can dismiss - Remote's
  * "no transmitter" or "that key did not go out". Same colours as
- * ServiceUnavailableNotice, so it reads as the same kind of message.
+ * ServiceUnavailableNotice, so it reads as the same kind of message. A title
+ * goes in bold above the text ("Sync failed" / what the server said).
  */
 Rectangle {
     id: notice
 
+    property alias title: titleLabel.text
     property alias text: noticeLabel.text
 
     signal dismissed()
 
-    implicitHeight: Math.max(noticeLabel.implicitHeight, closeButton.implicitHeight) + Units.gu(2)
+    implicitHeight: Math.max(words.implicitHeight, closeButton.implicitHeight) + Units.gu(2)
     height: visible ? implicitHeight : 0
 
     color: Colors.noticeBackground
@@ -43,21 +45,38 @@ Rectangle {
     border.width: 1
     radius: Units.gu(0.6)
 
-    Label {
-        id: noticeLabel
+    Column {
+        id: words
 
         anchors.left: parent.left
         anchors.right: closeButton.left
         anchors.margins: Units.gu(1.5)
         anchors.verticalCenter: parent.verticalCenter
 
-        wrapMode: Text.WordWrap
-        color: Colors.noticeText
-        font.pixelSize: FontUtils.sizeToPixels("small")
+        Label {
+            id: titleLabel
+            objectName: "noticeTitle"
+
+            width: parent.width
+            visible: text !== ""
+            wrapMode: Text.WordWrap
+            color: Colors.noticeText
+            font.bold: true
+            font.pixelSize: FontUtils.sizeToPixels("small")
+        }
+        Label {
+            id: noticeLabel
+
+            width: parent.width
+            wrapMode: Text.WordWrap
+            color: Colors.noticeText
+            font.pixelSize: FontUtils.sizeToPixels("small")
+        }
     }
 
     Button {
         id: closeButton
+        objectName: "noticeCloseButton"
 
         anchors.right: parent.right
         anchors.rightMargin: Units.gu(1)

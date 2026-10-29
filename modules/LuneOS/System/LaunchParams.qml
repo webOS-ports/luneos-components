@@ -53,6 +53,11 @@ QtObject {
     // Any other palm-command, by name
     signal command(string name, var params)
 
+    // For tests on a device: a launch with {"snapshot": "<absolute .png
+    // path>"} saves a picture of this item there, as the app draws it.
+    property var snapshotItem: null
+    signal snapshotSaved(string path)
+
     property var _params: ({})
 
     function _handleText(text) {
@@ -91,6 +96,16 @@ QtObject {
             return;
         _params = params;
         launched(params);
+
+        if (snapshotItem && typeof params.snapshot === "string" && params.snapshot.charAt(0) === "/") {
+            var path = params.snapshot;
+            snapshotItem.grabToImage(function(result) {
+                if (result.saveToFile(path))
+                    launch.snapshotSaved(path);
+                else
+                    console.warn("LaunchParams: could not save the snapshot to " + path);
+            });
+        }
 
         var name = commandOf(params);
         if (name === "open-app-menu")

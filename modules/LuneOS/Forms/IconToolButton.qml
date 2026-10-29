@@ -29,6 +29,11 @@ import LuneOS.Components 1.0
  *   // qml/components/IconButton.qml
  *   Forms.IconToolButton { imageFolder: Qt.resolvedUrl("../images/") }
  *
+ * An app that ships PNGs drawn from its SVGs ahead (1x/, 2x/ and 3x/ sets in
+ * imageFolder, see ArtworkScale) sets imageFormat: "png". With
+ * imageHasPressed the picture has a "<image>-pressed" state, shown while the
+ * key is held or checked - webOS's glow - and the key itself is not lit.
+ *
  * How it is drawn, by appearance:
  *   "toolbar"  on the legacy dark toolbar: a darker key while held or checked
  *   "plain"    on the light header: nothing behind it but a shade while held
@@ -37,10 +42,16 @@ import LuneOS.Components 1.0
 ToolButton {
     id: button
 
-    property url source: image !== "" && imageFolder.toString() !== ""
-                         ? imageFolder.toString() + image + ".svg" : ""
+    property url source: image === "" || imageFolder.toString() === "" ? ""
+                         : imageFormat === "png" ? ArtworkScale.url(imageFolder, _shownImage, Units.gridUnit)
+                         : imageFolder.toString() + _shownImage + ".svg"
     property url imageFolder
     property string image
+    // "svg", or "png" for the 1x/, 2x/ and 3x/ sets of ArtworkScale
+    property string imageFormat: "svg"
+    // The picture has a "<image>-pressed" state, for held or checked
+    property bool imageHasPressed: false
+    readonly property string _shownImage: image + (imageHasPressed && (pressed || checked) ? "-pressed" : "")
     // Shown when there is no picture.
     property string label
     property color labelColor: "white"
@@ -59,8 +70,18 @@ ToolButton {
             anchors.centerIn: parent
             width: button.iconSize
             height: button.iconSize
-            visible: button.source.toString() !== ""
-            svg: button.source
+            visible: button.source.toString() !== "" && button.imageFormat !== "png"
+            svg: visible ? button.source : ""
+            opacity: button.enabled ? 1.0 : 0.35
+        }
+        Image {
+            objectName: "iconButtonImage"
+            anchors.centerIn: parent
+            width: button.iconSize
+            height: button.iconSize
+            visible: button.source.toString() !== "" && button.imageFormat === "png"
+            source: visible ? button.source : ""
+            sourceSize: Qt.size(Math.ceil(width), Math.ceil(height))
             opacity: button.enabled ? 1.0 : 0.35
         }
         Text {
@@ -75,11 +96,13 @@ ToolButton {
     }
 
     background: Rectangle {
-        readonly property bool lit: button.pressed || button.checked
+        // A picture with its own pressed state is the key's light
+        readonly property bool held: button.pressed && !button.imageHasPressed
+        readonly property bool lit: held || (button.checked && !button.imageHasPressed)
         radius: Units.gu(0.6)
-        visible: button.appearance !== "plain" || button.pressed
+        visible: button.appearance !== "plain" || held
         color: button.appearance === "plain" ? "#30000000"
-             : button.appearance === "overlay" ? (button.pressed ? "#55ffffff" : button.checked ? "#33ffffff" : "transparent")
+             : button.appearance === "overlay" ? (held ? "#55ffffff" : lit ? "#33ffffff" : "transparent")
              : lit ? "#1d1d1d" : "transparent"
         border.color: button.appearance === "toolbar" && lit ? "#0c0c0c" : "transparent"
     }

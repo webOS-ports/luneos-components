@@ -12,9 +12,11 @@ uri = LuneOS.System
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 
 QML_FILES = AppLauncher.qml \
+            KeepScreenOn.qml \
             LaunchParams.qml \
             ServiceStatus.qml \
-            SystemPreferences.qml
+            SystemPreferences.qml \
+            WindowFullScreen.qml
 
 JS_FILES = Services.js
 
