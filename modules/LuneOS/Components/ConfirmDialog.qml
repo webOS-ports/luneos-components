@@ -41,6 +41,48 @@ Dialog {
     signal accepted();
     signal rejected();
 
+    // What ask() was given to run, until the dialog is answered
+    property bool _asked: false
+    property var _onAccepted: null
+    property var _onRejected: null
+
+    /*
+     * Opens the dialog and runs what the answer is for, in one call:
+     *
+     *   confirm.ask({ title: "Delete Album", message: "Are you sure...?",
+     *                 acceptText: "Delete", destructive: true,
+     *                 onAccepted: function() { ... } });
+     *
+     * What is left out is reset: no title or message, "OK" and "Cancel",
+     * not destructive. A rejectText of "" makes it a notice with one
+     * button. The dialog is closed before the function runs, so that may
+     * ask() again.
+     */
+    function ask(options) {
+        var o = options || {};
+        title = o.title !== undefined ? o.title : "";
+        message = o.message !== undefined ? o.message : "";
+        acceptText = o.acceptText !== undefined ? o.acceptText : "OK";
+        rejectText = o.rejectText !== undefined ? o.rejectText : "Cancel";
+        destructive = o.destructive === true;
+        _onAccepted = typeof o.onAccepted === "function" ? o.onAccepted : null;
+        _onRejected = typeof o.onRejected === "function" ? o.onRejected : null;
+        _asked = true;
+        open();
+    }
+
+    function _answer(run) {
+        _asked = false;
+        _onAccepted = null;
+        _onRejected = null;
+        close();
+        if (run)
+            run();
+    }
+
+    onAccepted: if (_asked) _answer(_onAccepted)
+    onRejected: if (_asked) _answer(_onRejected)
+
     Row {
         DialogButton {
             objectName: "confirmAcceptButton"
@@ -52,7 +94,9 @@ Dialog {
             onClicked: confirmDialog.accepted();
         }
     }
+    // Not there for a notice (rejectText "")
     Row {
+        visible: confirmDialog.rejectText !== ""
         DialogButton {
             objectName: "confirmRejectButton"
             text: confirmDialog.rejectText
