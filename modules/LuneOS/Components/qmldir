@@ -29,6 +29,7 @@ SectionDivider 1.0 SectionDivider.qml
 SelectionHandle 1.0 SelectionHandle.qml
 Toast 1.0 Toast.qml
 Tweak 1.0 Tweak.qml
+UsbDebuggingPrompt 1.0 UsbDebuggingPrompt.qml
 UserAgent 1.0 UserAgent.qml
 ZoomableImage 1.0 ZoomableImage.qml
 AppFiles 1.0 js/AppFiles.js

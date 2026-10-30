@@ -33,6 +33,7 @@ QML_FILES = ActionSheet.qml \
             SpriteIcon.qml \
             Toast.qml \
             Tweak.qml \
+            UsbDebuggingPrompt.qml \
             UserAgent.qml \
             ZoomableImage.qml
 
