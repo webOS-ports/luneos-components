@@ -1,0 +1,3 @@
+module org.kde.bluezqt
+singleton Manager 1.0 Manager.qml
+FakePendingCall 1.0 FakePendingCall.qml

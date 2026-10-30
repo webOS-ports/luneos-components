@@ -25,6 +25,8 @@ import Connman 0.2
 // LuneOS Bluetooth wrapper
 import org.kde.bluezqt 1.0 as BluezQt
 
+import "BluetoothPolicy.js" as Policy
+
 Item {
     id: root
 
@@ -38,9 +40,19 @@ Item {
     // drops it as the usable adapter anyway.
     readonly property bool bluetoothOperational: btManager.operational && btManager.usableAdapter !== null
     readonly property bool initializing: powered && !bluetoothOperational
+    // Set while a device list is on screen. Discovery then runs for
+    // discoveryTimeoutMs and stops; searchAgain() runs another.
     property bool discoveringMode: false
+    property int discoveryTimeoutMs: Policy.discoveryTimeoutMs
+    // The adapter is searching right now - for a "Searching..." indicator.
+    readonly property bool discovering: bluetoothOperational && btManager.usableAdapter.discovering === true
     readonly property bool discoverable: bluetoothOperational && btManager.usableAdapter.discoverable
-    readonly property bool connected: bluetoothOperational && btManager.usableAdapter.connected /*remark: connected is specific to Mer's version*/
+    // BluezQt's Adapter has no "connected" (Mer's had); undefined is false.
+    readonly property bool connected: bluetoothOperational && btManager.usableAdapter.connected === true
+
+    // This search has run its time; cleared by searchAgain() and by
+    // discoveringMode being set again.
+    property bool _discoveryTimedOut: false
 
     property QtObject btManager: BluezQt.Manager
     property QtObject connectingDevice;
@@ -53,6 +65,8 @@ Item {
             pendingCall = device.connectToDevice();
             pendingCall.finished.connect(function(call) {
                 connectingDevice = null;
+                if (call.error === 0)
+                    _trustIfPaired(device);
             });
         }
 
@@ -72,6 +86,7 @@ Item {
                     device.onPairedChanged.connect(function() {
                         if(connectingDevice === device && device.paired) {
                             console.log("Pairing has succeeded, connecting now...");
+                            _trustIfPaired(device);
                             __doConnect(device);
                         }
                     });
@@ -102,6 +117,44 @@ Item {
         return pendingCall;
     }
 
+    // The user picked this device and it is paired: let it connect back
+    // (a headset switched on again) without the agent being asked.
+    function _trustIfPaired(device)
+    {
+        if (Policy.shouldTrust(device)) {
+            console.log("Marking", device.address, "trusted.");
+            device.trusted = true;
+        }
+    }
+
+    // Start a new search, for the "Search again" button.
+    function searchAgain()
+    {
+        _discoveryTimedOut = false;
+        discoveringMode = true;
+        if (discovering)
+            discoveryTimer.restart();
+        _updateDiscovery();
+    }
+
+    function _updateDiscovery()
+    {
+        var adapter = btManager ? btManager.usableAdapter : null;
+        var action = Policy.discoveryAction(discoveringMode, !!adapter,
+                                            !!adapter && adapter.discovering === true,
+                                            _discoveryTimedOut);
+        if (action === "start") {
+            console.log("Starting bluetooth discovery.");
+            adapter.startDiscovery();
+            discoveryTimer.restart();
+        }
+        else if (action === "stop") {
+            console.log("Stopping bluetooth discovery.");
+            adapter.stopDiscovery();
+            discoveryTimer.stop();
+        }
+    }
+
     function setDiscoverable(isDiscoverable)
     {
         if(btManager && btManager.usableAdapter) {
@@ -114,30 +167,28 @@ Item {
         name: "bluetooth"
     }
 
+    Timer {
+        id: discoveryTimer
+        interval: root.discoveryTimeoutMs
+        onTriggered: {
+            root._discoveryTimedOut = true;
+            root._updateDiscovery();
+        }
+    }
+
     /* Bindings to keep the discovering mode updated */
     Connections {
         target: btManager
         function onUsableAdapterChanged() {
-            if(btManager.usableAdapter && root.discoveringMode)
-                btManager.usableAdapter.startDiscovery();
+            root._updateDiscovery();
         }
     }
     onDiscoveringModeChanged: {
-        if(btManager.usableAdapter && root.discoveringMode && !btManager.usableAdapter.discovering) {
-            console.log("Starting bluetooth discovery.");
-            btManager.usableAdapter.startDiscovery();
-        }
-        else if(btManager.usableAdapter && !root.discoveringMode && btManager.usableAdapter.discovering) {
-            console.log("Stopping bluetooth discovery.");
-            btManager.usableAdapter.stopDiscovery();
-        }
+        if (discoveringMode)
+            _discoveryTimedOut = false;
+        _updateDiscovery();
     }
-    Component.onCompleted: {
-        if(btManager.usableAdapter && root.discoveringMode && !btManager.usableAdapter.discovering) {
-            console.log("Starting bluetooth discovery.");
-            btManager.usableAdapter.startDiscovery();
-        }
-    }
+    Component.onCompleted: _updateDiscovery()
     Component.onDestruction: {
         if(btManager.usableAdapter && btManager.usableAdapter.discovering) {
             console.log("Stopping bluetooth discovery.");
