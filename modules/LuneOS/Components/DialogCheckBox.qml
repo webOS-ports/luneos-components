@@ -32,6 +32,8 @@ Item {
     property alias text: label.text
     /// Set by the caller when the label has to wrap inside a known width.
     property real labelWidth: label.implicitWidth
+    /// The label's size, 12pt unless set.
+    property alias labelPixelSize: label.font.pixelSize
 
     implicitWidth: box.width + row.spacing + label.width
     implicitHeight: Math.max(box.height, label.implicitHeight)
