@@ -30,7 +30,7 @@ Item {
     x: 0
     y: 0
     width: parent ? parent.width : 0
-    height: !parent ? 0 : keepClearOfKeyboard ? Math.max(shownHeight, parent.height - keyboard.height)
+    height: !parent ? 0 : keepClearOfKeyboard ? Math.max(frameHeight, parent.height - keyboard.height)
                                              : parent.height
     z: 1000
 
@@ -60,6 +60,10 @@ Item {
     readonly property bool compact: keepClearOfKeyboard && !!parent
                                     && parent.height - keyboard.height < dialogHeight
     readonly property real shownHeight: compact && compactDialogHeight > 0 ? compactDialogHeight : dialogHeight
+    // The frame as drawn: as tall as asked, and never shorter than what is
+    // in it, so a guessed dialogHeight (or the wider inset below) cannot
+    // put the buttons over the message.
+    readonly property real frameHeight: Math.max(shownHeight, fittedHeight)
     readonly property real keyboardHeight: keepClearOfKeyboard ? keyboard.height : 0
     // For tests, which have no keyboard: one this tall, when not negative.
     property alias keyboardHeightForTest: keyboard.heightForTest
@@ -68,11 +72,25 @@ Item {
     // inside the frame: a dialog whose contents vary sets dialogHeight to
     // this rather than a guess that the buttons, stacked against the foot,
     // then grow over the title.
-    readonly property real fittedHeight: Units.gu(1.6) * 2
+    readonly property real fittedHeight: contentInset * 2
         + (titleText.text.length > 0 ? titleText.height : 0)
         + (messageText.text.length > 0 ? Units.gu(1) + messageText.height : 0)
         + Units.gu(1) + dynamicColumn.height + Units.gu(1)
     readonly property bool opened: visible
+
+    /*
+     * Where the content sits inside the frame, as legacy webOS had it. The
+     * frame is Enyo 1.0's Onyx images/dialog.png (120 x 123, cut into the
+     * nine images/dialog-*.png at 0.1 gu a pixel), whose outer 10 px are
+     * drop shadow. Enyo's ModalDialog (themes/Onyx/css/ModalDialog.css)
+     * draws it with border-width 42px 24px 24px and pulls its container
+     * back out by margin -22px -4px -4px: content 20 px inside the image
+     * on every side, 10 px clear of the frame's visible edge. 20 px is
+     * 2 gu here. It was 1.6 gu, which left text 0.6 gu from that edge.
+     */
+    readonly property real contentInset: Units.gu(2.0)
+    // How wide the title, the message and the dialog's own contents can be.
+    readonly property real contentWidth: dialogWidth - 2 * contentInset
     signal aboutToShow()
     signal closed()
 
@@ -125,7 +143,7 @@ Item {
     Rectangle {
             id: dialogWindow
             color: "transparent"
-            height: dialog.shownHeight
+            height: dialog.frameHeight
             smooth: true
             radius: 10
 
@@ -218,7 +236,7 @@ Item {
             Item {
             id: staticContent
             anchors.fill: parent
-            anchors.margins: Units.gu(1.6)
+            anchors.margins: dialog.contentInset
 
             Text {
                 id: titleText
