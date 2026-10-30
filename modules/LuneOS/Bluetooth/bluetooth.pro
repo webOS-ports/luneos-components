@@ -3,7 +3,7 @@ TEMPLATE = subdirs
 uri = LuneOS.Bluetooth
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 
-QML_FILES = *.qml
+QML_FILES = *.qml *.js
 
 QMLDIR_FILE = qmldir
 

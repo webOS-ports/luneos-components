@@ -30,6 +30,7 @@ Item {
     readonly property bool bluetoothOperational: btManager.bluetoothOperational
     readonly property bool initializing: powered && !bluetoothOperational
     property bool discoveringMode: false
+    readonly property bool discovering: btManager.usableAdapter.discovering
     readonly property bool discoverable: bluetoothOperational && btManager.usableAdapter.discoverable
     readonly property bool connected: bluetoothOperational && btManager.usableAdapter.connected /*remark: connected is specific to Mer's version*/
 
@@ -73,6 +74,12 @@ Item {
     {
         // disconnect
         // unpair
+    }
+
+    function searchAgain()
+    {
+        discoveringMode = true;
+        btManager.usableAdapter.startDiscovery();
     }
 
     function setDiscoverable(isDiscoverable)
