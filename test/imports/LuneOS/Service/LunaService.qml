@@ -253,7 +253,7 @@ QtObject {
             if (returnFct)
                 returnFct({payload: JSON.stringify(DevMode.setStatus(args))});
         }
-        else if(/^luna:\/\/org\.webosports\.service\.devmode\/(respondAdbAuth|setDevPassword|addAuthorizedKey|removeAuthorizedKey|listAuthorizedKeys|sshOverWifi|revokeAdbKeys|getAccessStatus)$/.test(serviceURI)) {
+        else if(/^luna:\/\/org\.webosports\.service\.devmode\/(respondAdbAuth|setDevPassword|clearDevPassword|addAuthorizedKey|removeAuthorizedKey|listAuthorizedKeys|sshOverWifi|revokeAdbKeys|getAccessStatus)$/.test(serviceURI)) {
             var devmodeReply = DevMode[serviceURI.split("/").pop()](args, name);
             if (returnFct)
                 returnFct({payload: JSON.stringify(devmodeReply)});

@@ -49,7 +49,7 @@ function setStatus(args) {
 
 /*
  * USB debugging's "Allow this computer?" and Developer Options' ssh access
- * (adbAuthRequests, respondAdbAuth, setDevPassword, the authorized keys,
+ * (adbAuthRequests, respondAdbAuth, set/clearDevPassword, the authorized keys,
  * sshOverWifi). A test puts a question with ask() and reads the answers the
  * shell gave in responses. The password itself is never kept, as the real
  * service never logs it: only that one was set.
@@ -129,6 +129,15 @@ function setDevPassword(args) {
     return { "returnValue": true };
 }
 
+// Taking it away again (root back to "*"); as the service, with developer
+// mode off too.
+var passwordClears = 0;
+function clearDevPassword() {
+    passwordClears++;
+    passwordSet = false;
+    return { "returnValue": true };
+}
+
 // Not ssh-keygen's: the tests only need one that stays the same for a key.
 function _fingerprint(b64) {
     return "SHA256:" + b64.slice(-16);
@@ -186,6 +195,7 @@ function resetAccess() {
     responses = [];
     passwordSet = false;
     passwordCalls = 0;
+    passwordClears = 0;
     authorizedKeys = [];
     sshWifi = false;
     revoked = 0;
