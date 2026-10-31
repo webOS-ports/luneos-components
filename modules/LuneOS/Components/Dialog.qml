@@ -41,8 +41,10 @@ Item {
     property alias message: messageText.text
     property real dialogHeight: Units.gu(15.0)
     property alias dialogWidth: dialogWindow.width
-    // The title's size (16 pixels unless set) and how the message lines up.
+    // The title's size (16 pixels unless set), the message's (12pt unless
+    // set) and how the message lines up.
     property alias titlePixelSize: titleText.font.pixelSize
+    property alias messagePixelSize: messageText.font.pixelSize
     property alias messageAlignment: messageText.horizontalAlignment
 
     /*
