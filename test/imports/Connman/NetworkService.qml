@@ -81,13 +81,22 @@ Item {
     signal serviceConnectionStarted();
     signal serviceDisconnectionStarted();
     signal propertiesReady();
+    // Connect answered with an error: the D-Bus error's message; its name
+    // is in lastConnectError, which the real type leaves empty for
+    // net.connman.Error.InProgress.
+    signal connectRequestFailed(string error);
 
     /// slots
     function requestConnect() {
         networkService.connecting = true;
         connectionTimer.start();
+        serviceConnectionStarted();
     }
     function requestDisconnect() {
+        connectionTimer.stop();
+        networkService.connecting = false;
+        networkService.connected = false;
+        serviceDisconnectionStarted();
     }
     function remove() {
     }
