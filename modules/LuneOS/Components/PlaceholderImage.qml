@@ -35,7 +35,7 @@ Item {
     property color backgroundColor: "#2b2b2b"
     // Fill the tile, cut to it; else fit inside it
     property bool crop: true
-    property real aspectRatio: picture.implicitHeight>0 ? picture.implicitWidth/picture.implicitHeight : 1
+    property real aspectRatio: 1.0
     readonly property alias status: picture.status
     signal broken()
 
@@ -64,5 +64,8 @@ Item {
         clip: true
         sourceSize: Qt.size(Math.ceil(width), Math.ceil(height))
         onStatusChanged: if (status === Image.Error) holder.broken()
+        onImplicitHeightChanged: if(implicitHeight>0 && implicitWidth>0
+                                     && holder.aspectRatio === 1.0
+                                     && picture.status === Image.Ready) holder.aspectRatio = implicitWidth/implicitHeight
     }
 }
