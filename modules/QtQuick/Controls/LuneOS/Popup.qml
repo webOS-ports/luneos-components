@@ -38,6 +38,7 @@ import QtQuick 2.12
 import QtQuick.Templates 2.4 as T
 
 import LunaNext.Common 0.1
+import LuneOS.Components 1.0 as LC
 
 T.Popup {
     id: control
@@ -52,8 +53,20 @@ T.Popup {
 
     // Centred, since that is where every one of them was put by hand. A popup
     // anchored to something - a menu under a button - sets its own x and y.
+    //
+    // While the on-screen keyboard is up it is centred in the part of the
+    // window above the keys instead, so a field and the buttons under it
+    // stay in sight while typing; centred on the whole window, anything
+    // taller than a line or two had its buttons behind the keyboard on a
+    // phone. One taller than that part keeps its top on screen.
+    // keyboardTop is where the keys start (the window's height with none
+    // up), for a popup that caps its own height.
     x: parent ? (parent.width - width) / 2 : 0
-    y: parent ? (parent.height - height) / 2 : 0
+    y: !parent ? 0
+               : _keyboard.height > 0 ? Math.max(0, (keyboardTop - height) / 2)
+                                      : (parent.height - height) / 2
+    readonly property real keyboardTop: _keyboard.top
+    property LC.KeyboardInset _keyboard: LC.KeyboardInset { item: control.parent }
     // No size cap here: squeezing a popup whose content does not scroll only
     // pushes its buttons out of the box (First Use's feed warning on a
     // 720x720 screen). A popup that can be taller than the screen caps
