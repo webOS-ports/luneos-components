@@ -10,7 +10,8 @@ gtest, for the parts that need no camera:
   a forward transform built independently with `QTransform`, for every turn,
   mirroring, zoom and window shape.
 - `test_barcodedecoder.cpp`: luminance extraction from planar, packed and
-  padded frames, including the bounds it refuses, and zbar decoding. The
+  padded frames, including the bounds it refuses (a stride too short for the
+  row, a plane too short for the rows), and zbar decoding. The
   barcodes are EAN-13s drawn from the GS1 definition in the test itself, so
   no binary fixtures are needed.
 - `test_barcodescanner.cpp`: the scanner around it, with real `QVideoFrame`s

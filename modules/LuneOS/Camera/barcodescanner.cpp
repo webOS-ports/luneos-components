@@ -114,8 +114,8 @@ static BarcodeDecoder::LumaImage lumaOf(const QVideoFrame &source)
         case QVideoFrameFormat::Format_P016: pixelStride = 2; offset = 1; break;
         default: break;
         }
-        LumaImage image = extractLuma(frame.bits(0), w, h, frame.bytesPerLine(0),
-                                      pixelStride, offset, step);
+        LumaImage image = extractLuma(frame.bits(0), frame.mappedBytes(0), w, h,
+                                      frame.bytesPerLine(0), pixelStride, offset, step);
         frame.unmap();
         return image;
     }
@@ -126,7 +126,7 @@ static BarcodeDecoder::LumaImage lumaOf(const QVideoFrame &source)
             return LumaImage();
         if (step > 1)
             grey = grey.scaled(grey.width() / step, grey.height() / step);
-        return extractLuma(grey.constBits(), grey.width(), grey.height(),
+        return extractLuma(grey.constBits(), grey.sizeInBytes(), grey.width(), grey.height(),
                            int(grey.bytesPerLine()));
     }
     }

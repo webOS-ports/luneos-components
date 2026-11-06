@@ -25,8 +25,8 @@ namespace BarcodeDecoder {
 // zbar.h puts its C API in namespace zbar when compiled as C++.
 using namespace zbar;
 
-LumaImage extractLuma(const uchar *plane, int width, int height, int bytesPerLine,
-                      int pixelStride, int offset, int step)
+LumaImage extractLuma(const uchar *plane, qsizetype planeSize, int width, int height,
+                      int bytesPerLine, int pixelStride, int offset, int step)
 {
     LumaImage image;
     if (!plane || width <= 0 || height <= 0 || pixelStride <= 0 || offset < 0
@@ -34,6 +34,10 @@ LumaImage extractLuma(const uchar *plane, int width, int height, int bytesPerLin
         return image;
     // The last sample of a row must lie inside the row.
     if (qint64(width - 1) * pixelStride + offset >= bytesPerLine)
+        return image;
+    // And the last row inside the plane: a mapped frame can be shorter than
+    // its height says (a driver's short buffer), and was read past its end.
+    if (qint64(height - 1) * bytesPerLine + qint64(width - 1) * pixelStride + offset >= planeSize)
         return image;
 
     const int outWidth = (width + step - 1) / step;
