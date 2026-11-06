@@ -25,21 +25,39 @@
 
 using namespace BluezQt;
 
+/*
+ * One request of BlueZ's to the agent, as QML answers it. It is answered
+ * once: what comes after the first accept, reject or cancel is ignored. One
+ * that goes unanswered (the agent replaces it with the next request of its
+ * kind, or the agent goes) is cancelled when it is deleted, so BlueZ is not
+ * left waiting for its D-Bus timeout.
+ */
 class LuneOSBluetoothRequest : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(bool answered READ answered NOTIFY answeredChanged)
 
 public:
     explicit LuneOSBluetoothRequest(const Request<> &request, QObject *parent = nullptr);
     explicit LuneOSBluetoothRequest(const Request<QString> &request, QObject *parent = nullptr);
     explicit LuneOSBluetoothRequest(const Request<quint32> &request, QObject *parent = nullptr);
+    ~LuneOSBluetoothRequest() override;
+
+    bool answered() const;
 
 public Q_SLOTS:
-    void accept(QVariant returnValue = QVariant()) const;
-    void reject() const;
-    void cancel() const;
+    void accept(const QVariant &returnValue = QVariant());
+    void reject();
+    void cancel();
+
+Q_SIGNALS:
+    void answeredChanged();
 
 private:
+    bool markAnswered();
+
+    bool mAnswered = false;
+
     enum RequestType {
         Void,
         String,

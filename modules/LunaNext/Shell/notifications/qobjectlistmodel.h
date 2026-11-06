@@ -29,12 +29,14 @@ class QObjectListModel : public QAbstractListModel
 
 public:
     explicit QObjectListModel(QObject *parent = 0, QList<QObject*> *list = new QList<QObject*>());
+    // The list is the model's, as setList() deletes the one it replaces.
+    ~QObjectListModel() override;
     QHash<int, QByteArray> roleNames() const override;
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int itemCount() const;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const;
-    QVariant data(const QModelIndex &index, int role) const;
-    bool setData(const QModelIndex &index, const QVariant &value, int role);
+    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
     Q_INVOKABLE void move(int oldRow, int newRow);
 
     void insertItem(int index, QObject *item);

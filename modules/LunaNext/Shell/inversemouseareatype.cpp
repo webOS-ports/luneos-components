@@ -229,7 +229,8 @@ InverseMouseAreaType::InverseMouseAreaType(QQuickItem *parent) :
     QQuickMouseArea(parent),
     m_ready(false),
     m_topmostItem(false),
-    m_sensingArea(QuickUtils::instance().rootItem(this))
+    m_sensingArea(QuickUtils::instance().rootItem(this)),
+    m_touchId(-1)
 {
     /*
      * QQuickMouseArea overrides enabledChanged() signal, therefore we must make sure
@@ -248,6 +249,13 @@ InverseMouseAreaType::InverseMouseAreaType(QQuickItem *parent) :
 
 InverseMouseAreaType::~InverseMouseAreaType()
 {
+    // ~QQuickItem, which runs after this, takes the item out of its window
+    // and emits windowChanged (and may emit visibleChanged): the slots must
+    // not run on what is left of it.
+    disconnect(this, &QQuickMouseArea::enabledChanged, this, &InverseMouseAreaType::update);
+    disconnect(this, &QQuickMouseArea::visibleChanged, this, &InverseMouseAreaType::update);
+    disconnect(this, &QQuickMouseArea::windowChanged, this, &InverseMouseAreaType::resetFilterOnWindowUpdate);
+    updateEventFilter(false);
 }
 
 void InverseMouseAreaType::updateEventFilter(bool enable)
@@ -377,9 +385,26 @@ QEvent *InverseMouseAreaType::mapEventToArea(QObject *target, QEvent *event, QPo
             return hev;
         }
         } break;
-    // convert touch events into mouse events and continue handling as such
+    // convert touch events into mouse events and continue handling as such;
+    // the touch points are mapped through the item that got them
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+        if (!targetItem || static_cast<QTouchEvent*>(event)->points().isEmpty())
+            break;
+        return mapTouchEventToArea(targetItem, static_cast<QTouchEvent*>(event), point);
+    default:
+        break;
+    }
+    m_filteredEvent = false;
+    point = QPoint();
+    return event;
+}
+
+QEvent *InverseMouseAreaType::mapTouchEventToArea(QQuickItem *targetItem, QTouchEvent *tev, QPoint &point)
+{
+    switch (tev->type()) {
     case QEvent::TouchBegin: {
-        QTouchEvent *tev = static_cast<QTouchEvent*>(event);
         QList<QTouchEvent::TouchPoint> points = tev->touchPoints();
         const QTouchEvent::TouchPoint &primaryPoint = points.first();
         m_touchId = primaryPoint.id();
@@ -393,7 +418,6 @@ QEvent *InverseMouseAreaType::mapEventToArea(QObject *target, QEvent *event, QPo
         return mev;
         } break;
     case QEvent::TouchUpdate: {
-        QTouchEvent *tev = static_cast<QTouchEvent*>(event);
         QList<QTouchEvent::TouchPoint> points = tev->touchPoints();
         const QTouchEvent::TouchPoint &primaryPoint = points.first();
         QPointF pos = targetItem->mapToScene(primaryPoint.pos());
@@ -407,30 +431,34 @@ QEvent *InverseMouseAreaType::mapEventToArea(QObject *target, QEvent *event, QPo
         } break;
     case QEvent::TouchEnd: {
         QMouseEvent *mev = 0;
-        QTouchEvent *tev = static_cast<QTouchEvent*>(event);
         QList<QTouchEvent::TouchPoint> points = tev->touchPoints();
         for (int i = 0; i < points.count(); i++) {
-            const QTouchEvent::TouchPoint &point = points.at(i);
-            if (point.id() != m_touchId) {
+            const QTouchEvent::TouchPoint &touchPoint = points.at(i);
+            if (touchPoint.id() != m_touchId) {
                 continue;
             }
-            QPointF pos = targetItem->mapToScene(point.pos());
+            QPointF pos = targetItem->mapToScene(touchPoint.position());
             mev = new QMouseEvent(QEvent::MouseButtonRelease,
                             mapFromScene(pos),
-                            point.scenePos(),
-                            point.screenPos(),
+                            touchPoint.scenePosition(),
+                            touchPoint.globalPosition(),
                             Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
             break;
         }
+        // A touch that ends without the one that began here (it began
+        // before the filter was set, or another finger lifts) has no
+        // release to map: it passes as it is.
+        if (!mev)
+            break;
         point = mev->pos();
         return mev;
         } break;
     default:
-        m_filteredEvent = false;
-        point = QPoint();
         break;
     }
-    return event;
+    m_filteredEvent = false;
+    point = QPoint();
+    return tev;
 }
 
 bool InverseMouseAreaType::eventFilter(QObject *object, QEvent *event)
@@ -565,6 +593,14 @@ bool InverseMouseAreaType::contains(const QPointF &point) const
     QRectF oskRect = QGuiApplication::inputMethod()->keyboardRectangle();
     bool pointInArea = QQuickMouseArea::contains(point);
     bool pointInOSK = oskRect.contains(scenePos);
-    bool pointOutArea = (m_sensingArea && m_sensingArea->contains(m_sensingArea->mapFromScene(scenePos)));
+    bool pointOutArea;
+    if (m_sensingArea == this) {
+        // The area was the first item of its window, which QuickUtils then
+        // gives as the root: asking it would ask this again, without end.
+        // It senses the whole window instead.
+        pointOutArea = window() && QRectF(0, 0, window()->width(), window()->height()).contains(scenePos);
+    } else {
+        pointOutArea = (m_sensingArea && m_sensingArea->contains(m_sensingArea->mapFromScene(scenePos)));
+    }
     return !pointInArea && !pointInOSK && pointOutArea;
 }

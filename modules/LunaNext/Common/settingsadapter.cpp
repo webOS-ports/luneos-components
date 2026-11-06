@@ -92,25 +92,29 @@ bool SettingsAdapter::displayFps() const
  * a malformed adaptation should degrade to "no cutouts" rather than to a
  * rectangle nobody can explain.
  *
- * A field that is not an integer, or a rect with anything other than four
+ * A rect with a field that is not an integer, or with anything other than four
  * fields, is dropped with a warning: one bad entry in a hand-written deviceinfo
  * must not take the rest of the list with it, and a silently empty rect at
- * 0,0,0,0 would be indistinguishable from a corner cutout of no width.
+ * 0,0,0,0 would be indistinguishable from a corner cutout of no width. Leaving
+ * out only the bad field would not do: "1 2 x 3 4" would be four numbers, and
+ * the wrong rect.
  *
  * The separator is an argument because both levels of the cutout syntax are the
  * same job: the list of rectangles is split on ';' and each rectangle on ' '.
  */
-static QList<int> parseIntList(const QString &raw, QChar separator, const char *what)
+static QList<int> parseIntList(const QString &raw, QChar separator, const char *what, bool *allParsed)
 {
 	QList<int> out;
+	*allParsed = true;
 
 	const QStringList fields = raw.split(separator, Qt::SkipEmptyParts);
 	for (const QString &field : fields) {
 		bool ok = false;
 		const int v = field.trimmed().toInt(&ok);
 		if (!ok) {
-			qWarning("SettingsAdapter: %s: '%s' is not a number, ignoring it",
+			qWarning("SettingsAdapter: %s: '%s' is not a number",
 			         what, qUtf8Printable(field));
+			*allParsed = false;
 			continue;
 		}
 		out.append(v);
@@ -137,11 +141,12 @@ QVariantList SettingsAdapter::displayCutouts() const
 	const QStringList rects = raw.split(QLatin1Char(';'), Qt::SkipEmptyParts);
 
 	for (const QString &rect : rects) {
-		const QList<int> f = parseIntList(rect.simplified(), QLatin1Char(' '), "cutout");
+		bool allParsed = false;
+		const QList<int> f = parseIntList(rect.simplified(), QLatin1Char(' '), "cutout", &allParsed);
 
 		// Covers both a rect with the wrong number of fields and one whose
 		// fields did not all parse - parseIntList has already said which.
-		if (f.count() != 4) {
+		if (!allParsed || f.count() != 4) {
 			qWarning("SettingsAdapter: cutout '%s' is not four numbers \"x y w h\", ignoring it",
 			         qUtf8Printable(rect));
 			continue;
@@ -171,14 +176,22 @@ QVariantList SettingsAdapter::displayCutouts() const
  *   CornerRadii="10;20;30;40"  ->  [ 10, 20, 30, 40 ]
  *
  * a plain list of ints, so a consumer writes cornerRadii[0] for the top-left.
- * Empty when the key is absent, or when it holds neither one value nor four.
+ * Empty when the key is absent, when it holds neither one value nor four, or
+ * when one of them is not a number (which one was meant cannot be known).
  */
 QVariantList SettingsAdapter::displayCornerRadii() const
 {
 	QVariantList out;
 
 	const QString raw = QString::fromStdString(Settings::LunaSettings()->displayCornerRadii);
-	QList<int> radii = parseIntList(raw, QLatin1Char(';'), "corner radius");
+	bool allParsed = false;
+	QList<int> radii = parseIntList(raw, QLatin1Char(';'), "corner radius", &allParsed);
+
+	if (!allParsed) {
+		qWarning("SettingsAdapter: CornerRadii '%s' is not all numbers, ignoring them",
+		         qUtf8Printable(raw));
+		return out;
+	}
 
 	if (radii.count() == 1)
 		radii = QList<int>() << radii.at(0) << radii.at(0) << radii.at(0) << radii.at(0);

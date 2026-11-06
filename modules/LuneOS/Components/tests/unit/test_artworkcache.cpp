@@ -167,7 +167,26 @@ TEST_F(ArtworkCacheTest, NamesThatAreNotPlainAreMadePlain)
     ASSERT_FALSE(cache.image(odd, QSize(40, 20)).isNull());
     const QString kept = QFileInfo(cache.cachePath(odd, QSize(40, 20))).fileName();
     EXPECT_TRUE(QFileInfo::exists(cache.cachePath(odd, QSize(40, 20))));
-    EXPECT_TRUE(kept.startsWith(QStringLiteral("we_rd_name_1-40x20-"))) << qPrintable(kept);
+    EXPECT_TRUE(kept.startsWith(QStringLiteral("we_rd_name_1."))) << qPrintable(kept);
+}
+
+TEST_F(ArtworkCacheTest, NamesMadeAlikeKeepTheirOwnFiles)
+{
+    // "a b" is made "a_b", and the first 64 characters of the long names
+    // are the same: each picture, drawn, removed the other's file.
+    const QString spaced = writeSvg(images, QStringLiteral("a b.svg"), twoHalves);
+    const QString plain = writeSvg(images, QStringLiteral("a_b.svg"), allRed);
+    const QString longA = writeSvg(images, QString(70, QLatin1Char('x')) + QStringLiteral("A.svg"), twoHalves);
+    const QString longB = writeSvg(images, QString(70, QLatin1Char('x')) + QStringLiteral("B.svg"), allRed);
+    ArtworkCache cache(cacheDir);
+    for (const QString &svg : { spaced, plain, longA, longB })
+        ASSERT_FALSE(cache.image(svg, QSize(40, 20)).isNull());
+    for (const QString &svg : { spaced, plain, longA, longB })
+        EXPECT_TRUE(QFileInfo::exists(cache.cachePath(svg, QSize(40, 20)))) << qPrintable(svg);
+    EXPECT_NE(cache.cachePath(spaced, QSize(40, 20)), cache.cachePath(plain, QSize(40, 20)));
+    EXPECT_NE(cache.cachePath(longA, QSize(40, 20)), cache.cachePath(longB, QSize(40, 20)));
+    // A plain name stays as it was, so what is already kept is still found.
+    EXPECT_TRUE(QFileInfo(cache.cachePath(plain, QSize(40, 20))).fileName().startsWith(QStringLiteral("a_b-40x20-")));
 }
 
 TEST_F(ArtworkCacheTest, ReadsThePathOutOfAnId)

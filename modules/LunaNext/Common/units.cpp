@@ -16,6 +16,7 @@
  */
 
 #include <QtCore/qmath.h>
+#include <cmath>
 #include <QFile>
 #include <QTextStream>
 #include <Settings.h>
@@ -53,12 +54,32 @@ float Units::mGridUnit = DEFAULT_GRID_UNIT_PX;
 float Units::mUiScale = 1.0f;
 bool Units::mInitialised = false;
 
+/* toFloat() takes "nan" and "inf" as numbers, and NaN passes every
+ * comparison a clamp makes; neither is a size. */
+static bool parseFloat(const QByteArray &text, float *value)
+{
+    bool ok = false;
+    float parsed = text.toFloat(&ok);
+    if (!ok || !std::isfinite(parsed))
+        return false;
+    *value = parsed;
+    return true;
+}
+
 static float getEnvFloat(const char* name, float defaultValue)
 {
-    QByteArray stringValue = qgetenv(name);
-    bool ok;
-    float value = stringValue.toFloat(&ok);
-    return ok ? value : defaultValue;
+    float value = defaultValue;
+    parseFloat(qgetenv(name), &value);
+    return value;
+}
+
+static float clampUiScale(float scale)
+{
+    if (scale < MIN_UI_SCALE)
+        return MIN_UI_SCALE;
+    if (scale > MAX_UI_SCALE)
+        return MAX_UI_SCALE;
+    return scale;
 }
 
 static float readUiScale()
@@ -66,23 +87,14 @@ static float readUiScale()
     float scale = 1.0f;
 
     QFile file(QStringLiteral(UI_SCALE_FILE));
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        bool ok = false;
-        float value = QTextStream(&file).readLine().trimmed().toFloat(&ok);
-        if (ok)
-            scale = value;
-    }
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+        parseFloat(QTextStream(&file).readLine().trimmed().toUtf8(), &scale);
 
     // An environment variable still wins, the way it does for the grid unit,
     // so one application can be started larger without changing the device.
     scale = getEnvFloat(ENV_UI_SCALE, scale);
 
-    if (scale < MIN_UI_SCALE)
-        scale = MIN_UI_SCALE;
-    if (scale > MAX_UI_SCALE)
-        scale = MAX_UI_SCALE;
-
-    return scale;
+    return clampUiScale(scale);
 }
 
 void Units::initialise()
@@ -107,10 +119,10 @@ float Units::uiScale()
 
 bool Units::persistUiScale(float scale)
 {
-    if (scale < MIN_UI_SCALE)
-        scale = MIN_UI_SCALE;
-    if (scale > MAX_UI_SCALE)
-        scale = MAX_UI_SCALE;
+    // Written as "nan", it would be read back as no number at all.
+    if (!std::isfinite(scale))
+        return false;
+    scale = clampUiScale(scale);
 
     QFile file(QStringLiteral(UI_SCALE_FILE));
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
@@ -158,8 +170,10 @@ float Units::_dp(float value)
 
     const float ratio = mGridUnit / DEFAULT_GRID_UNIT_PX;
     if (value <= 2.0)
-        // for values under 2dp, return only multiples of the value
-        return qRound(value * qFloor(ratio));
+        // for values under 2dp, return only multiples of the value; below
+        // a ratio of 1 (a uiScale under 1 on an 8px grid) that multiple is
+        // the value itself, or a 1dp line would be no line at all
+        return qRound(value * qMax(1.0f, std::floor(ratio)));
     return qRound(value * ratio);
 }
 

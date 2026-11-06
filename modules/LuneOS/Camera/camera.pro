@@ -22,6 +22,7 @@ SOURCES += \
     plugin.cpp \
     droidcamerafactory.cpp \
     droidcamerabin.cpp \
+    capturefile.cpp \
     cameracontrols.cpp \
     camerasensorinfo.cpp \
     barcodedecoder.cpp \
@@ -30,6 +31,7 @@ SOURCES += \
 HEADERS += \
     droidcamerafactory.h \
     droidcamerabin.h \
+    capturefile.h \
     cameracontrols.h \
     camerageometry.h \
     camerasensorinfo.h \

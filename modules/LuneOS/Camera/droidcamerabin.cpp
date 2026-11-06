@@ -92,3 +92,34 @@ GstElement *droid_camera_bin_contents(GstElement *bin)
         return nullptr;
     return LUNEOS_DROID_BIN(bin)->contents;
 }
+
+/* Sets `property` of the element `name` in `bin`; false if there is none. */
+static bool setChildProperty(GstElement *bin, const char *name, const char *property,
+                             const char *value)
+{
+    GstElement *child = gst_bin_get_by_name(GST_BIN(bin), name);
+    if (!child)
+        return false;
+    g_object_set(child, property, value, nullptr);
+    gst_object_unref(child);
+    return true;
+}
+
+GstElement *droid_recorder_bin_new(const char *description, const char *location,
+                                   const char *audioDevice, GError **error)
+{
+    GstElement *rec = gst_parse_bin_from_description(description, TRUE, error);
+    if (!rec)
+        return nullptr;
+    // Held while it is set up, and handed back floating, as the parser
+    // gives it, for the bin it is added to.
+    gst_object_ref_sink(rec);
+
+    if (!setChildProperty(rec, "recsink", "location", location) ||
+        (audioDevice && !setChildProperty(rec, "recaudio", "device", audioDevice))) {
+        gst_object_unref(rec);
+        return nullptr;
+    }
+    g_object_force_floating(G_OBJECT(rec));
+    return rec;
+}

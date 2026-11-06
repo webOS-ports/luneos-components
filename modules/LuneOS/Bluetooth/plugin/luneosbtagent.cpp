@@ -42,6 +42,11 @@ void LuneOSBluetoothAgent::displayPasskey(DevicePtr device, const QString &passk
     displayPasskeyToUser(device.data(), passkey, entered);
 }
 
+/*
+ * Each kind of request has one in hand at a time. A new one replaces the
+ * last, whose deletion cancels it if it went unanswered (the user never
+ * answered, or BlueZ asked again).
+ */
 void LuneOSBluetoothAgent::requestPinCode(DevicePtr device, const Request<QString> &request)
 {
     mPinCodeRequestPtr.reset(new LuneOSBluetoothRequest(request));
@@ -51,24 +56,24 @@ void LuneOSBluetoothAgent::requestPinCode(DevicePtr device, const Request<QStrin
 void LuneOSBluetoothAgent::requestPasskey(DevicePtr device, const Request<quint32> &request)
 {
     mPasskeyRequestPtr.reset(new LuneOSBluetoothRequest(request));
-    requestPasskeyFromUser(device.data(), mPasskeyRequestPtr.data()); // that'll leak, isn't it
+    requestPasskeyFromUser(device.data(), mPasskeyRequestPtr.data());
 }
 
 void LuneOSBluetoothAgent::requestConfirmation(DevicePtr device, const QString &passkey, const Request<> &request)
 {
     mConfirmationRequestPtr.reset(new LuneOSBluetoothRequest(request));
-    requestConfirmationFromUser(device.data(), passkey, mConfirmationRequestPtr.data()); // that'll leak, isn't it
+    requestConfirmationFromUser(device.data(), passkey, mConfirmationRequestPtr.data());
 }
 void LuneOSBluetoothAgent::requestAuthorization(DevicePtr device, const Request<> &request)
 {
     mAuthorizationRequestPtr.reset(new LuneOSBluetoothRequest(request));
-    requestAuthorizationFromUser(device.data(), mAuthorizationRequestPtr.data()); // that'll leak, isn't it
+    requestAuthorizationFromUser(device.data(), mAuthorizationRequestPtr.data());
 }
 
 void LuneOSBluetoothAgent::authorizeService(DevicePtr device, const QString &uuid, const Request<> &request)
 {
     mServiceRequestPtr.reset(new LuneOSBluetoothRequest(request));
-    authorizeServiceFromUser(device.data(), uuid, mServiceRequestPtr.data()); // that'll leak, isn't it
+    authorizeServiceFromUser(device.data(), uuid, mServiceRequestPtr.data());
 }
 
 QDBusObjectPath LuneOSBluetoothAgent::objectPath() const

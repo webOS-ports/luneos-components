@@ -1,8 +1,9 @@
 # Unit tests for the parts of LuneOS.Camera that need no camera: the control
 # tables and arithmetic (cameracontrols.cpp), the barcode frame handling and
 # decoding (barcodedecoder.cpp), the threaded scanner around it
-# (barcodescanner.cpp) and the camera's wrapper bin (droidcamerabin.cpp,
-# with GStreamer's core elements). See README.md.
+# (barcodescanner.cpp), the camera's wrapper bin and recorders
+# (droidcamerabin.cpp, with GStreamer's core elements) and where a picture is
+# written (capturefile.cpp). See README.md.
 #
 # Not part of the module's build; build it on its own:
 #   qmake tests.pro && make
@@ -26,10 +27,12 @@ SOURCES += \
     unit/test_barcodedecoder.cpp \
     unit/test_barcodescanner.cpp \
     unit/test_droidcamerabin.cpp \
+    unit/test_capturefile.cpp \
     ../cameracontrols.cpp \
     ../barcodedecoder.cpp \
     ../barcodescanner.cpp \
-    ../droidcamerabin.cpp
+    ../droidcamerabin.cpp \
+    ../capturefile.cpp
 
 HEADERS += \
     ../barcodescanner.h

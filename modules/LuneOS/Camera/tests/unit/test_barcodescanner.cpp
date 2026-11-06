@@ -76,12 +76,23 @@ static bool spinUntil(Pred done, int timeoutMs = 3000)
     return done();
 }
 
+/* Lets the pool's workers finish what they were given. Not waitForDone():
+ * that also joins the pool's threads, and Qt joins with
+ * pthread_clockjoin_np(), which ThreadSanitizer does not intercept. The
+ * joined threads stay alive to it, and the next worker on a reused pthread
+ * handle stops the TSan build with "CHECK failed" in
+ * sanitizer_thread_registry.cpp. */
+static void drainPool()
+{
+    spinUntil([] { return QThreadPool::globalInstance()->activeThreadCount() == 0; });
+    QCoreApplication::processEvents();
+}
+
 /* Shows a fresh frame of the code and lets the worker finish, as one scan. */
 static void scanOnce(QVideoSink &sink, const std::string &digits)
 {
     sink.setVideoFrame(ean13Frame(digits));
-    QThreadPool::globalInstance()->waitForDone();
-    QCoreApplication::processEvents();
+    drainPool();
 }
 
 class BarcodeScannerTest : public ::testing::Test
@@ -101,8 +112,7 @@ protected:
 
     void TearDown() override
     {
-        QThreadPool::globalInstance()->waitForDone();
-        QCoreApplication::processEvents();
+        drainPool();
     }
 };
 
@@ -137,7 +147,7 @@ TEST_F(BarcodeScannerTest, TwoDifferentSightingsConfirmNothing)
 TEST_F(BarcodeScannerTest, InactiveLooksAtNothing)
 {
     sink.setVideoFrame(ean13Frame("4006381333931"));
-    QThreadPool::globalInstance()->waitForDone();
+    drainPool();
     spinUntil([] { return false; }, 200);
     EXPECT_TRUE(texts.isEmpty());
 }
@@ -149,8 +159,7 @@ TEST_F(BarcodeScannerTest, ACodeThatStaysInViewIsReportedOnce)
         // A new frame each time, as a camera delivers them: the sink does not
         // announce the same frame twice.
         sink.setVideoFrame(ean13Frame("4006381333931"));
-        QThreadPool::globalInstance()->waitForDone();
-        QCoreApplication::processEvents();
+        drainPool();
     }
     EXPECT_EQ(texts.size(), 1);
 }
@@ -179,8 +188,7 @@ TEST_F(BarcodeScannerTest, ABurstOfFramesIsReportedOnce)
         frames.append(ean13Frame("4006381333931"));
     for (const QVideoFrame &frame : frames)
         sink.setVideoFrame(frame);
-    QThreadPool::globalInstance()->waitForDone();
-    QCoreApplication::processEvents();
+    drainPool();
     // However many of them were decoded, one more scan has the code confirmed.
     scanOnce(sink, "4006381333931");
     EXPECT_EQ(texts.size(), 1);
@@ -195,7 +203,6 @@ TEST(BarcodeScanner, ScannerDeletedWhileDecoding)
     sink.setVideoFrame(ean13Frame("4006381333931"));
     // The worker may still be running; its result must go nowhere.
     scanner.reset();
-    QThreadPool::globalInstance()->waitForDone();
-    QCoreApplication::processEvents();
+    drainPool();
     SUCCEED();
 }

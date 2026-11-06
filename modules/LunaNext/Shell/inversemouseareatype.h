@@ -20,6 +20,7 @@
 #include <QtCore/QPointer>
 
 class QQuickItem;
+class QTouchEvent;
 class InverseMouseAreaType : public QQuickMouseArea
 {
     Q_OBJECT
@@ -47,6 +48,7 @@ private: // getter/setter
     bool topmostItem() const;
     void setTopmostItem(bool value);
     QEvent * mapEventToArea(QObject *target, QEvent *event, QPoint &point);
+    QEvent * mapTouchEventToArea(QQuickItem *targetItem, QTouchEvent *tev, QPoint &point);
 
 Q_SIGNALS:
     void sensingAreaChanged();

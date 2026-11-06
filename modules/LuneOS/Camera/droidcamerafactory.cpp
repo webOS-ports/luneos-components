@@ -16,6 +16,7 @@
 
 #include "droidcamerafactory.h"
 #include "droidcamerabin.h"
+#include "capturefile.h"
 #include "cameracontrols.h"
 
 #include <QCoreApplication>
@@ -155,13 +156,17 @@ static QByteArray recordingAudioSource()
  * NO_PREROLL rather than SUCCESS, which is not a failure. */
 static bool audioSourceUsable(const char *device)
 {
-    gchar *desc = g_strdup_printf("pulsesrc device=%s ! fakesink sync=false", device);
+    // The device is a property, not part of the description (see
+    // droid_recorder_bin_new()).
     GError *error = nullptr;
-    GstElement *probe = gst_parse_launch(desc, &error);
-    g_free(desc);
+    GstElement *probe = gst_parse_launch("pulsesrc name=probesrc ! fakesink sync=false", &error);
     g_clear_error(&error);
     if (!probe)
         return false;
+    if (GstElement *src = gst_bin_get_by_name(GST_BIN(probe), "probesrc")) {
+        g_object_set(src, "device", device, nullptr);
+        gst_object_unref(src);
+    }
 
     bool ok = gst_element_set_state(probe, GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE;
 
@@ -238,6 +243,9 @@ DroidCameraFactory::DroidCameraFactory(QObject *parent)
 
 DroidCameraFactory::~DroidCameraFactory()
 {
+    // A hardware recording being set up uses this object until it is done.
+    if (m_startWorker.joinable())
+        m_startWorker.join();
 #ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
     /* The image sink's handler is the one that holds a plain pointer to the
      * factory (the camera's own handlers go through a QPointer); nothing may
@@ -323,12 +331,20 @@ QObject *DroidCameraFactory::createVideoSource(int cameraDevice)
         return nullptr;
 
     // A camera switch tears the old source (and any recording branch in
-    // it) down wholesale; just drop our bookkeeping.
-    if (m_recBin) {
+    // it) down wholesale; just drop our bookkeeping, all of it: a hardware
+    // recording's flags left set sent the next camera's software recording
+    // down the hardware stop. A recorder still being set up for the old
+    // camera is dropped when its worker reports back (the generation below
+    // tells it apart).
+    if (m_recBin || m_starting) {
         if (m_recTeePad)
             gst_object_unref(static_cast<GstPad *>(m_recTeePad));
         m_recBin = nullptr;
         m_recTeePad = nullptr;
+        m_hwRecording = false;
+        m_stopRequested = false;
+        m_starting = false;
+        m_stopAfterStart = false;
         m_pendingVideoPath.clear();
         emit recordingChanged();
     }
@@ -557,13 +573,13 @@ void DroidCameraFactory::saveImage(const QByteArray &data)
         return;
 
     QDir().mkpath(QFileInfo(path).absolutePath());
-    QFile f(path);
-    if (!f.open(QIODevice::WriteOnly) || f.write(data) != data.size()) {
+    // A new file: the name asked for, or the next free one after it.
+    const QString saved = writeNewCaptureFile(path, data);
+    if (saved.isEmpty()) {
         emit imageCaptureError(QStringLiteral("cannot write %1").arg(path));
         return;
     }
-    f.close();
-    qInfo() << "DroidCameraFactory: saved capture to" << path;
+    qInfo() << "DroidCameraFactory: saved capture to" << saved;
 
     /* A focus the shot locked is the shot's; the next one focuses afresh. */
     if (m_focusStatus != FocusIdle) {
@@ -574,7 +590,7 @@ void DroidCameraFactory::saveImage(const QByteArray &data)
         setFocusStatus(FocusIdle);
     }
 
-    emit imageSaved(path);
+    emit imageSaved(saved);
 }
 
 bool DroidCameraFactory::recording() const
@@ -652,7 +668,9 @@ bool DroidCameraFactory::startRecording(const QString &filePath, int rotation)
 {
 #ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
     auto *source = qobject_cast<QGStreamerVideoSource *>(m_videoSource);
-    if (!source || !source->gstElement() || m_recBin || m_starting) {
+    // A worker still setting up a recorder for the previous camera holds
+    // the way until it is done.
+    if (!source || !source->gstElement() || m_recBin || m_starting || m_startWorker.joinable()) {
         emit videoCaptureError(QStringLiteral("cannot start recording"));
         return false;
     }
@@ -685,22 +703,26 @@ bool DroidCameraFactory::startRecording(const QString &filePath, int rotation)
         m_pendingVideoPath = filePath;
         emit recordingChanged();
         gst_object_ref(bin);
-        std::thread([this, bin, filePath] {
+        const unsigned generation = m_generation;
+        m_startWorker = std::thread([this, bin, filePath, generation] {
             GstElement *rec = startHwRecording(bin, filePath);
-            QMetaObject::invokeMethod(this, [this, bin, filePath, rec] {
-                m_starting = false;
+            // The application, not this object, carries the answer: the
+            // factory may be gone by the time it is delivered (its
+            // destructor waits for this thread, not for the event).
+            QPointer<DroidCameraFactory> guard(this);
+            QMetaObject::invokeMethod(QCoreApplication::instance(),
+                                      [guard, bin, filePath, rec, generation] {
+                if (guard) {
+                    guard->hwStartFinished(bin, rec, filePath, generation);
+                    return;
+                }
                 if (rec) {
-                    hwRecordingStarted(rec, filePath);
-                } else {
-                    // The hardware recorder could not be set up: record in software instead.
-                    m_pendingVideoPath.clear();
-                    m_stopAfterStart = false;
-                    if (!startSwRecording(bin, filePath))
-                        emit recordingChanged();
+                    gst_element_set_state(rec, GST_STATE_NULL);
+                    gst_bin_remove(GST_BIN(bin), rec);
                 }
                 gst_object_unref(bin);
             }, Qt::QueuedConnection);
-        }).detach();
+        });
         return true;
     }
 
@@ -710,6 +732,37 @@ bool DroidCameraFactory::startRecording(const QString &filePath, int rotation)
     Q_UNUSED(rotation);
     return false;
 #endif
+}
+
+void DroidCameraFactory::hwStartFinished(GstElement *bin, GstElement *rec, const QString &filePath,
+                                         unsigned generation)
+{
+    // The worker posted this as its last act.
+    if (m_startWorker.joinable())
+        m_startWorker.join();
+
+    if (generation != m_generation) {
+        // Set up for a camera that has been switched away from: its source
+        // is being torn down, and this camera's state is not its to set.
+        if (rec) {
+            gst_element_set_state(rec, GST_STATE_NULL);
+            gst_bin_remove(GST_BIN(bin), rec);
+        }
+        gst_object_unref(bin);
+        return;
+    }
+
+    m_starting = false;
+    if (rec) {
+        hwRecordingStarted(rec, filePath);
+    } else {
+        // The hardware recorder could not be set up: record in software instead.
+        m_pendingVideoPath.clear();
+        m_stopAfterStart = false;
+        if (!startSwRecording(bin, filePath))
+            emit recordingChanged();
+    }
+    gst_object_unref(bin);
 }
 
 bool DroidCameraFactory::startSwRecording(GstElement *bin, const QString &filePath)
@@ -731,17 +784,16 @@ bool DroidCameraFactory::startSwRecording(GstElement *bin, const QString &filePa
         "videoconvert ! videoscale ! "
         "video/x-raw,format=I420,width=1344,height=672 ! "
         "avenc_mpeg4 bitrate=8000000 ! mp4mux name=recmux ! "
-        "filesink name=recsink async=false location=\"%1\" "
-        "pulsesrc name=recaudio device=%2 ! audioconvert ! "
-        "avenc_aac ! queue ! recmux.")
-        .arg(filePath, QString::fromLatin1(audioSource));
+        "filesink name=recsink async=false "
+        "pulsesrc name=recaudio ! audioconvert ! "
+        "avenc_aac ! queue ! recmux.");
     const QString vDesc = QStringLiteral(
         "queue name=recentry max-size-buffers=30 leaky=downstream ! "
         "videoconvert ! videoscale ! "
         "video/x-raw,format=I420,width=1344,height=672 ! "
         "avenc_mpeg4 bitrate=8000000 ! mp4mux name=recmux ! "
-        "filesink name=recsink async=false location=\"%1\"")
-        .arg(filePath);
+        "filesink name=recsink async=false");
+    const QByteArray location = QFile::encodeName(filePath);
 
     GError *error = nullptr;
     // A/V first; falls back to video-only when the audio chain cannot be
@@ -749,12 +801,12 @@ bool DroidCameraFactory::startSwRecording(GstElement *bin, const QString &filePa
     // 16-bit input override in /etc/pulse/droid-audio, see the recipe).
     GstElement *rec = nullptr;
     if (!audioSource.isEmpty() && audioSourceUsable(audioSource.constData()))
-        rec = gst_parse_bin_from_description(
-            avDesc.toUtf8().constData(), TRUE, &error);
+        rec = droid_recorder_bin_new(avDesc.toUtf8().constData(), location.constData(),
+                                     audioSource.constData(), &error);
     if (!rec) {
         g_clear_error(&error);
-        rec = gst_parse_bin_from_description(vDesc.toUtf8().constData(),
-                                             TRUE, &error);
+        rec = droid_recorder_bin_new(vDesc.toUtf8().constData(), location.constData(),
+                                     nullptr, &error);
     }
     if (!rec) {
         qWarning() << "DroidCameraFactory: recording bin failed:"
@@ -1008,23 +1060,23 @@ GstElement *DroidCameraFactory::startHwRecording(GstElement *bin,
     const QByteArray audioSource = recordingAudioSource();
     const QString avDesc = QStringLiteral(
         "queue ! h264parse ! mp4mux name=recmux ! "
-        "filesink name=recsink async=false location=\"%1\" "
-        "pulsesrc name=recaudio device=%2 ! audioconvert ! "
-        "avenc_aac ! queue max-size-buffers=0 max-size-bytes=0 max-size-time=0 ! recmux.")
-        .arg(filePath, QString::fromLatin1(audioSource));
+        "filesink name=recsink async=false "
+        "pulsesrc name=recaudio ! audioconvert ! "
+        "avenc_aac ! queue max-size-buffers=0 max-size-bytes=0 max-size-time=0 ! recmux.");
     const QString vDesc = QStringLiteral(
         "h264parse ! mp4mux name=recmux ! "
-        "filesink name=recsink async=false location=\"%1\"").arg(filePath);
+        "filesink name=recsink async=false");
+    const QByteArray location = QFile::encodeName(filePath);
 
     GError *error = nullptr;
     GstElement *rec = nullptr;
     if (!audioSource.isEmpty() && audioSourceUsable(audioSource.constData()))
-        rec = gst_parse_bin_from_description(
-            avDesc.toUtf8().constData(), TRUE, &error);
+        rec = droid_recorder_bin_new(avDesc.toUtf8().constData(), location.constData(),
+                                     audioSource.constData(), &error);
     if (!rec) {
         g_clear_error(&error);
-        rec = gst_parse_bin_from_description(vDesc.toUtf8().constData(),
-                                             TRUE, &error);
+        rec = droid_recorder_bin_new(vDesc.toUtf8().constData(), location.constData(),
+                                     nullptr, &error);
     }
     if (!rec) {
         g_clear_error(&error);

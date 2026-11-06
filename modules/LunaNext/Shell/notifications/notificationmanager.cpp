@@ -60,12 +60,13 @@ NotificationManager::NotificationManager(QObject *parent) :
 
 NotificationManager::~NotificationManager()
 {
+    // The notifications stay in the database, which restoreNotifications()
+    // reads at the next start; they are this object's children and go with
+    // it. Closing them here, as was done after the database was deleted,
+    // used the freed database for each of them.
     database->commit();
     delete database;
-
-    foreach(uint id, notifications.keys()) {
-        removeNotification(id);
-    }
+    database = 0;
 }
 
 Notification *NotificationManager::notification(uint id) const

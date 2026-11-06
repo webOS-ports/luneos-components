@@ -44,11 +44,13 @@ struct LumaImage {
  * row is a Y sample: 1 for the Y plane of planar and semi-planar YUV (I420,
  * NV12, NV21 ...), 2 for packed 4:2:2 (YUYV with offset 0, UYVY with offset 1).
  * step keeps every step-th sample in each direction, to bring large frames
- * down to a size a phone decodes quickly. Returns an invalid image for
- * nonsensical arguments, including a stride too short for the row.
+ * down to a size a phone decodes quickly. planeSize is how many bytes there
+ * are at plane (QVideoFrame::mappedBytes()). Returns an invalid image for
+ * nonsensical arguments, including a stride too short for the row and a
+ * plane too small for the rows.
  */
-LumaImage extractLuma(const uchar *plane, int width, int height, int bytesPerLine,
-                      int pixelStride = 1, int offset = 0, int step = 1);
+LumaImage extractLuma(const uchar *plane, qsizetype planeSize, int width, int height,
+                      int bytesPerLine, int pixelStride = 1, int offset = 0, int step = 1);
 
 /* The smallest step that brings the longer side down to maxSide or below. */
 int stepFor(int width, int height, int maxSide);

@@ -31,7 +31,7 @@ namespace luna
 class ReticleItem : public QQuickPaintedItem
 {
     Q_OBJECT
-    Q_PROPERTY(QUrl imagePath WRITE setImagePath)
+    Q_PROPERTY(QUrl imagePath READ imagePath WRITE setImagePath)
     Q_PROPERTY(qreal initialScale MEMBER mInitialScale)
 
 public:

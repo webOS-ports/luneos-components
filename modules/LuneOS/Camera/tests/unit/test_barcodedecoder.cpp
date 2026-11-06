@@ -74,7 +74,7 @@ TEST(ExtractLuma, SkipsRowPadding)
 {
     const uchar plane[] = { 1, 2, 3, 99,
                             4, 5, 6, 99 };
-    const LumaImage image = extractLuma(plane, 3, 2, 4);
+    const LumaImage image = extractLuma(plane, sizeof(plane), 3, 2, 4);
     ASSERT_TRUE(image.isValid());
     EXPECT_EQ(image.width, 3);
     EXPECT_EQ(image.height, 2);
@@ -85,7 +85,7 @@ TEST(ExtractLuma, PackedYuvTakesEveryOtherByte)
 {
     // UYVY: U Y V Y - the luminance is at odd offsets.
     const uchar plane[] = { 9, 1, 9, 2, 9, 3, 9, 4 };
-    const LumaImage image = extractLuma(plane, 4, 1, 8, 2, 1);
+    const LumaImage image = extractLuma(plane, sizeof(plane), 4, 1, 8, 2, 1);
     ASSERT_TRUE(image.isValid());
     EXPECT_EQ(image.pixels, QByteArray("\x01\x02\x03\x04", 4));
 }
@@ -95,7 +95,7 @@ TEST(ExtractLuma, StepSubsamples)
     const uchar plane[] = { 1, 2, 3,
                             4, 5, 6,
                             7, 8, 9 };
-    const LumaImage image = extractLuma(plane, 3, 3, 3, 1, 0, 2);
+    const LumaImage image = extractLuma(plane, sizeof(plane), 3, 3, 3, 1, 0, 2);
     ASSERT_TRUE(image.isValid());
     EXPECT_EQ(image.width, 2);
     EXPECT_EQ(image.height, 2);
@@ -106,13 +106,27 @@ TEST(ExtractLuma, RefusesWhatWouldReadOutOfBounds)
 {
     const uchar plane[16] = {};
     // A row stride shorter than the row.
-    EXPECT_FALSE(extractLuma(plane, 4, 2, 3).isValid());
+    EXPECT_FALSE(extractLuma(plane, sizeof(plane), 4, 2, 3).isValid());
     // Packed samples running past the stride.
-    EXPECT_FALSE(extractLuma(plane, 4, 2, 7, 2, 1).isValid());
-    EXPECT_FALSE(extractLuma(plane, 4, 2, 8, 2, 2).isValid());
-    EXPECT_FALSE(extractLuma(nullptr, 4, 2, 4).isValid());
-    EXPECT_FALSE(extractLuma(plane, 0, 2, 4).isValid());
-    EXPECT_FALSE(extractLuma(plane, 4, 2, 4, 1, 0, 0).isValid());
+    EXPECT_FALSE(extractLuma(plane, sizeof(plane), 4, 2, 7, 2, 1).isValid());
+    EXPECT_FALSE(extractLuma(plane, sizeof(plane), 4, 2, 8, 2, 2).isValid());
+    EXPECT_FALSE(extractLuma(nullptr, 16, 4, 2, 4).isValid());
+    EXPECT_FALSE(extractLuma(plane, sizeof(plane), 0, 2, 4).isValid());
+    EXPECT_FALSE(extractLuma(plane, sizeof(plane), 4, 2, 4, 1, 0, 0).isValid());
+}
+
+TEST(ExtractLuma, RefusesAPlaneShorterThanItsRows)
+{
+    // Four rows of 4 said, 15 bytes there: the last sample is the 16th.
+    const uchar plane[16] = {};
+    EXPECT_TRUE(extractLuma(plane, 16, 4, 4, 4).isValid());
+    EXPECT_FALSE(extractLuma(plane, 15, 4, 4, 4).isValid());
+    // The last row need only reach its last sample, not the stride's end:
+    // rows of 4 every 8 bytes, the 4th row's last sample at byte 27.
+    const uchar padded[32] = {};
+    EXPECT_TRUE(extractLuma(padded, 28, 4, 4, 8).isValid());
+    EXPECT_FALSE(extractLuma(padded, 27, 4, 4, 8).isValid());
+    EXPECT_FALSE(extractLuma(plane, 0, 4, 1, 4).isValid());
 }
 
 TEST(StepFor, BringsTheLongerSideDown)
@@ -129,7 +143,7 @@ TEST(Decode, ReadsAnEan13)
     const int module = 3, height = 120;
     const int width = ean13Width(module);
     const std::vector<uchar> plane = drawEan13("4006381333931", module, height, width + 16);
-    const LumaImage image = extractLuma(plane.data(), width, height, width + 16);
+    const LumaImage image = extractLuma(plane.data(), plane.size(), width, height, width + 16);
     const QList<Symbol> symbols = decode(image);
     ASSERT_EQ(symbols.size(), 1);
     EXPECT_EQ(symbols[0].text, QStringLiteral("4006381333931"));
@@ -142,7 +156,7 @@ TEST(Decode, ReadsItFromPackedYuvAtHalfSize)
     const int width = ean13Width(module);
     const int stride = width * 2;
     const std::vector<uchar> plane = drawEan13("4006381333931", module, height, stride, 2, 1);
-    const LumaImage image = extractLuma(plane.data(), width, height, stride, 2, 1, 2);
+    const LumaImage image = extractLuma(plane.data(), plane.size(), width, height, stride, 2, 1, 2);
     const QList<Symbol> symbols = decode(image);
     ASSERT_EQ(symbols.size(), 1);
     EXPECT_EQ(symbols[0].text, QStringLiteral("4006381333931"));

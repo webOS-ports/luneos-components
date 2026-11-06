@@ -157,3 +157,82 @@ TEST(DroidCameraBin, ObserverSeesElementMessagesOfTheCamera)
     gst_object_unref(cam);
     gst_object_unref(outer);
 }
+
+/* A recorder like the ones DroidCameraFactory builds, with elements the
+ * build host has (coreelements, alsa) in place of the encoders and pulsesrc;
+ * alsasrc has a "device" string property as pulsesrc does. */
+static const char *kRecorder =
+    "queue name=recentry ! identity name=recmux ! filesink name=recsink async=false";
+static const char *kRecorderWithAudio =
+    "queue name=recentry ! identity name=recmux ! filesink name=recsink async=false "
+    "alsasrc name=recaudio ! fakesink";
+
+static gchar *stringProperty(GstElement *bin, const char *name, const char *property)
+{
+    GstElement *child = gst_bin_get_by_name(GST_BIN(bin), name);
+    if (!child)
+        return nullptr;
+    gchar *value = nullptr;
+    g_object_get(child, property, &value, nullptr);
+    gst_object_unref(child);
+    return value;
+}
+
+static bool hasElement(GstElement *bin, const char *name)
+{
+    GstElement *child = gst_bin_get_by_name(GST_BIN(bin), name);
+    if (child)
+        gst_object_unref(child);
+    return child != nullptr;
+}
+
+TEST(DroidRecorderBin, WritesToTheLocationAsGiven)
+{
+    // A '"' ended the quoted location and the rest went on as pipeline.
+    const char *path = "/media/internal/DCIM/a\" ! fakesink name=injected x=\"b.mp4";
+    GError *error = nullptr;
+    GstElement *rec = droid_recorder_bin_new(kRecorder, path, nullptr, &error);
+    ASSERT_NE(rec, nullptr) << (error ? error->message : "");
+    // Floating, as the parser gives it: the bin it is added to takes it.
+    EXPECT_TRUE(g_object_is_floating(rec));
+    gst_object_ref_sink(rec);
+
+    gchar *location = stringProperty(rec, "recsink", "location");
+    EXPECT_STREQ(location, path);
+    g_free(location);
+    EXPECT_FALSE(hasElement(rec, "injected"));
+    gst_object_unref(rec);
+}
+
+TEST(DroidRecorderBin, ReadsTheAudioDeviceAsGiven)
+{
+    GstElementFactory *alsasrc = gst_element_factory_find("alsasrc");
+    if (!alsasrc)
+        GTEST_SKIP() << "no alsasrc";
+    gst_object_unref(alsasrc);
+    const char *device = "hw:0 ! fakesink name=injected";
+    GError *error = nullptr;
+    GstElement *rec = droid_recorder_bin_new(kRecorderWithAudio, "/media/internal/x.mp4",
+                                             device, &error);
+    ASSERT_NE(rec, nullptr) << (error ? error->message : "");
+    gst_object_ref_sink(rec);
+    gchar *set = stringProperty(rec, "recaudio", "device");
+    EXPECT_STREQ(set, device);
+    g_free(set);
+    EXPECT_FALSE(hasElement(rec, "injected"));
+    gst_object_unref(rec);
+}
+
+TEST(DroidRecorderBin, RecorderWithoutItsElementsIsRefused)
+{
+    GError *error = nullptr;
+    EXPECT_EQ(droid_recorder_bin_new("queue ! fakesink", "/media/internal/x.mp4", nullptr, &error),
+              nullptr);
+    // A device for a recorder that has no recaudio.
+    EXPECT_EQ(droid_recorder_bin_new(kRecorder, "/media/internal/x.mp4", "hw:0", &error), nullptr);
+    g_clear_error(&error);
+    EXPECT_EQ(droid_recorder_bin_new("no-such-element", "/media/internal/x.mp4", nullptr, &error),
+              nullptr);
+    EXPECT_NE(error, nullptr);
+    g_clear_error(&error);
+}

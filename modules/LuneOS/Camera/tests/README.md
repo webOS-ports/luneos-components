@@ -10,7 +10,8 @@ gtest, for the parts that need no camera:
   a forward transform built independently with `QTransform`, for every turn,
   mirroring, zoom and window shape.
 - `test_barcodedecoder.cpp`: luminance extraction from planar, packed and
-  padded frames, including the bounds it refuses, and zbar decoding. The
+  padded frames, including the bounds it refuses (a stride too short for the
+  row, a plane too short for the rows), and zbar decoding. The
   barcodes are EAN-13s drawn from the GS1 definition in the test itself, so
   no binary fixtures are needed.
 - `test_barcodescanner.cpp`: the scanner around it, with real `QVideoFrame`s
@@ -20,6 +21,12 @@ gtest, for the parts that need no camera:
   GStreamer's core elements in the camera bin's shape: its source pad, the
   observer seeing element messages, and that a recorder linked to the
   viewfinder tee must go in the inner bin (`droid_camera_bin_contents()`).
+  A recorder (`droid_recorder_bin_new()`) writes to the file name and reads
+  the audio device exactly as given, a `"` or `!` in either making no more
+  pipeline of it.
+- `test_capturefile.cpp`: where a picture is written. Always to a new file:
+  the name asked for, or `-1`, `-2`, ... after it when that is taken (two
+  shots in one second), and never through a symlink in its place.
 
 `tests.pro` builds `luneos-camera-tests`; it is not part of the module's
 build. It needs googletest in the sysroot. On the build host, run the x86-64

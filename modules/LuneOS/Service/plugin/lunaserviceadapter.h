@@ -27,6 +27,13 @@
 #include <QVariant>
 #include <luna-service2/lunaservice.h>
 
+/*
+ * A message as QML sees it. serviceId is the sender's name as the hub
+ * resolved it and is the one to base a decision on. applicationId is what the
+ * sender wrote into its own message: the hub does not check it, so it says
+ * which app a privileged sender (such as a web app manager) speaks for, and
+ * nothing about a sender that is not trusted.
+ */
 class LunaServiceMessage : public QObject
 {
     Q_OBJECT
@@ -142,23 +149,14 @@ private:
     void updateCallUri();
 
     static bool serviceMethodCallback(LSHandle *handle, LSMessage *message, void *data);
-    bool handleServiceMethodCallback(LSHandle *handle, LSMessage *message);
+    bool handleServiceMethodCallback(LSHandle *handle, LSMessage *message, QJSValue callback);
+    bool nameAllowed() const;
 
-    class RegisteredMethod
-    {
-    public:
-        RegisteredMethod(const QString& name, QJSValue callback);
-        ~RegisteredMethod();
-
-        LSMethod* methods();
-        QJSValue callback();
-
-    private:
-        LSMethod mMethods[2];
-        QJSValue mCallback;
-    };
-
-    QMap<QString, RegisteredMethod*> mServiceMethodCallbacks;
+    // The methods this adapter registered (category/method), whose slots
+    // (lunaserviceadapter.cpp) it lets go of when it is destroyed.
+    QList<QString> mRegisteredMethods;
+    // Whether this adapter holds a reference on serviceHandles[mName].
+    bool mHoldsHandleRef;
 
     static GMainLoop *mainLoop();
 };
