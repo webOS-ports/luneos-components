@@ -47,11 +47,21 @@ struct MethodSlot
 };
 
 typedef QHash<QString, MethodSlot*> MethodSlots;
-static QHash<LSHandle*, MethodSlots> methodSlots;
+
+/*
+ * Made the first time it is used, not at static initialisation, whose order
+ * with other statics cannot be relied on. The same goes for
+ * globalServiceHandles() below.
+ */
+static QHash<LSHandle*, MethodSlots> &globalMethodSlots()
+{
+    static QHash<LSHandle*, MethodSlots> methodSlots;
+    return methodSlots;
+}
 
 static void freeMethodSlots(LSHandle *handle)
 {
-    const MethodSlots handleSlots = methodSlots.take(handle);
+    const MethodSlots handleSlots = globalMethodSlots().take(handle);
     qDeleteAll(handleSlots);
 }
 
@@ -95,7 +105,11 @@ private:
     unsigned int mRefCount;
 };
 
-static QMap<QString, LunaServiceHandle*> serviceHandles;
+static QMap<QString, LunaServiceHandle*> &globalServiceHandles()
+{
+    static QMap<QString, LunaServiceHandle*> serviceHandles;
+    return serviceHandles;
+}
 
 LunaServiceMessage::LunaServiceMessage(LSMessage *message, QObject *parent) :
     QObject(parent),
@@ -285,7 +299,7 @@ LunaServiceAdapter::~LunaServiceAdapter()
     // Calls to methods this adapter registered get an error reply from now on
     // (serviceMethodCallback), unless another adapter took the method over.
     if (mServiceHandle) {
-        const MethodSlots &handleSlots = methodSlots[mServiceHandle];
+        const MethodSlots &handleSlots = globalMethodSlots()[mServiceHandle];
         for (const QString &methodPath : std::as_const(mRegisteredMethods)) {
             MethodSlot *slot = handleSlots.value(methodPath);
             if (slot && slot->owner == this) {
@@ -294,7 +308,7 @@ LunaServiceAdapter::~LunaServiceAdapter()
             }
         }
         if (handleSlots.isEmpty())
-            methodSlots.remove(mServiceHandle);
+            globalMethodSlots().remove(mServiceHandle);
     }
 
     // Only a reference this adapter took is given back: one that never
@@ -302,10 +316,10 @@ LunaServiceAdapter::~LunaServiceAdapter()
     if (!mHoldsHandleRef)
         return;
 
-    LunaServiceHandle *handle = serviceHandles.value(mName);
+    LunaServiceHandle *handle = globalServiceHandles().value(mName);
 
     if (handle && !handle->unref()) {
-        serviceHandles.remove(mName);
+        globalServiceHandles().remove(mName);
         delete handle;
     }
 }
@@ -355,8 +369,8 @@ void LunaServiceAdapter::componentComplete()
 
     // check wether we have the handle for the same service already cached
     
-    if (serviceHandles.contains(mName)) {
-        LunaServiceHandle *serviceHandle = serviceHandles.value(mName);
+    if (globalServiceHandles().contains(mName)) {
+        LunaServiceHandle *serviceHandle = globalServiceHandles().value(mName);
         serviceHandle->ref();
         mHoldsHandleRef = true;
         mServiceHandle = serviceHandle->handle();
@@ -381,7 +395,7 @@ void LunaServiceAdapter::componentComplete()
             LunaServiceHandle *handle = new LunaServiceHandle(mServiceHandle);
             handle->ref();
             mHoldsHandleRef = true;
-            serviceHandles.insert(mName, handle);
+            globalServiceHandles().insert(mName, handle);
         }
         else {
             // Standalone QML app
@@ -414,7 +428,7 @@ void LunaServiceAdapter::componentComplete()
                 LunaServiceHandle *handle = new LunaServiceHandle(mServiceHandle);
                 handle->ref();
                 mHoldsHandleRef = true;
-                serviceHandles.insert(mName, handle);
+                globalServiceHandles().insert(mName, handle);
             }
         }
     }
@@ -556,7 +570,7 @@ bool LunaServiceAdapter::registerMethod(const QString& category, const QString& 
     }
 
     QString methodPath = buildMethodPath(category, name);
-    MethodSlots &handleSlots = methodSlots[mServiceHandle];
+    MethodSlots &handleSlots = globalMethodSlots()[mServiceHandle];
     MethodSlot *slot = handleSlots.value(methodPath);
 
     if (slot && slot->owner == this) {
@@ -581,7 +595,7 @@ bool LunaServiceAdapter::registerMethod(const QString& category, const QString& 
                        << name << "in category" << category  << ":" << error.message;
             LSErrorFree(&error);
             if (handleSlots.isEmpty())
-                methodSlots.remove(mServiceHandle);
+                globalMethodSlots().remove(mServiceHandle);
             return false;
         }
 
@@ -596,7 +610,7 @@ bool LunaServiceAdapter::registerMethod(const QString& category, const QString& 
             // its error reply.
             delete slot;
             if (handleSlots.isEmpty())
-                methodSlots.remove(mServiceHandle);
+                globalMethodSlots().remove(mServiceHandle);
             return false;
         }
         handleSlots.insert(methodPath, slot);
