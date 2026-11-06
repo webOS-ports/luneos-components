@@ -11,6 +11,12 @@ gtest, for the module's C++:
   existing file is never overwritten, a symlink in place of the file or of the
   folder is never followed, a missing folder is created, and a name whose
   format cannot be written leaves nothing behind.
+- `test_inversemousearea.cpp`: the touch events `InverseMouseArea` maps to
+  mouse events. A touch that ends without the one that began on it (it began
+  before the filter was set, or another finger lifts), or one on something
+  that is no item, passes through as it is; the finger that began a press
+  ends it. An area that is the first item of its window, and so its own
+  sensing area, senses the whole window.
 
 `tests.pro` builds `lunanext-shell-tests`; it is not part of the module's
 build. It needs googletest. On the build host, run the x86-64 build with its
@@ -22,8 +28,8 @@ recipe sysroot:
 
 ## Sanitizers and valgrind
 
-`qmake CONFIG+=sanitize` adds ASan and UBSan. The test has no threads of its
-own, so ThreadSanitizer has nothing to check.
+`qmake CONFIG+=sanitize` adds ASan and UBSan. The tests have no threads of
+their own, so ThreadSanitizer has nothing to check.
 
     valgrind --leak-check=full --errors-for-leak-kinds=definite ./lunanext-shell-tests
 
