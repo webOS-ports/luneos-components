@@ -20,6 +20,9 @@ gtest, for the parts that need no camera:
   GStreamer's core elements in the camera bin's shape: its source pad, the
   observer seeing element messages, and that a recorder linked to the
   viewfinder tee must go in the inner bin (`droid_camera_bin_contents()`).
+  A recorder (`droid_recorder_bin_new()`) writes to the file name and reads
+  the audio device exactly as given, a `"` or `!` in either making no more
+  pipeline of it.
 
 `tests.pro` builds `luneos-camera-tests`; it is not part of the module's
 build. It needs googletest in the sysroot. On the build host, run the x86-64

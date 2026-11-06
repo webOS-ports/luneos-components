@@ -50,4 +50,18 @@ GstElement *droid_camera_bin_new(const char *name, GstElement *contents,
  */
 GstElement *droid_camera_bin_contents(GstElement *bin);
 
+/*
+ * A recorder: gst_parse_bin_from_description(description, TRUE, error), with
+ * its element "recsink" writing to `location` and, when `audioDevice` is not
+ * null, its element "recaudio" reading that device.
+ *
+ * Both are set as properties and not written into the description: a file
+ * name with a '"' in it ended the quoted location there and went on as more
+ * of the pipeline. The bin is returned floating, as the parser returns it.
+ * Returns nullptr (and sets `error` if the description did not parse) when
+ * the bin cannot be made or lacks either element.
+ */
+GstElement *droid_recorder_bin_new(const char *description, const char *location,
+                                   const char *audioDevice, GError **error);
+
 #endif // DROIDCAMERABIN_H

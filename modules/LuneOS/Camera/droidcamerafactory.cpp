@@ -155,13 +155,17 @@ static QByteArray recordingAudioSource()
  * NO_PREROLL rather than SUCCESS, which is not a failure. */
 static bool audioSourceUsable(const char *device)
 {
-    gchar *desc = g_strdup_printf("pulsesrc device=%s ! fakesink sync=false", device);
+    // The device is a property, not part of the description (see
+    // droid_recorder_bin_new()).
     GError *error = nullptr;
-    GstElement *probe = gst_parse_launch(desc, &error);
-    g_free(desc);
+    GstElement *probe = gst_parse_launch("pulsesrc name=probesrc ! fakesink sync=false", &error);
     g_clear_error(&error);
     if (!probe)
         return false;
+    if (GstElement *src = gst_bin_get_by_name(GST_BIN(probe), "probesrc")) {
+        g_object_set(src, "device", device, nullptr);
+        gst_object_unref(src);
+    }
 
     bool ok = gst_element_set_state(probe, GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE;
 
@@ -731,17 +735,16 @@ bool DroidCameraFactory::startSwRecording(GstElement *bin, const QString &filePa
         "videoconvert ! videoscale ! "
         "video/x-raw,format=I420,width=1344,height=672 ! "
         "avenc_mpeg4 bitrate=8000000 ! mp4mux name=recmux ! "
-        "filesink name=recsink async=false location=\"%1\" "
-        "pulsesrc name=recaudio device=%2 ! audioconvert ! "
-        "avenc_aac ! queue ! recmux.")
-        .arg(filePath, QString::fromLatin1(audioSource));
+        "filesink name=recsink async=false "
+        "pulsesrc name=recaudio ! audioconvert ! "
+        "avenc_aac ! queue ! recmux.");
     const QString vDesc = QStringLiteral(
         "queue name=recentry max-size-buffers=30 leaky=downstream ! "
         "videoconvert ! videoscale ! "
         "video/x-raw,format=I420,width=1344,height=672 ! "
         "avenc_mpeg4 bitrate=8000000 ! mp4mux name=recmux ! "
-        "filesink name=recsink async=false location=\"%1\"")
-        .arg(filePath);
+        "filesink name=recsink async=false");
+    const QByteArray location = QFile::encodeName(filePath);
 
     GError *error = nullptr;
     // A/V first; falls back to video-only when the audio chain cannot be
@@ -749,12 +752,12 @@ bool DroidCameraFactory::startSwRecording(GstElement *bin, const QString &filePa
     // 16-bit input override in /etc/pulse/droid-audio, see the recipe).
     GstElement *rec = nullptr;
     if (!audioSource.isEmpty() && audioSourceUsable(audioSource.constData()))
-        rec = gst_parse_bin_from_description(
-            avDesc.toUtf8().constData(), TRUE, &error);
+        rec = droid_recorder_bin_new(avDesc.toUtf8().constData(), location.constData(),
+                                     audioSource.constData(), &error);
     if (!rec) {
         g_clear_error(&error);
-        rec = gst_parse_bin_from_description(vDesc.toUtf8().constData(),
-                                             TRUE, &error);
+        rec = droid_recorder_bin_new(vDesc.toUtf8().constData(), location.constData(),
+                                     nullptr, &error);
     }
     if (!rec) {
         qWarning() << "DroidCameraFactory: recording bin failed:"
@@ -1008,23 +1011,23 @@ GstElement *DroidCameraFactory::startHwRecording(GstElement *bin,
     const QByteArray audioSource = recordingAudioSource();
     const QString avDesc = QStringLiteral(
         "queue ! h264parse ! mp4mux name=recmux ! "
-        "filesink name=recsink async=false location=\"%1\" "
-        "pulsesrc name=recaudio device=%2 ! audioconvert ! "
-        "avenc_aac ! queue max-size-buffers=0 max-size-bytes=0 max-size-time=0 ! recmux.")
-        .arg(filePath, QString::fromLatin1(audioSource));
+        "filesink name=recsink async=false "
+        "pulsesrc name=recaudio ! audioconvert ! "
+        "avenc_aac ! queue max-size-buffers=0 max-size-bytes=0 max-size-time=0 ! recmux.");
     const QString vDesc = QStringLiteral(
         "h264parse ! mp4mux name=recmux ! "
-        "filesink name=recsink async=false location=\"%1\"").arg(filePath);
+        "filesink name=recsink async=false");
+    const QByteArray location = QFile::encodeName(filePath);
 
     GError *error = nullptr;
     GstElement *rec = nullptr;
     if (!audioSource.isEmpty() && audioSourceUsable(audioSource.constData()))
-        rec = gst_parse_bin_from_description(
-            avDesc.toUtf8().constData(), TRUE, &error);
+        rec = droid_recorder_bin_new(avDesc.toUtf8().constData(), location.constData(),
+                                     audioSource.constData(), &error);
     if (!rec) {
         g_clear_error(&error);
-        rec = gst_parse_bin_from_description(vDesc.toUtf8().constData(),
-                                             TRUE, &error);
+        rec = droid_recorder_bin_new(vDesc.toUtf8().constData(), location.constData(),
+                                     nullptr, &error);
     }
     if (!rec) {
         g_clear_error(&error);
