@@ -22,6 +22,7 @@
 #include <QQuickWindow>
 #include <QTouchEvent>
 #include <QtTest/QTest>
+#include <private/qeventpoint_p.h>
 
 #include "inversemouseareatype.h"
 
@@ -46,6 +47,15 @@ QPointingDevice *touchScreen()
 QTouchEvent touch(QEvent::Type type, int id, QEventPoint::State state, QPointF pos)
 {
     QEventPoint point(id, state, pos, pos);
+    return QTouchEvent(type, touchScreen(), Qt::NoModifier, QList<QEventPoint>() << point);
+}
+
+/* A touch as it reaches an item: its points carry their position in that
+ * item as well as in the scene. */
+QTouchEvent touchAt(QEvent::Type type, int id, QEventPoint::State state, QPointF local, QPointF scene)
+{
+    QEventPoint point(id, state, scene, scene);
+    QMutableEventPoint::setPosition(point, local);
     return QTouchEvent(type, touchScreen(), Qt::NoModifier, QList<QEventPoint>() << point);
 }
 
@@ -138,4 +148,71 @@ TEST(InverseMouseArea, destroyedInItsWindowLeavesItAlone)
     }
     QTouchEvent begin = touch(QEvent::TouchBegin, 1, QEventPoint::State::Pressed, QPointF(150, 150));
     QCoreApplication::sendEvent(&window, &begin);
+}
+
+TEST_F(InverseMouseAreaTest, aTouchOutsideItLandsWhereItWasInTheArea)
+{
+    // The area is not at the window's origin: the touch's scene position is
+    // mapped into the area's own coordinates.
+    area->setPosition(QPointF(20, 30));
+    // The area filters the window's events; in a window a point's position
+    // is its scene position.
+    QTouchEvent begin = touchAt(QEvent::TouchBegin, 1, QEventPoint::State::Pressed, QPointF(150, 160), QPointF(150, 160));
+    area->filter(&window, &begin);
+    EXPECT_TRUE(area->isPressed());
+    EXPECT_EQ(area->mouseX(), 130);
+    EXPECT_EQ(area->mouseY(), 130);
+
+    QTouchEvent move = touchAt(QEvent::TouchUpdate, 1, QEventPoint::State::Updated, QPointF(170, 190), QPointF(170, 190));
+    area->filter(&window, &move);
+    EXPECT_EQ(area->mouseX(), 150);
+    EXPECT_EQ(area->mouseY(), 160);
+
+    QTouchEvent end = touchAt(QEvent::TouchEnd, 1, QEventPoint::State::Released, QPointF(180, 200), QPointF(180, 200));
+    area->filter(&window, &end);
+    EXPECT_FALSE(area->isPressed());
+    EXPECT_EQ(area->mouseX(), 160);
+    EXPECT_EQ(area->mouseY(), 170);
+}
+
+TEST_F(InverseMouseAreaTest, aTouchOnAnItemInsideIsMappedThroughThatItem)
+{
+    // The points of a touch are the item's own: they go through the scene.
+    area->setPosition(QPointF(20, 30));
+    background->setPosition(QPointF(10, 10));
+    QTouchEvent begin = touchAt(QEvent::TouchBegin, 1, QEventPoint::State::Pressed, QPointF(140, 150), QPointF(150, 160));
+    area->filter(background, &begin);
+    EXPECT_EQ(area->mouseX(), 130);
+    EXPECT_EQ(area->mouseY(), 130);
+
+    QTouchEvent end = touchAt(QEvent::TouchEnd, 1, QEventPoint::State::Released, QPointF(150, 170), QPointF(160, 180));
+    area->filter(background, &end);
+    EXPECT_FALSE(area->isPressed());
+    EXPECT_EQ(area->mouseX(), 140);
+    EXPECT_EQ(area->mouseY(), 150);
+}
+
+TEST_F(InverseMouseAreaTest, aMousePressOutsideItLandsWhereItWasInTheArea)
+{
+    area->setPosition(QPointF(20, 30));
+    const QPointF scene(150, 160);
+    QMouseEvent press(QEvent::MouseButtonPress, scene, scene, QPointF(1150, 1160),
+                      Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    area->filter(window.contentItem(), &press);
+    EXPECT_TRUE(area->isPressed());
+    EXPECT_EQ(area->mouseX(), 130);
+    EXPECT_EQ(area->mouseY(), 130);
+}
+
+TEST_F(InverseMouseAreaTest, aHoverOutsideItLandsWhereItWasInTheArea)
+{
+    area->setPosition(QPointF(20, 30));
+    area->setHoverEnabled(true);
+    QHoverEvent enter(QEvent::HoverEnter, QPointF(150, 160), QPointF(150, 160), QPointF(150, 160));
+    area->filter(window.contentItem(), &enter);
+    QHoverEvent move(QEvent::HoverMove, QPointF(160, 180), QPointF(160, 180), QPointF(150, 160));
+    area->filter(window.contentItem(), &move);
+    EXPECT_TRUE(area->hovered());
+    EXPECT_EQ(area->mouseX(), 140);
+    EXPECT_EQ(area->mouseY(), 150);
 }

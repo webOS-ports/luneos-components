@@ -421,11 +421,13 @@ QEvent *InverseMouseAreaType::mapTouchEventToArea(QQuickItem *targetItem, QTouch
         QList<QTouchEvent::TouchPoint> points = tev->touchPoints();
         const QTouchEvent::TouchPoint &primaryPoint = points.first();
         QPointF pos = targetItem->mapToScene(primaryPoint.pos());
+        // The finger is still down: the move is made with the button held,
+        // as the press was, or the mouse area ignores it.
         QMouseEvent *mev = new QMouseEvent(QEvent::MouseMove,
                         mapFromScene(pos),
                         primaryPoint.scenePos(),
                         primaryPoint.screenPos(),
-                        Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+                        Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
         point = mev->pos();
         return mev;
         } break;
