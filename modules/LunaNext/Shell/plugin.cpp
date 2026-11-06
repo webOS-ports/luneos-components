@@ -43,6 +43,6 @@ void LunaNextShellPlugin::registerTypes(const char *uri)
     qmlRegisterType<VolumeKeys>(uri, 0, 1, "VolumeKeys");
 }
 
-void LunaNextShellPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
+void LunaNextShellPlugin::initializeEngine(QQmlEngine *, const char *)
 {
 }

@@ -353,11 +353,11 @@ QEvent *InverseMouseAreaType::mapEventToArea(QObject *target, QEvent *event, QPo
             // translate coordinates to local
             QMouseEvent *ev = static_cast<QMouseEvent*>(event);
             QMouseEvent *mev = new QMouseEvent(ev->type(),
-                                   mapFromScene(ev->windowPos()),
-                                   ev->windowPos(),
-                                   ev->screenPos(),
+                                   mapFromScene(ev->scenePosition()),
+                                   ev->scenePosition(),
+                                   ev->globalPosition(),
                                    ev->button(), ev->buttons(), ev->modifiers());
-            point = mev->pos();
+            point = mev->position().toPoint();
             return mev;
         }
         break;
@@ -375,13 +375,17 @@ QEvent *InverseMouseAreaType::mapEventToArea(QObject *target, QEvent *event, QPo
     case QEvent::HoverMove: {
         if (targetItem && targetItem != this) {
             QHoverEvent *ev = static_cast<QHoverEvent*>(event);
-            QPointF spos = targetItem->mapToScene(ev->posF());
+            QPointF spos = targetItem->mapToScene(ev->position());
             QPointF sopos = targetItem->mapToScene(ev->oldPosF());
+            // The constructor without a global position used the position
+            // for it (Qt's qevent.cpp); this one says so.
+            const QPointF hpos = mapFromScene(spos);
             QHoverEvent *hev = new QHoverEvent(ev->type(),
-                                               mapFromScene(spos),
+                                               hpos,
+                                               hpos,
                                                mapFromScene(sopos),
                                                ev->modifiers());
-            point = hev->pos();
+            point = hev->position().toPoint();
             return hev;
         }
         } break;
@@ -405,35 +409,37 @@ QEvent *InverseMouseAreaType::mapTouchEventToArea(QQuickItem *targetItem, QTouch
 {
     switch (tev->type()) {
     case QEvent::TouchBegin: {
-        QList<QTouchEvent::TouchPoint> points = tev->touchPoints();
-        const QTouchEvent::TouchPoint &primaryPoint = points.first();
+        const QList<QEventPoint> &points = tev->points();
+        const QEventPoint &primaryPoint = points.first();
         m_touchId = primaryPoint.id();
-        QPointF pos = targetItem->mapToScene(primaryPoint.pos());
+        QPointF pos = targetItem->mapToScene(primaryPoint.position());
         QMouseEvent *mev = new QMouseEvent(QEvent::MouseButtonPress,
                         mapFromScene(pos),
-                        primaryPoint.scenePos(),
-                        primaryPoint.screenPos(),
+                        primaryPoint.scenePosition(),
+                        primaryPoint.globalPosition(),
                         Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-        point = mev->pos();
+        point = mev->position().toPoint();
         return mev;
         } break;
     case QEvent::TouchUpdate: {
-        QList<QTouchEvent::TouchPoint> points = tev->touchPoints();
-        const QTouchEvent::TouchPoint &primaryPoint = points.first();
-        QPointF pos = targetItem->mapToScene(primaryPoint.pos());
+        const QList<QEventPoint> &points = tev->points();
+        const QEventPoint &primaryPoint = points.first();
+        QPointF pos = targetItem->mapToScene(primaryPoint.position());
+        // The finger is still down: the move is made with the button held,
+        // as the press was, or the mouse area ignores it.
         QMouseEvent *mev = new QMouseEvent(QEvent::MouseMove,
                         mapFromScene(pos),
-                        primaryPoint.scenePos(),
-                        primaryPoint.screenPos(),
-                        Qt::NoButton, Qt::NoButton, Qt::NoModifier);
-        point = mev->pos();
+                        primaryPoint.scenePosition(),
+                        primaryPoint.globalPosition(),
+                        Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
+        point = mev->position().toPoint();
         return mev;
         } break;
     case QEvent::TouchEnd: {
-        QMouseEvent *mev = 0;
-        QList<QTouchEvent::TouchPoint> points = tev->touchPoints();
+        QMouseEvent *mev = nullptr;
+        const QList<QEventPoint> &points = tev->points();
         for (int i = 0; i < points.count(); i++) {
-            const QTouchEvent::TouchPoint &touchPoint = points.at(i);
+            const QEventPoint &touchPoint = points.at(i);
             if (touchPoint.id() != m_touchId) {
                 continue;
             }
@@ -450,7 +456,7 @@ QEvent *InverseMouseAreaType::mapTouchEventToArea(QQuickItem *targetItem, QTouch
         // release to map: it passes as it is.
         if (!mev)
             break;
-        point = mev->pos();
+        point = mev->position().toPoint();
         return mev;
         } break;
     default:
@@ -516,7 +522,7 @@ void InverseMouseAreaType::mousePressEvent(QMouseEvent *event)
     // overload QQuickMouseArea mousePress event as the original one sets containsMouse
     // to true automatically, however ion our case this can be false in case the press
     // happens inside the "hole"
-    if (!m_topmostItem || (m_topmostItem && m_filteredEvent && contains(event->localPos()))) {
+    if (!m_topmostItem || (m_topmostItem && m_filteredEvent && contains(event->position()))) {
         QQuickMouseArea::mousePressEvent(event);
     } else {
         // we do not consume the mouse event
@@ -530,7 +536,7 @@ void InverseMouseAreaType::mousePressEvent(QMouseEvent *event)
 void InverseMouseAreaType::mouseDoubleClickEvent(QMouseEvent *event)
 {
     // same as with mousePressEvent
-    if (!m_topmostItem || (m_topmostItem && m_filteredEvent && contains(event->localPos()))) {
+    if (!m_topmostItem || (m_topmostItem && m_filteredEvent && contains(event->position()))) {
         QQuickMouseArea::mouseDoubleClickEvent(event);
     } else {
         // we do not consume the mouse event

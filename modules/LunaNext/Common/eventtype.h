@@ -26,7 +26,6 @@ namespace luna
 class EventType : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(Event)
 
 public:
 
@@ -34,6 +33,7 @@ public:
         CoreNaviNext,
         CoreNaviBack,
     };
+    Q_ENUM(Event)
 
     static int toKey(EventType::Event event);
 };
