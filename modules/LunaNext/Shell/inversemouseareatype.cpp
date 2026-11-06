@@ -249,6 +249,13 @@ InverseMouseAreaType::InverseMouseAreaType(QQuickItem *parent) :
 
 InverseMouseAreaType::~InverseMouseAreaType()
 {
+    // ~QQuickItem, which runs after this, takes the item out of its window
+    // and emits windowChanged (and may emit visibleChanged): the slots must
+    // not run on what is left of it.
+    disconnect(this, &QQuickMouseArea::enabledChanged, this, &InverseMouseAreaType::update);
+    disconnect(this, &QQuickMouseArea::visibleChanged, this, &InverseMouseAreaType::update);
+    disconnect(this, &QQuickMouseArea::windowChanged, this, &InverseMouseAreaType::resetFilterOnWindowUpdate);
+    updateEventFilter(false);
 }
 
 void InverseMouseAreaType::updateEventFilter(bool enable)

@@ -123,3 +123,19 @@ TEST_F(InverseMouseAreaTest, containsWhatIsOutsideItInItsSensingArea)
     EXPECT_TRUE(area->contains(QPointF(150, 150)));
     EXPECT_FALSE(area->contains(QPointF(250, 250)));
 }
+
+TEST(InverseMouseArea, destroyedInItsWindowLeavesItAlone)
+{
+    // Taken out of the window as its QQuickItem part went, it updated its
+    // event filter from the part already destroyed (AddressSanitizer saw
+    // what that left). The window filters no events for it after.
+    QQuickWindow window;
+    window.resize(200, 200);
+    {
+        Probe area(window.contentItem());
+        area.setSize(QSizeF(100, 100));
+        ASSERT_TRUE(area.setProperty("topmostItem", true));
+    }
+    QTouchEvent begin = touch(QEvent::TouchBegin, 1, QEventPoint::State::Pressed, QPointF(150, 150));
+    QCoreApplication::sendEvent(&window, &begin);
+}
