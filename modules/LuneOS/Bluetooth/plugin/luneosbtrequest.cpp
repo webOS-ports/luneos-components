@@ -42,8 +42,33 @@ LuneOSBluetoothRequest::LuneOSBluetoothRequest(const Request<QString> &request, 
 {
 }
 
-void LuneOSBluetoothRequest::accept(QVariant returnValue) const
+LuneOSBluetoothRequest::~LuneOSBluetoothRequest()
 {
+    if (!mAnswered)
+        cancel();
+}
+
+bool LuneOSBluetoothRequest::answered() const
+{
+    return mAnswered;
+}
+
+/* True the first time: the request may be answered now. */
+bool LuneOSBluetoothRequest::markAnswered()
+{
+    if (mAnswered) {
+        qWarning("LuneOSBluetoothRequest: already answered, ignoring this answer");
+        return false;
+    }
+    mAnswered = true;
+    Q_EMIT answeredChanged();
+    return true;
+}
+
+void LuneOSBluetoothRequest::accept(const QVariant &returnValue)
+{
+    if (!markAnswered())
+        return;
     if(mRequestType == LuneOSBluetoothRequest::Void) {
         mRequestVoid.accept();
     }
@@ -55,8 +80,10 @@ void LuneOSBluetoothRequest::accept(QVariant returnValue) const
     }
 }
 
-void LuneOSBluetoothRequest::reject() const
+void LuneOSBluetoothRequest::reject()
 {
+    if (!markAnswered())
+        return;
     if(mRequestType == LuneOSBluetoothRequest::Void) {
         mRequestVoid.reject();
     }
@@ -67,8 +94,11 @@ void LuneOSBluetoothRequest::reject() const
         mRequestString.reject();
     }
 }
-void LuneOSBluetoothRequest::cancel() const
+
+void LuneOSBluetoothRequest::cancel()
 {
+    if (!markAnswered())
+        return;
     if(mRequestType == LuneOSBluetoothRequest::Void) {
         mRequestVoid.cancel();
     }
@@ -79,4 +109,3 @@ void LuneOSBluetoothRequest::cancel() const
         mRequestString.cancel();
     }
 }
-
