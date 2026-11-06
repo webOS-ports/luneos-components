@@ -16,6 +16,7 @@
 
 #include "droidcamerafactory.h"
 #include "droidcamerabin.h"
+#include "capturefile.h"
 #include "cameracontrols.h"
 
 #include <QCoreApplication>
@@ -561,13 +562,13 @@ void DroidCameraFactory::saveImage(const QByteArray &data)
         return;
 
     QDir().mkpath(QFileInfo(path).absolutePath());
-    QFile f(path);
-    if (!f.open(QIODevice::WriteOnly) || f.write(data) != data.size()) {
+    // A new file: the name asked for, or the next free one after it.
+    const QString saved = writeNewCaptureFile(path, data);
+    if (saved.isEmpty()) {
         emit imageCaptureError(QStringLiteral("cannot write %1").arg(path));
         return;
     }
-    f.close();
-    qInfo() << "DroidCameraFactory: saved capture to" << path;
+    qInfo() << "DroidCameraFactory: saved capture to" << saved;
 
     /* A focus the shot locked is the shot's; the next one focuses afresh. */
     if (m_focusStatus != FocusIdle) {
@@ -578,7 +579,7 @@ void DroidCameraFactory::saveImage(const QByteArray &data)
         setFocusStatus(FocusIdle);
     }
 
-    emit imageSaved(path);
+    emit imageSaved(saved);
 }
 
 bool DroidCameraFactory::recording() const

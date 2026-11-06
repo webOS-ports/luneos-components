@@ -23,6 +23,9 @@ gtest, for the parts that need no camera:
   A recorder (`droid_recorder_bin_new()`) writes to the file name and reads
   the audio device exactly as given, a `"` or `!` in either making no more
   pipeline of it.
+- `test_capturefile.cpp`: where a picture is written. Always to a new file:
+  the name asked for, or `-1`, `-2`, ... after it when that is taken (two
+  shots in one second), and never through a symlink in its place.
 
 `tests.pro` builds `luneos-camera-tests`; it is not part of the module's
 build. It needs googletest in the sysroot. On the build host, run the x86-64
