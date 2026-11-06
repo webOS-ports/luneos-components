@@ -23,6 +23,11 @@ QObjectListModel::QObjectListModel(QObject *parent, QList<QObject*> *list)
 {
 }
 
+QObjectListModel::~QObjectListModel()
+{
+    delete _list;
+}
+
 QHash<int, QByteArray> QObjectListModel::roleNames() const
 {
     QHash<int, QByteArray> parentRoles = QAbstractListModel::roleNames();
@@ -74,7 +79,18 @@ bool QObjectListModel::setData(const QModelIndex &index, const QVariant &value, 
 
     if (role == Qt::UserRole + 1)
     {
-        _list->replace(index.row(), reinterpret_cast<QObject*>(value.toInt()));
+        // An object, as data() gives it; a number is no pointer.
+        QObject *item = value.value<QObject*>();
+        if (!item)
+            return false;
+
+        const QObject *old = _list->at(index.row());
+        if (old == item)
+            return true;
+        disconnect(old, SIGNAL(destroyed()), this, SLOT(removeDestroyedItem()));
+        _list->replace(index.row(), item);
+        connect(item, SIGNAL(destroyed()), this, SLOT(removeDestroyedItem()));
+        emit dataChanged(index, index, QList<int>() << role);
         return true;
     }
 
@@ -117,6 +133,9 @@ void QObjectListModel::removeItem(QObject *item)
 
 void QObjectListModel::removeItem(int index)
 {
+    if (index < 0 || index >= _list->count())
+        return;
+
     beginRemoveRows(QModelIndex(), index, index);
     disconnect(((QObject*)_list->at(index)), SIGNAL(destroyed()), this, SLOT(removeDestroyedItem()));
     _list->removeAt(index);

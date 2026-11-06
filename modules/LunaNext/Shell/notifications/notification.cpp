@@ -40,6 +40,9 @@ Notification::Notification(const QString &ownerId, uint replacesId, const QStrin
 Notification::Notification(QObject *parent) :
     QObject(parent),
     replacesId_(0),
+    duration_(0),
+    doNotSuppress_(false),
+    priority_(0),
     expireTimeout_(-1),
     timestamp_(QDateTime::currentDateTimeUtc())
 {

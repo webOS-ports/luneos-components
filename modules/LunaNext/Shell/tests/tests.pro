@@ -1,6 +1,7 @@
 # Unit tests for LunaNext.Shell's C++: where ScreenShooter writes a
 # screenshot (screenshooter.cpp), and the touch events InverseMouseArea maps
-# (inversemouseareatype.cpp). See README.md.
+# (inversemouseareatype.cpp), and the notifications' store, list model and
+# manager (notifications/). See README.md.
 #
 # Not part of the module's build; build it on its own:
 #   qmake tests.pro && make
@@ -10,19 +11,28 @@ TEMPLATE = app
 TARGET = lunanext-shell-tests
 CONFIG += console c++17
 CONFIG -= app_bundle
-QT = core gui qml quick quick-private testlib
+QT = core gui qml quick quick-private sql testlib
 
 INCLUDEPATH += ..
 
-HEADERS += ../screenshooter.h ../inversemouseareatype.h ../quickutils.h
+HEADERS += ../screenshooter.h ../inversemouseareatype.h ../quickutils.h \
+    ../notifications/categorydefinitionstore.h \
+    ../notifications/notification.h \
+    ../notifications/notificationmanager.h \
+    ../notifications/qobjectlistmodel.h
 
 SOURCES += \
     unit/main.cpp \
     unit/test_screenshooter.cpp \
     unit/test_inversemousearea.cpp \
+    unit/test_notifications.cpp \
     ../screenshooter.cpp \
     ../inversemouseareatype.cpp \
-    ../quickutils.cpp
+    ../quickutils.cpp \
+    ../notifications/categorydefinitionstore.cpp \
+    ../notifications/notification.cpp \
+    ../notifications/notificationmanager.cpp \
+    ../notifications/qobjectlistmodel.cpp
 
 LIBS += -lgtest -lpthread
 
