@@ -142,23 +142,13 @@ private:
     void updateCallUri();
 
     static bool serviceMethodCallback(LSHandle *handle, LSMessage *message, void *data);
-    bool handleServiceMethodCallback(LSHandle *handle, LSMessage *message);
+    bool handleServiceMethodCallback(LSHandle *handle, LSMessage *message, QJSValue callback);
 
-    class RegisteredMethod
-    {
-    public:
-        RegisteredMethod(const QString& name, QJSValue callback);
-        ~RegisteredMethod();
-
-        LSMethod* methods();
-        QJSValue callback();
-
-    private:
-        LSMethod mMethods[2];
-        QJSValue mCallback;
-    };
-
-    QMap<QString, RegisteredMethod*> mServiceMethodCallbacks;
+    // The methods this adapter registered (category/method), whose slots
+    // (lunaserviceadapter.cpp) it lets go of when it is destroyed.
+    QList<QString> mRegisteredMethods;
+    // Whether this adapter holds a reference on serviceHandles[mName].
+    bool mHoldsHandleRef;
 
     static GMainLoop *mainLoop();
 };
