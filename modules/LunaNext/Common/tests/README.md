@@ -14,6 +14,10 @@ gtest, for the module's C++:
   not write on the build host: there the scale comes from the environment,
   and `persistUiScale` fails to open the file whatever it is given, so the
   last test only shows its check on a device.
+- `test_settingsadapter.cpp`: the panel shape `SettingsAdapter` reads. Cutouts
+  are `x y w h` rects; one with a field that is no number, without four
+  fields or without area is dropped and the others kept. Corner radii are one
+  value or four, negative ones 0, and dropped when one of them is no number.
 
 `tests.pro` builds `lunanext-common-tests`; it is not part of the module's
 build. It needs googletest. On the build host, run the x86-64 build with its

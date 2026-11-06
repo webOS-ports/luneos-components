@@ -1,5 +1,6 @@
 # Unit tests for LunaNext.Common's C++: the sizes Units gives and the
-# uiScale it takes (units.cpp). See README.md.
+# uiScale it takes (units.cpp), and the panel shape SettingsAdapter reads
+# (settingsadapter.cpp). See README.md.
 #
 # Not part of the module's build; build it on its own:
 #   qmake tests.pro && make
@@ -13,12 +14,14 @@ QT = core gui qml
 
 INCLUDEPATH += ..
 
-HEADERS += ../units.h
+HEADERS += ../units.h ../settingsadapter.h
 
 SOURCES += \
     unit/main.cpp \
     unit/test_units.cpp \
-    ../units.cpp
+    unit/test_settingsadapter.cpp \
+    ../units.cpp \
+    ../settingsadapter.cpp
 
 CONFIG += link_pkgconfig
 PKGCONFIG += LunaSysMgrCommon glib-2.0
