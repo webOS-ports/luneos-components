@@ -81,6 +81,29 @@ var profiles = {
      * inside 480px. Where a layout runs out of width first.
      */
     "mindphone": { tabletUi: false, displayWidth:  480, displayHeight:  800, dpi: 190, gridUnit: 11 },
+    /*
+     * Xiaomi Mi A1 (tissot) - meta-luneos's tissot luna-platform.conf:
+     * DisplayWidth 1080, DisplayHeight 1920, DPI 480, GridUnit 26.
+     */
+    "tissot":  { tabletUi: false, displayWidth: 1080, displayHeight: 1920, dpi: 480, gridUnit: 26 },
+    /*
+     * Google Pixel 3a (sargo) - 1080x2220 is meta-google's sargo.conf; DPI 441
+     * is its deviceinfo's, and GridUnit 25 is what luneos-device-config's
+     * 50-luna-platform makes of that (round(441 * 1.44 / 25.4)).
+     */
+    "sargo":   { tabletUi: false, displayWidth: 1080, displayHeight: 2220, dpi: 441, gridUnit: 25 },
+    /*
+     * The three phones on their side: width and height swapped. A phone in
+     * landscape is the shortest window an app gets - tissot's is 41 grid
+     * units high, less than the Q25's 45 - so it is where a layout made for
+     * portrait runs out of height. radon's notch moves to the left edge, as
+     * it is with the top of the phone turned to the left.
+     */
+    "tissot-land": { tabletUi: false, displayWidth: 1920, displayHeight: 1080, dpi: 480, gridUnit: 26 },
+    "sargo-land":  { tabletUi: false, displayWidth: 2220, displayHeight: 1080, dpi: 441, gridUnit: 25 },
+    "radon-land":  { tabletUi: false, displayWidth: 1600, displayHeight:  720, dpi: 262, gridUnit: 15,
+                     cutouts: [ { x: 0, y: 324, width: 102, height: 72 } ],
+                     cornerRadii: [ 75, 75, 75, 75 ] },
     /* For desktop debug */
     "desktop": { tabletUi: false, displayWidth:  600, displayHeight:  800, dpi: 148, gridUnit: 10 }
 };
