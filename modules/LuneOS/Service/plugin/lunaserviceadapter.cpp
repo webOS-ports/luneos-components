@@ -310,6 +310,20 @@ LunaServiceAdapter::~LunaServiceAdapter()
     }
 }
 
+bool LunaServiceAdapter::nameAllowed() const
+{
+    // qml-runner may register under any app ID (it is in containers.d), and
+    // registers whatever name the app gives: an app would then speak with
+    // the permissions of another. Under the launcher a LunaService therefore
+    // only gets the app's own ID, which qml-runner set as applicationName.
+    if (QCoreApplication::applicationFilePath() != LUNA_QML_LAUNCHER_PATH &&
+        QCoreApplication::applicationFilePath() != LUNA_QML_LAUNCHER_PATH_LUNEOS)
+        return true;
+
+    return !QCoreApplication::applicationName().isEmpty() &&
+           mName == QCoreApplication::applicationName();
+}
+
 void LunaServiceAdapter::classBegin()
 {
 }
@@ -320,6 +334,12 @@ void LunaServiceAdapter::componentComplete()
 
     if (mName.length() == 0)
         mName = QCoreApplication::applicationName();
+
+    if (!nameAllowed()) {
+        qWarning("LunaService: an app %s may not use the name %s",
+                 qUtf8Printable(QCoreApplication::applicationName()), qUtf8Printable(mName));
+        return;
+    }
 
     // There are two main use-cases for LunaService:
     // 1. QML app is started via luna-qml-launcher or qml-runner
