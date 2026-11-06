@@ -29,17 +29,27 @@
 
 namespace {
 
+QByteArray hash12(const QByteArray &data);
+
 /* What a picture is known by in the cache: the SVG's own name, with anything
- * but letters, digits, '-' and '_' replaced, so it is a plain file name. */
+ * but letters, digits, '-' and '_' replaced, so it is a plain file name.
+ *
+ * A name that had to be changed, or cut to 64 characters, gets '.' and a
+ * hash of the name as it was: "a b" and "a_b", or two long names that start
+ * alike, would otherwise share one, and each picture, drawn, removed the
+ * other's file as an old version of itself. No plain name has a '.'. */
 QString pictureName(const QFileInfo &svg)
 {
-    QString name = svg.completeBaseName();
+    const QString original = svg.completeBaseName();
+    QString name = original;
     for (QChar &c : name) {
         const char l = c.toLatin1();
         if (!((l >= 'a' && l <= 'z') || (l >= 'A' && l <= 'Z') || (l >= '0' && l <= '9') || l == '-' || l == '_'))
             c = QLatin1Char('_');
     }
-    return name.left(64);
+    if (name == original && name.size() <= 64)
+        return name;
+    return name.left(64) + QLatin1Char('.') + QString::fromLatin1(hash12(original.toUtf8()).left(8));
 }
 
 QByteArray hash12(const QByteArray &data)
