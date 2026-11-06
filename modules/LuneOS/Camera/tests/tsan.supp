@@ -21,3 +21,7 @@ race:QArrayData::allocate2
 # - QThreadPool's own wait condition, destroyed on the GUI thread after its
 #   worker has left it.
 race:QWaitCondition
+#
+# - the pool's threads, joined by Qt at exit with pthread_clockjoin_np(),
+#   which TSan does not intercept: it reports each as a thread leak.
+thread:QThread::start

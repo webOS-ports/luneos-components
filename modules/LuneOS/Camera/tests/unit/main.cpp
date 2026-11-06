@@ -28,11 +28,13 @@ int main(int argc, char **argv)
 {
     gst_init(&argc, &argv);
     QCoreApplication app(argc, argv);
-    /* Pool threads live for the whole run. With the default expiry a worker
-     * exits between tests and the next one starts on its pthread handle,
-     * which a ThreadSanitizer runtime built for another glibc than the
-     * sysroot's mistakes for a thread still alive (CHECK failed in
-     * sanitizer_thread_registry.cpp). */
+    /* Pool threads live for the whole run. Qt joins a thread with
+     * pthread_clockjoin_np(), which ThreadSanitizer does not intercept, so
+     * to TSan a joined thread stays alive; the next one started on its
+     * pthread handle stops the run with "CHECK failed" in
+     * sanitizer_thread_registry.cpp. With the default expiry a worker would
+     * exit and be joined between tests. The tests wait for the pool with
+     * drainPool(), not waitForDone(), for the same reason. */
     QThreadPool::globalInstance()->setExpiryTimeout(-1);
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
