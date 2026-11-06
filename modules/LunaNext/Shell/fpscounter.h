@@ -22,6 +22,8 @@
 #include <QQuickItem>
 #include <QTimer>
 
+#include <atomic>
+
 namespace luna
 {
 
@@ -32,6 +34,7 @@ class FpsCounter : public QQuickItem
 
 public:
     explicit FpsCounter(QQuickItem *parent = 0);
+    ~FpsCounter() override;
 
     unsigned int fps() const;
 
@@ -39,12 +42,16 @@ signals:
     void fpsChanged();
 
 private slots:
-    void setup();
+    void setWindow(QQuickWindow *newWindow);
+    void updateFps();
 
 private:
-    unsigned int mFrameCounter;
+    // Counted where the window swaps its frames, which is the render
+    // thread under the threaded render loop, and read here.
+    std::atomic<unsigned int> mFrameCounter;
     unsigned int mFps;
     QTimer mUpdateTimer;
+    QMetaObject::Connection mFrameConnection;
 };
 
 } // namespace luna

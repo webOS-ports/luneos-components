@@ -23,26 +23,45 @@ namespace luna
 {
 
 FpsCounter::FpsCounter(QQuickItem *parent) :
-    QQuickItem(parent)
+    QQuickItem(parent),
+    mFrameCounter(0),
+    mFps(0)
 {
-    QTimer::singleShot(0, this, SLOT(setup()));
-}
-
-void FpsCounter::setup()
-{
-    QQuickWindow *parentWindow = window();
-    connect(parentWindow, &QQuickWindow::frameSwapped, [=]() {
-        mFrameCounter++;
-    });
-
-    connect(&mUpdateTimer, &QTimer::timeout, [=]() {
-        mFps = mFrameCounter / 2;
-        mFrameCounter = 0;
-        fpsChanged();
-    });
+    connect(&mUpdateTimer, &QTimer::timeout, this, &FpsCounter::updateFps);
+    connect(this, &QQuickItem::windowChanged, this, &FpsCounter::setWindow);
 
     mUpdateTimer.setInterval(2000);
     mUpdateTimer.start();
+
+    setWindow(window());
+}
+
+FpsCounter::~FpsCounter()
+{
+    // ~QQuickItem, which runs after this, takes the item out of its window
+    // and so emits windowChanged: setWindow() must not run on what is left.
+    disconnect(this, &QQuickItem::windowChanged, this, &FpsCounter::setWindow);
+    QObject::disconnect(mFrameConnection);
+}
+
+void FpsCounter::setWindow(QQuickWindow *newWindow)
+{
+    // Frames of the window it was in no longer count, and none count after
+    // this item is gone: the connection has it as its context.
+    QObject::disconnect(mFrameConnection);
+    mFrameConnection = QMetaObject::Connection();
+
+    if (newWindow) {
+        mFrameConnection = connect(newWindow, &QQuickWindow::frameSwapped, this, [this]() {
+            mFrameCounter.fetch_add(1, std::memory_order_relaxed);
+        }, Qt::DirectConnection);
+    }
+}
+
+void FpsCounter::updateFps()
+{
+    mFps = mFrameCounter.exchange(0, std::memory_order_relaxed) / 2;
+    Q_EMIT fpsChanged();
 }
 
 unsigned int FpsCounter::fps() const
