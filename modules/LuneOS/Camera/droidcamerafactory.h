@@ -23,6 +23,7 @@
 #include <QVariantList>
 
 #include <atomic>
+#include <thread>
 
 #include "cameracontrols.h"
 
@@ -247,6 +248,8 @@ private:
     void finishRecording();
     struct _GstElement *startHwRecording(struct _GstElement *bin, const QString &filePath);
     void hwRecordingStarted(struct _GstElement *rec, const QString &filePath);
+    void hwStartFinished(struct _GstElement *bin, struct _GstElement *rec, const QString &filePath,
+                         unsigned generation);
     bool startSwRecording(struct _GstElement *bin, const QString &filePath);
     void finishHwRecording(bool saved = true);
 
@@ -264,6 +267,11 @@ private:
     // for meanwhile.
     bool m_starting = false;
     bool m_stopAfterStart = false;
+    // The worker setting up a hardware recording. It uses this object, so it
+    // is joined before this goes, and when it has reported back; a camera
+    // switch does not wait for it, but no other start begins until it is
+    // done.
+    std::thread m_startWorker;
     QString m_pendingVideoPath;
     // The rotation startRecording() was given, for the recording being set up.
     int m_recordingRotation = 0;

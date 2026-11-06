@@ -243,6 +243,9 @@ DroidCameraFactory::DroidCameraFactory(QObject *parent)
 
 DroidCameraFactory::~DroidCameraFactory()
 {
+    // A hardware recording being set up uses this object until it is done.
+    if (m_startWorker.joinable())
+        m_startWorker.join();
 #ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
     /* The image sink's handler is the one that holds a plain pointer to the
      * factory (the camera's own handlers go through a QPointer); nothing may
@@ -328,12 +331,20 @@ QObject *DroidCameraFactory::createVideoSource(int cameraDevice)
         return nullptr;
 
     // A camera switch tears the old source (and any recording branch in
-    // it) down wholesale; just drop our bookkeeping.
-    if (m_recBin) {
+    // it) down wholesale; just drop our bookkeeping, all of it: a hardware
+    // recording's flags left set sent the next camera's software recording
+    // down the hardware stop. A recorder still being set up for the old
+    // camera is dropped when its worker reports back (the generation below
+    // tells it apart).
+    if (m_recBin || m_starting) {
         if (m_recTeePad)
             gst_object_unref(static_cast<GstPad *>(m_recTeePad));
         m_recBin = nullptr;
         m_recTeePad = nullptr;
+        m_hwRecording = false;
+        m_stopRequested = false;
+        m_starting = false;
+        m_stopAfterStart = false;
         m_pendingVideoPath.clear();
         emit recordingChanged();
     }
@@ -657,7 +668,9 @@ bool DroidCameraFactory::startRecording(const QString &filePath, int rotation)
 {
 #ifdef HAVE_QGSTREAMER_VIDEO_SOURCE
     auto *source = qobject_cast<QGStreamerVideoSource *>(m_videoSource);
-    if (!source || !source->gstElement() || m_recBin || m_starting) {
+    // A worker still setting up a recorder for the previous camera holds
+    // the way until it is done.
+    if (!source || !source->gstElement() || m_recBin || m_starting || m_startWorker.joinable()) {
         emit videoCaptureError(QStringLiteral("cannot start recording"));
         return false;
     }
@@ -690,22 +703,26 @@ bool DroidCameraFactory::startRecording(const QString &filePath, int rotation)
         m_pendingVideoPath = filePath;
         emit recordingChanged();
         gst_object_ref(bin);
-        std::thread([this, bin, filePath] {
+        const unsigned generation = m_generation;
+        m_startWorker = std::thread([this, bin, filePath, generation] {
             GstElement *rec = startHwRecording(bin, filePath);
-            QMetaObject::invokeMethod(this, [this, bin, filePath, rec] {
-                m_starting = false;
+            // The application, not this object, carries the answer: the
+            // factory may be gone by the time it is delivered (its
+            // destructor waits for this thread, not for the event).
+            QPointer<DroidCameraFactory> guard(this);
+            QMetaObject::invokeMethod(QCoreApplication::instance(),
+                                      [guard, bin, filePath, rec, generation] {
+                if (guard) {
+                    guard->hwStartFinished(bin, rec, filePath, generation);
+                    return;
+                }
                 if (rec) {
-                    hwRecordingStarted(rec, filePath);
-                } else {
-                    // The hardware recorder could not be set up: record in software instead.
-                    m_pendingVideoPath.clear();
-                    m_stopAfterStart = false;
-                    if (!startSwRecording(bin, filePath))
-                        emit recordingChanged();
+                    gst_element_set_state(rec, GST_STATE_NULL);
+                    gst_bin_remove(GST_BIN(bin), rec);
                 }
                 gst_object_unref(bin);
             }, Qt::QueuedConnection);
-        }).detach();
+        });
         return true;
     }
 
@@ -715,6 +732,37 @@ bool DroidCameraFactory::startRecording(const QString &filePath, int rotation)
     Q_UNUSED(rotation);
     return false;
 #endif
+}
+
+void DroidCameraFactory::hwStartFinished(GstElement *bin, GstElement *rec, const QString &filePath,
+                                         unsigned generation)
+{
+    // The worker posted this as its last act.
+    if (m_startWorker.joinable())
+        m_startWorker.join();
+
+    if (generation != m_generation) {
+        // Set up for a camera that has been switched away from: its source
+        // is being torn down, and this camera's state is not its to set.
+        if (rec) {
+            gst_element_set_state(rec, GST_STATE_NULL);
+            gst_bin_remove(GST_BIN(bin), rec);
+        }
+        gst_object_unref(bin);
+        return;
+    }
+
+    m_starting = false;
+    if (rec) {
+        hwRecordingStarted(rec, filePath);
+    } else {
+        // The hardware recorder could not be set up: record in software instead.
+        m_pendingVideoPath.clear();
+        m_stopAfterStart = false;
+        if (!startSwRecording(bin, filePath))
+            emit recordingChanged();
+    }
+    gst_object_unref(bin);
 }
 
 bool DroidCameraFactory::startSwRecording(GstElement *bin, const QString &filePath)
