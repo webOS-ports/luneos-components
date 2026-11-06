@@ -1,6 +1,7 @@
 # Unit tests for LunaNext.Shell's C++: where ScreenShooter writes a
 # screenshot (screenshooter.cpp), and the touch events InverseMouseArea maps
-# (inversemouseareatype.cpp), the frames FpsCounter counts (fpscounter.cpp),
+# (inversemouseareatype.cpp), the taps and edge flicks GestureHandler sees
+# (gesturehandler.cpp), the frames FpsCounter counts (fpscounter.cpp),
 # ReticleItem's properties (reticleitem.cpp),
 # and the notifications' store, list model and
 # manager (notifications/). See README.md.
@@ -17,7 +18,7 @@ QT = core gui qml quick quick-private sql testlib
 
 INCLUDEPATH += ..
 
-HEADERS += ../screenshooter.h ../inversemouseareatype.h ../quickutils.h ../fpscounter.h ../reticleitem.h \
+HEADERS += ../screenshooter.h ../inversemouseareatype.h ../quickutils.h ../gesturehandler.h ../fpscounter.h ../reticleitem.h \
     ../notifications/categorydefinitionstore.h \
     ../notifications/notification.h \
     ../notifications/notificationmanager.h \
@@ -27,12 +28,14 @@ SOURCES += \
     unit/main.cpp \
     unit/test_screenshooter.cpp \
     unit/test_inversemousearea.cpp \
+    unit/test_gesturehandler.cpp \
     unit/test_notifications.cpp \
     unit/test_fpscounter.cpp \
     unit/test_reticleitem.cpp \
     ../screenshooter.cpp \
     ../inversemouseareatype.cpp \
     ../quickutils.cpp \
+    ../gesturehandler.cpp \
     ../fpscounter.cpp \
     ../reticleitem.cpp \
     ../notifications/categorydefinitionstore.cpp \

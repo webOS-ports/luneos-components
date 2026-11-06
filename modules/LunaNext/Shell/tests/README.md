@@ -18,6 +18,14 @@ gtest, for the module's C++:
   ends it. An area that is the first item of its window, and so its own
   sensing area, senses the whole window. One destroyed in its window runs no
   slot on what is left of it.
+- `test_gesturehandler.cpp`: `GestureHandler`, with touches that go through
+  Qt as a touch screen's would. A touch that stays within a finger is a tap
+  where it is on the screen; one that moves further is none. A flick from the
+  left or right edge that is long enough and not along the edge is an edge
+  flick from where it began, its length measured on the screen; a short one,
+  one along the edge or one in the middle is none. An edge touch held past the
+  timeout is a flick that timed out. Unless set, the timeout is 2000 ms and the
+  minimal flick length 100.
 - `test_notifications.cpp`: the notifications' C++ (`notifications/`). A
   default `Notification` has defined duration, priority and doNotSuppress;
   `QObjectListModel::setData` stores the object it is given (not a number as a

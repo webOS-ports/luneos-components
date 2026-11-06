@@ -31,10 +31,15 @@ namespace luna
 GestureHandler::GestureHandler(QQuickItem *parent) :
     QQuickItem(parent),
     mFingerSize(0),
+    mMinFlick(100),
     mTimeout(2000)
 {
     mTapRecognizer = new TapGestureRecognizer(this);
     mScreenEdgeFlickRecognizer = new ScreenEdgeFlickGestureRecognizer(this);
+    // The recognizer's timer has no interval until it is given one: without
+    // this an edge touch timed out at once when the timeout was not set.
+    mScreenEdgeFlickRecognizer->setTimeout(mTimeout);
+    mScreenEdgeFlickRecognizer->setMinimalFlickLength(mMinFlick);
     connect(mTapRecognizer, &TapGestureRecognizer::tapGesture,
         this, &GestureHandler::gestureEvent);
     connect(mScreenEdgeFlickRecognizer, &ScreenEdgeFlickGestureRecognizer::screenEdgeFlickGesture,
