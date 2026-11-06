@@ -34,6 +34,6 @@ void LunaNextShellNotificationsPlugin::registerTypes(const char *uri)
     qmlRegisterType<NotificationManagerWrapper>(uri, 0, 1, "NotificationManager");
 }
 
-void LunaNextShellNotificationsPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
+void LunaNextShellNotificationsPlugin::initializeEngine(QQmlEngine *, const char *)
 {
 }

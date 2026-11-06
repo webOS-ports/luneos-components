@@ -89,9 +89,9 @@ bool TapGestureRecognizer::eventFilter(QObject *, QEvent *event)
     case QEvent::TouchUpdate:
         {
             QTouchEvent *touchEvent = static_cast<QTouchEvent *>(event);
-            const QTouchEvent::TouchPoint &touchPoint = touchEvent->touchPoints().first();
+            const QTouchEvent::TouchPoint &touchPoint = touchEvent->points().first();
 
-            if (QLineF(touchPoint.pos(),touchPoint.startPos()).length() > mFingerSize)
+            if (QLineF(touchPoint.position(),touchPoint.pressPosition()).length() > mFingerSize)
                 show = false;
         }
         break;
@@ -102,8 +102,8 @@ bool TapGestureRecognizer::eventFilter(QObject *, QEvent *event)
         {
             if (show) {
                 QTouchEvent *touchEvent = static_cast<QTouchEvent *>(event);
-                const QTouchEvent::TouchPoint &touchPoint = touchEvent->touchPoints().first();
-                QPointF fpoint = touchPoint.screenPos();
+                const QTouchEvent::TouchPoint &touchPoint = touchEvent->points().first();
+                QPointF fpoint = touchPoint.globalPosition();
                 emit tapGesture(GestureHandler::TapGesture, fpoint.toPoint(), false);
             };
             show = false;
@@ -137,11 +137,11 @@ bool ScreenEdgeFlickGestureRecognizer::eventFilter(QObject *, QEvent *event)
             QTouchEvent *touchEvent = static_cast<QTouchEvent *>(event);
             mTimer.stop();
             emit touchBegin();
-            if (touchEvent->touchPoints().count() != 1)
+            if (touchEvent->points().count() != 1)
                 break;
 
-            const QTouchEvent::TouchPoint &touchPoint = touchEvent->touchPoints().first();
-            QPointF fpoint = touchPoint.screenPos();
+            const QTouchEvent::TouchPoint &touchPoint = touchEvent->points().first();
+            QPointF fpoint = touchPoint.globalPosition();
             mStartPos = fpoint.toPoint();
             QMargins marg(mFingerSize, mFingerSize, mFingerSize, mFingerSize);
             QRect margRect = QRect(0, 0, parentItem()->width(), parentItem()->height()).marginsRemoved(marg);
@@ -152,8 +152,8 @@ bool ScreenEdgeFlickGestureRecognizer::eventFilter(QObject *, QEvent *event)
         {
             if (mTimer.isActive()) {
                 QTouchEvent *touchEvent = static_cast<QTouchEvent *>(event);
-                const QTouchEvent::TouchPoint &touchPoint = touchEvent->touchPoints().first();
-                QPointF fpoint = touchPoint.screenPos();
+                const QTouchEvent::TouchPoint &touchPoint = touchEvent->points().first();
+                QPointF fpoint = touchPoint.globalPosition();
                 int x0 = mStartPos.x();
                 int y0 = mStartPos.y();
                 double deltaX = qAbs(fpoint.x() - x0);
@@ -185,8 +185,8 @@ bool ScreenEdgeFlickGestureRecognizer::eventFilter(QObject *, QEvent *event)
 
             if (mTimer.isActive()) {
                 mTimer.stop();
-                const QTouchEvent::TouchPoint &touchPoint = touchEvent->touchPoints().first();
-                QPointF fpoint = touchPoint.screenPos();
+                const QTouchEvent::TouchPoint &touchPoint = touchEvent->points().first();
+                QPointF fpoint = touchPoint.globalPosition();
                 if (QLineF(mStartPos,fpoint).length() < mMinFlick)
                     break;
 

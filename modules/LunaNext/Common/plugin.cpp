@@ -24,27 +24,27 @@
 #include "fileutils.h"
 #include "ledsadapter.h"
 
-static QObject *settings_callback(QQmlEngine *e, QJSEngine *)
+static QObject *settings_callback(QQmlEngine *, QJSEngine *)
 {
     return new luna::SettingsAdapter();
 }
 
-static QObject *units_callback(QQmlEngine *e, QJSEngine *)
+static QObject *units_callback(QQmlEngine *, QJSEngine *)
 {
     return new luna::Units();
 }
 
-static QObject *fontutils_callback(QQmlEngine *e, QJSEngine *)
+static QObject *fontutils_callback(QQmlEngine *, QJSEngine *)
 {
     return new luna::FontUtils;
 }
 
-static QObject *fileutils_callback(QQmlEngine *e, QJSEngine *)
+static QObject *fileutils_callback(QQmlEngine *, QJSEngine *)
 {
     return new luna::FileUtils;
 }
 
-static QObject *leds_callback(QQmlEngine *e, QJSEngine *)
+static QObject *leds_callback(QQmlEngine *, QJSEngine *)
 {
     return new luna::LedsAdapter();
 }
@@ -64,6 +64,6 @@ void LunaNextCommonPlugin::registerTypes(const char *uri)
     qmlRegisterSingletonType<luna::LedsAdapter>(uri, 0, 1, "Leds", leds_callback);
 }
 
-void LunaNextCommonPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
+void LunaNextCommonPlugin::initializeEngine(QQmlEngine *, const char *)
 {
 }
