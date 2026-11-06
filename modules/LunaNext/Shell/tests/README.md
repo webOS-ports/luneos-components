@@ -28,6 +28,8 @@ gtest, for the module's C++:
 - `test_fpscounter.cpp`: `FpsCounter` starts at 0, counts the frames of the
   window it is in (and of no other), counts nothing once destroyed, and takes
   frames from another thread, as the threaded render loop swaps them.
+- `test_reticleitem.cpp`: `Reticle`'s `imagePath` can be set and read as a
+  property, and the item takes its size from that image.
 
 `tests.pro` builds `lunanext-shell-tests`; it is not part of the module's
 build. It needs googletest. On the build host, run the x86-64 build with its
