@@ -24,6 +24,7 @@
 #include <QCoreApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QPointer>
 
 #include "lunaserviceadapter.h"
 #include "webos_application.h"
@@ -165,12 +166,21 @@ bool LunaServiceCall::responseCallback(LSHandle *handle, LSMessage *message, voi
 
 bool LunaServiceCall::handleResponse(LSHandle *handle, LSMessage *message)
 {
+    Q_UNUSED(handle);
+
     LunaServiceMessage msg(message);
     mResponseCount++;
 
     if (mCallback.isCallable()) {
+        // The callback may cancel this call (a page ends its subscription
+        // when the last message came) or destroy the LunaService it belongs
+        // to; either deletes this object. Nothing of it is touched after
+        // that: luna-service2 already knows the call is gone.
+        QPointer<LunaServiceCall> self(this);
         QQmlContext *context = QQmlEngine::contextForObject(parent());
         mCallback.call(QJSValueList() << context->engine()->newQObject(&msg));
+        if (!self)
+            return true;
     }
 
     const char* category = LSMessageGetCategory(message);
