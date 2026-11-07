@@ -62,10 +62,11 @@ Item {
             return found;
         }
 
-        // Dialog's 16 px title, its 12pt message and a 12pt box label.
+        // Dialog's 2 gu title (Enyo's 20px caption), its 12pt message and a
+        // 12pt box label.
         function test_unset_they_keep_their_sizes() {
             var d = createTemporaryObject(plainDialog, page);
-            compare(d.titlePixelSize, 16);
+            compare(d.titlePixelSize, Units.gu(2.0));
             compare(d.messagePixelSize, px("12pt"));
             var b = createTemporaryObject(plainBox, page);
             compare(b.labelPixelSize, px("12pt"));
@@ -74,7 +75,18 @@ Item {
         function test_messagePixelSize_sizes_the_message() {
             var d = createTemporaryObject(plainDialog, page, { messagePixelSize: px("medium") });
             compare(textShowing(d, "m").font.pixelSize, px("medium"));
-            compare(textShowing(d, "t").font.pixelSize, 16);
+            compare(textShowing(d, "t").font.pixelSize, Units.gu(2.0));
+        }
+
+        // As Enyo's ModalDialog caption: larger than the message, not bold,
+        // the body's #333, and a long one wraps rather than being cut short.
+        function test_title_reads_as_legacy_webOS_caption() {
+            var d = createTemporaryObject(plainDialog, page);
+            var t = textShowing(d, "t");
+            verify(t.font.pixelSize > textShowing(d, "m").font.pixelSize, "the title is larger than the message");
+            verify(t.font.weight < Font.DemiBold, "the title is not bold");
+            compare(t.color, Qt.color("#333333"));
+            compare(t.wrapMode, Text.Wrap);
         }
 
         function test_labelPixelSize_sizes_the_label() {
