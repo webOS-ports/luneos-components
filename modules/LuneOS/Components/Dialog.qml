@@ -41,7 +41,7 @@ Item {
     property alias message: messageText.text
     property real dialogHeight: Units.gu(15.0)
     property alias dialogWidth: dialogWindow.width
-    // The title's size (16 pixels unless set), the message's (12pt unless
+    // The title's size (2 gu, Enyo's 20px, unless set), the message's (12pt unless
     // set) and how the message lines up.
     property alias titlePixelSize: titleText.font.pixelSize
     property alias messagePixelSize: messageText.font.pixelSize
@@ -246,11 +246,14 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width
                 horizontalAlignment: Text.AlignHCenter
+                // Enyo's ModalDialog caption (enyo-modaldialog-title): 1rem of
+                // Onyx's 20px, the body's #333 in Prelude Medium, wrapping. It
+                // was 16 device pixels, unscaled, and bold: a third of the
+                // message's height on a phone.
                 font.family: "Prelude"
-                color: "#3b3b3b"
-                font.pixelSize: 16
-                font.weight: Font.Bold
-                elide: Text.ElideRight
+                color: "#333333"
+                font.pixelSize: Units.gu(2.0)
+                wrapMode: Text.Wrap
             }
 
             // Under the title rather than over it: both were anchored to the
