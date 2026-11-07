@@ -26,6 +26,7 @@ QML_FILES = ActionSheet.qml \
             Page.qml \
             PageStackWindow.qml \
             PlaceholderImage.qml \
+            Printer.qml \
             PromptDialog.qml \
             ProxyAuthenticationDialog.qml \
             SectionDivider.qml \
