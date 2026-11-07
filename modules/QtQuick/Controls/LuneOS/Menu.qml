@@ -80,10 +80,23 @@ T.Menu {
                              contentItem ? contentItem.implicitHeight : 0) + topPadding + bottomPadding
 
     margins: 0
-    leftPadding: 20; rightPadding: 20
-    topPadding: 10; bottomPadding: 10
+    leftPadding: _appMenuStyle ? Math.round(1 * _px) : 20
+    rightPadding: _appMenuStyle ? Math.round(10 * _px) : 20
+    topPadding: _appMenuStyle ? 0 : 10
+    bottomPadding: _appMenuStyle ? Math.round(20 * _px) : 10
 
     readonly property bool _appMenuStyle: LuneOSMenu.appMenuStyle
+
+    /*
+     * The app menu is webOS 3.0's (enyo.AppMenu in the Onyx theme), laid out
+     * in its CSS pixels: those of the TouchPad, where a grid unit is ten of
+     * them. Onyx's frame (appmenu.png, sliced 12 24 20 24) starts 10px left
+     * of the menu's edge (left: -10px) and its rows 13px into the frame's
+     * 24px left border; they run to 14px into the right one and to the top
+     * of the frame, and the frame closes 20px under the last of them. It is
+     * at least 210px wide.
+     */
+    readonly property real _px: Units.gridUnit / 10
 
     //! [contentItem]
     contentItem: ListView {
@@ -97,6 +110,7 @@ T.Menu {
         currentIndex: -1
 
         property bool _appMenuStyle: control._appMenuStyle
+        property real _px: control._px
 
         ScrollIndicator.vertical: ScrollIndicator {}
     }
@@ -104,8 +118,9 @@ T.Menu {
 
     //! [background]
     background: Item {
-        implicitWidth: _appMenuStyle ? appMenuStyleBg.implicitWidth : generalStyleBg.implicitWidth
-        implicitHeight: _appMenuStyle ? appMenuStyleBg.implicitHeight : generalStyleBg.implicitHeight
+        // The app menu's frame is at least 210px wide, 10px of it left of the menu
+        implicitWidth: _appMenuStyle ? Math.round(200 * control._px) : generalStyleBg.implicitWidth
+        implicitHeight: _appMenuStyle ? 0 : generalStyleBg.implicitHeight
         BorderImage {
             id: generalStyleBg
             source: "images/menu-background.png"
@@ -114,12 +129,22 @@ T.Menu {
             visible: !_appMenuStyle
             anchors.fill: parent
         }
-        Rectangle {
+        // Onyx's images-1.5/appmenu.png (120x240, sliced 18 36 30 36), made
+        // at the 1.5 scale it is drawn for and scaled to the CSS pixel here, so
+        // that the slices are Onyx's 12 24 20 24
+        BorderImage {
             id: appMenuStyleBg
-            radius: Units.gu(0.4)
-            color: "#313131"
+            readonly property real _scale: control._px / 1.5
             visible: _appMenuStyle
-            anchors.fill: parent
+            x: -Math.round(10 * control._px)
+            width: (parent.width - x) / _scale
+            height: parent.height / _scale
+            scale: _scale
+            transformOrigin: Item.TopLeft
+            smooth: true
+            source: "images/appmenu.png"
+            border.left: 36; border.top: 18
+            border.right: 36; border.bottom: 30
         }
     }
     //! [background]
