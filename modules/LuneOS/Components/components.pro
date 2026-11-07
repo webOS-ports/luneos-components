@@ -26,7 +26,7 @@ QML_FILES = ActionSheet.qml \
             Page.qml \
             PageStackWindow.qml \
             PlaceholderImage.qml \
-            Printer.qml \
+            PrintDialog.qml \
             PromptDialog.qml \
             ProxyAuthenticationDialog.qml \
             SectionDivider.qml \
@@ -50,6 +50,8 @@ RESOURCE_FILES = images/button-up-center.png images/button-up-left.png images/bu
                  images/dialog-left-bottom.png images/dialog-left-middle.png images/dialog-left-top.png \
                  images/dialog-right-bottom.png images/dialog-right-middle.png images/dialog-right-top.png \
                  images/icon-file.png images/icon-folder.png images/icon-warning.png \
+                 images/dialog-group-unlabeled.png images/picker-pill.png images/picker-pill-downstate.png \
+                 images/print-warning.png \
                  images/selection-handle.svg
 
 QMLDIR_FILE = qmldir
