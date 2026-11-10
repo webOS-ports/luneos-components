@@ -16,3 +16,4 @@ moc_predefs.h
 *_metatypes.json
 *_qmltyperegistrations.cpp
 plugins.qmltypes
+test/unit/build/
