@@ -148,7 +148,8 @@ LunaServiceCall::LunaServiceCall(QObject *parent) :
     mServiceHandle(0),
     mToken(LSMESSAGE_TOKEN_INVALID),
     mResponseLimit(-1),
-    mResponseCount(0)
+    mResponseCount(0),
+    mDeferred(false)
 {
 }
 
@@ -202,6 +203,26 @@ error:
     return false;
 }
 
+void LunaServiceCall::defer(const QString& uri, const QString& arguments)
+{
+    mDeferred = true;
+    mDeferredUri = uri;
+    mDeferredArguments = arguments;
+}
+
+bool LunaServiceCall::executeDeferred(LSHandle *serviceHandle)
+{
+    mDeferred = false;
+    mServiceHandle = serviceHandle;
+    // execute may run the error callback, which may destroy this call:
+    // nothing of it is touched after.
+    const QString uri = mDeferredUri;
+    const QString arguments = mDeferredArguments;
+    mDeferredUri.clear();
+    mDeferredArguments.clear();
+    return execute(uri, arguments);
+}
+
 bool LunaServiceCall::responseCallback(LSHandle *handle, LSMessage *message, void *user_data)
 {
     LunaServiceCall *call = static_cast<LunaServiceCall*>(user_data);
@@ -242,6 +263,13 @@ bool LunaServiceCall::handleResponse(LSHandle *handle, LSMessage *message)
 
 void LunaServiceCall::cancel()
 {
+    // Held until its service completes: it never goes out.
+    if (mDeferred) {
+        mDeferred = false;
+        static_cast<LunaServiceAdapter*>(parent())->removePendingCall(this);
+        return;
+    }
+
     if (mToken == LSMESSAGE_TOKEN_INVALID)
         return;
 
@@ -283,6 +311,7 @@ LunaServiceAdapter::LunaServiceAdapter(QObject *parent) :
     mUsePrivateBus(false),
     mServiceHandle(0),
     mInitialized(false),
+    mComplete(false),
     mService(""),
     mMethod(""),
     mHoldsHandleRef(false)
@@ -342,7 +371,48 @@ void LunaServiceAdapter::classBegin()
 {
 }
 
+/*
+ * The service registers here, as its creation completes. QML may call it
+ * before that - a binding, or another object completing first, such as a
+ * Repeater whose delegates ask for something as they are made - so calls
+ * made until then are held, and go out now, in the order they were made.
+ * If the service could not be registered, each gets its error callback, as
+ * a call on an unregistered service always did.
+ */
 void LunaServiceAdapter::componentComplete()
+{
+    mInitialized = registerService();
+    mComplete = true;
+
+    QPointer<LunaServiceAdapter> self(this);
+    executeDeferredCalls();
+    if (!self)
+        return;
+
+    if (mInitialized)
+        Q_EMIT initialized();
+}
+
+void LunaServiceAdapter::executeDeferredCalls()
+{
+    QList<QPointer<LunaServiceCall>> deferred;
+    for (LunaServiceCall *pending : std::as_const(mPendingCalls)) {
+        if (pending->isDeferred())
+            deferred.append(pending);
+    }
+
+    // A callback may cancel a call still held, which deletes it, or destroy
+    // this adapter and with it every call.
+    QPointer<LunaServiceAdapter> self(this);
+    for (const QPointer<LunaServiceCall> &held : std::as_const(deferred)) {
+        if (!self)
+            return;
+        if (held)
+            held->executeDeferred(mServiceHandle);
+    }
+}
+
+bool LunaServiceAdapter::registerService()
 {
     LSError error;
 
@@ -352,7 +422,7 @@ void LunaServiceAdapter::componentComplete()
     if (!nameAllowed()) {
         qWarning("LunaService: an app %s may not use the name %s",
                  qUtf8Printable(QCoreApplication::applicationName()), qUtf8Printable(mName));
-        return;
+        return false;
     }
 
     // There are two main use-cases for LunaService:
@@ -433,11 +503,7 @@ void LunaServiceAdapter::componentComplete()
         }
     }
 
-    mInitialized = true;
-
-    Q_EMIT initialized();
-
-    return;
+    return true;
 
 error_registered:
     // Registered but not attached: nobody holds this handle, so it goes.
@@ -450,7 +516,7 @@ error_registered:
         LSErrorFree(&error);
     }
     mServiceHandle = 0;
-    return;
+    return false;
 
 error:
     if (LSErrorIsSet(&error)) {
@@ -458,6 +524,7 @@ error:
         LSErrorFree(&error);
     }
     mServiceHandle = 0;
+    return false;
 }
 
 QString LunaServiceAdapter::name() const
@@ -705,11 +772,18 @@ LunaServiceCall* LunaServiceAdapter::createAndExecuteCall(const QString& uri, co
     LunaServiceCall *call = new LunaServiceCall(this);
 
     call->setup(mServiceHandle, callback, errorCallback, responseLimit);
-    call->execute(uri, arguments);
-
     mPendingCalls.append(call);
 
-    return call;
+    if (!mComplete) {
+        call->defer(uri, arguments);
+        return call;
+    }
+
+    // The error callback may destroy this adapter, and the call with it.
+    QPointer<LunaServiceCall> guard(call);
+    call->execute(uri, arguments);
+
+    return guard.data();
 }
 
 QObject* LunaServiceAdapter::call(const QString& uri, const QString& arguments, QJSValue callback, QJSValue errorCallback)
