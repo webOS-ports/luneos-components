@@ -40,6 +40,8 @@ Item {
         password = found.password;
         protocol = found.protocol;
         name = found.name;
+        messageCenter = found.messageCenter || "";
+        messageProxy = found.messageProxy || "";
         _loading = false;
     }
 
@@ -62,6 +64,8 @@ Item {
     onPasswordChanged: _writeBack("password", password)
     onProtocolChanged: _writeBack("protocol", protocol)
     onNameChanged: _writeBack("name", name)
+    onMessageCenterChanged: _writeBack("messageCenter", messageCenter)
+    onMessageProxyChanged: _writeBack("messageProxy", messageProxy)
 
     function disconnect() {
         active = false;
