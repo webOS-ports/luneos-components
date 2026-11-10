@@ -64,11 +64,44 @@ function goAutomatic() {
 var contexts = [
     { path: "/mock/modem0/context1", accessPointName: "internet", name: "Internet",
       type: "internet", username: "", password: "", protocol: "ip",
-      authMethod: "none", active: true },
+      authMethod: "none", active: true, messageCenter: "", messageProxy: "" },
     { path: "/mock/modem0/context2", accessPointName: "mms.internet", name: "MMS",
       type: "mms", username: "", password: "", protocol: "ip",
-      authMethod: "none", active: false }
+      authMethod: "none", active: false,
+      messageCenter: "http://mms.example.com/mms", messageProxy: "10.0.0.1:8080" }
 ];
+
+// The next AddContext/RemoveContext fails with this message instead, the
+// way ofono answers with org.ofono.Error.* (a test sets it, one shot).
+var failNextContextCall = "";
+var _nextContextId = 3;
+
+// org.ofono.ConnectionManager.AddContext: a new, inactive context of the
+// given type with ofono's defaults. Returns its path, or "" on failure.
+function addContext(type) {
+    if (failNextContextCall !== "")
+        return "";
+    var path = "/mock/modem0/context" + _nextContextId++;
+    contexts.push({ path: path, accessPointName: "", name: "", type: type,
+                    username: "", password: "", protocol: "ip",
+                    authMethod: "chap", active: false,
+                    messageCenter: "", messageProxy: "" });
+    return path;
+}
+
+// org.ofono.ConnectionManager.RemoveContext: ofono deactivates an active
+// context first, so removal does not depend on it. Returns success.
+function removeContext(path) {
+    if (failNextContextCall !== "")
+        return false;
+    for (var i = 0; i < contexts.length; i++) {
+        if (contexts[i].path === path) {
+            contexts.splice(i, 1);
+            return true;
+        }
+    }
+    return false;
+}
 
 function contextByPath(path) {
     for (var i = 0; i < contexts.length; i++)
