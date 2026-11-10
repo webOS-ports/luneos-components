@@ -66,6 +66,12 @@ public:
     void setup(LSHandle *serviceHandle, QJSValue callback, QJSValue errorCallback, int responseLimit = -1);
     bool execute(const QString& uri, const QString& arguments);
 
+    // A call made before its LunaService completed: it goes out with
+    // executeDeferred once the service is registered (or failed to be).
+    void defer(const QString& uri, const QString& arguments);
+    bool isDeferred() const { return mDeferred; }
+    bool executeDeferred(LSHandle *serviceHandle);
+
     Q_INVOKABLE void cancel();
 
 private:
@@ -75,6 +81,9 @@ private:
     LSMessageToken mToken;
     int mResponseLimit;
     int mResponseCount;
+    bool mDeferred;
+    QString mDeferredUri;
+    QString mDeferredArguments;
 
     static bool responseCallback(LSHandle *handle, LSMessage *message, void *user_data);
     bool handleResponse(LSHandle *handle, LSMessage *message);
@@ -136,6 +145,9 @@ private:
     bool mUsePrivateBus;
     LSHandle *mServiceHandle;
     bool mInitialized;
+    // Whether componentComplete ran: calls made before it are held
+    // (LunaServiceCall::defer) rather than sent on a handle not there yet.
+    bool mComplete;
     QString mService;
     QString mMethod;
     QJSValue mResponseCallback;
@@ -144,6 +156,8 @@ private:
     QList<LunaServiceCall*> mPendingCalls;
 
     LunaServiceCall* createAndExecuteCall(const QString& uri, const QString& arguments, QJSValue callback, QJSValue errorCallback, int responseLimit);
+    bool registerService();
+    void executeDeferredCalls();
 
     QString buildMethodPath(const QString& category, const QString& method);
     void updateCallUri();
