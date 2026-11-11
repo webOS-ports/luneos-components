@@ -1,6 +1,8 @@
 # QML only: helpers over LuneOS.Service's LunaService for what every app
 # asks the system for - is a service there, the system preferences, start
-# an app or open a URL - with one name per service (Services.js).
+# an app or open a URL - with one name per service (Services.js) - and
+# which way the phone is held, by the rule the shell turns the screen by
+# (DeviceOrientation.qml, OrientationFilter.js).
 #
 # A module of its own, not more types in LuneOS.Service: nearly every file
 # imports that one, and a new name there shadows any file of the same name
@@ -12,13 +14,16 @@ uri = LuneOS.System
 installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
 
 QML_FILES = AppLauncher.qml \
+            DeviceOrientation.qml \
+            DeviceOrientationSensor.qml \
             KeepScreenOn.qml \
             LaunchParams.qml \
             ServiceStatus.qml \
             SystemPreferences.qml \
             WindowFullScreen.qml
 
-JS_FILES = Services.js
+JS_FILES = OrientationFilter.js \
+           Services.js
 
 QMLDIR_FILE = qmldir
 
