@@ -89,7 +89,11 @@ var values = {
     "enableFingerprintUnlock": true,
 
     "airplaneMode": false,
-    "rotationLock": false,
+    // The locked angle in degrees, or 400 when the screen turns freely, as
+    // the shell writes it. luna-sysservice ships no default; every reader
+    // (the shell, Settings, the camera, LuneOS.System's DeviceOrientation)
+    // takes it as a number, and a false here read as locked at 0.
+    "rotationLock": 400,
     "4DigitNumber": "+312055512",
 
     // LocationPage.qml's global prefs - com.palm.location (the real legacy
@@ -105,12 +109,21 @@ var values = {
 /*
  * Subscribers, as { keys: [...], callback: fct }. A subscriber only hears
  * about the keys it asked for, the way the real service reports.
+ *
+ * subscribe() returns the function that ends the subscription: the real
+ * service stops answering a call once it is cancelled, and a call is
+ * cancelled when the LunaService that made it is destroyed.
  */
 var subscribers = [];
 
 function subscribe(keys, callback)
 {
-    subscribers.push({ "keys": keys || [], "callback": callback });
+    var subscriber = { "keys": keys || [], "callback": callback };
+    subscribers.push(subscriber);
+    return function() {
+        var i = subscribers.indexOf(subscriber);
+        if( i >= 0 ) subscribers.splice(i, 1);
+    };
 }
 
 function has(key)
@@ -155,7 +168,9 @@ function write(newValues)
 
 function _notify(changed)
 {
-    subscribers.forEach(function(subscriber) {
+    // A copy: a callback may end a subscription, its own or another's.
+    subscribers.slice().forEach(function(subscriber) {
+        if( subscribers.indexOf(subscriber) < 0 ) return;
         var relevant = subscriber.keys.filter(function(key) {
             return changed.indexOf(key) >= 0;
         });
