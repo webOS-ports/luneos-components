@@ -67,6 +67,34 @@ QtObject {
     property var onResponse
     property var onError
 
+    /*
+     * Calls that stay open, as { cancel: fct }. The real plugin cancels every
+     * call a LunaService made when it is destroyed (~LunaServiceAdapter
+     * deletes its pending calls, and a deleted call cancels itself); without
+     * this a destroyed page's SystemPreferences kept hearing every
+     * setPreferences and failed on its own dead properties.
+     */
+    property var _openCalls: []
+
+    function _keepSubscription(stop) {
+        var call = {
+            cancel: function() {
+                stop();
+                var i = lunaServiceMock._openCalls.indexOf(call);
+                if (i >= 0)
+                    lunaServiceMock._openCalls.splice(i, 1);
+            }
+        };
+        _openCalls.push(call);
+        return call;
+    }
+
+    Component.onDestruction: {
+        var open = _openCalls.slice();
+        for (var i = 0; i < open.length; i++)
+            open[i].cancel();
+    }
+
     Component.onCompleted: {
         initialized();
 
@@ -556,8 +584,9 @@ QtObject {
             returnFct({"payload": JSON.stringify(prefs)});
 
             // Kept, so a later setPreferences reaches whoever is watching -
-            // which is how a settings page and the shell stay in step.
-            Prefs.subscribe(requested, returnFct);
+            // which is how a settings page and the shell stay in step - until
+            // the call is cancelled or this LunaService goes.
+            return lunaServiceMock._keepSubscription(Prefs.subscribe(requested, returnFct));
         }
         // In-call audio routing: no bluetooth or headset, not docked.
         else if(serviceURI === "luna://com.palm.bluetooth/hfg/monitorstatus" && returnFct) {

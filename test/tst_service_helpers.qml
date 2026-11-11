@@ -35,6 +35,25 @@ TestCase {
 
     AppLauncher { id: launcher }
 
+    SystemPreferences {
+        id: lockWriter
+        // What the store first says, before any test writes it
+        property var firstRotationLock
+        keys: ["rotationLock"]
+        onUpdated: (response) => {
+            if (firstRotationLock === undefined)
+                firstRotationLock = response.rotationLock;
+        }
+    }
+    Component {
+        id: watcherComponent
+        SystemPreferences {
+            property int heard: 0
+            keys: ["rotationLock"]
+            onChanged: heard++
+        }
+    }
+
     function test_status_follows_the_bus() {
         tryCompare(status, "known", true);
         compare(status.available, true);
@@ -102,6 +121,44 @@ TestCase {
                        function (r) { done = r; }, function (e) { failed = e; }, true);
         tryVerify(function () { return done !== null; });
         compare(failed, null);
+    }
+
+    function test_rotation_lock_reads_as_an_angle() {
+        // 400 is free; anything else is the locked angle. A false here
+        // read as locked at 0 to everything that takes it as a number.
+        tryCompare(lockWriter, "loaded", true);
+        compare(lockWriter.firstRotationLock, 400);
+    }
+
+    function test_a_destroyed_page_hears_no_more() {
+        tryCompare(lockWriter, "loaded", true);
+        var gone = watcherComponent.createObject(null);
+        var stays = createTemporaryObject(watcherComponent, null);
+        tryCompare(gone, "loaded", true);
+        tryCompare(stays, "loaded", true);
+        var before = stays.heard;
+        gone.destroy();
+        wait(0);
+
+        // Before the stub ended its subscriptions, this reached the
+        // destroyed one too and threw on its properties.
+        verify(lockWriter.set("rotationLock", 90));
+        tryVerify(function () { return stays.heard > before; });
+        verify(lockWriter.set("rotationLock", 400));
+        tryCompare(stays.values, "rotationLock", 400);
+    }
+
+    function test_new_keys_end_the_old_subscription() {
+        tryCompare(lockWriter, "loaded", true);
+        var w = createTemporaryObject(watcherComponent, null);
+        tryCompare(w, "loaded", true);
+        w.keys = ["timeFormat"];
+        tryCompare(w, "loaded", true);
+        var before = w.heard;
+        verify(lockWriter.set("rotationLock", 180));
+        verify(lockWriter.set("rotationLock", 400));
+        wait(50);
+        compare(w.heard, before, "rotationLock is no longer asked for");
     }
 
     function test_one_name_per_service() {
