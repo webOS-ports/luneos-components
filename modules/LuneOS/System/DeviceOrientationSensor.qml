@@ -29,6 +29,7 @@ Accelerometer {
     signal sampled(real x, real y, real z)
 
     active: true
+    onErrorChanged: if (error !== 0) console.warn("DeviceOrientation: accelerometer error " + error)
     onReadingChanged: {
         if (reading)
             sampled(reading.x, reading.y, reading.z);
