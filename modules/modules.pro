@@ -8,8 +8,6 @@ SUBDIRS += \
     LuneOS/Passcode/passcode.pro \
     LuneOS/System/system.pro \
     LuneOS/Telephony/telephony.pro
-    
-qtHaveModule(BluezQt): SUBDIRS += LuneOS/Bluetooth/bluetooth.pro
 
 win32|mac {
     CONFIG += desktop
@@ -17,6 +15,7 @@ win32|mac {
 
 !CONFIG(desktop) {
     SUBDIRS += LuneOS/Service/service.pro \
+               LuneOS/Bluetooth/bluetooth.pro \
                LunaNext/Common/common.pro \
                LunaNext/Shell/notifications/notifications.pro \
                LunaNext/Shell/shell.pro
