@@ -66,7 +66,16 @@ QtObject {
     signal cancel()
     signal release()
 
+    // A refused registration is tried again this often, this many times in
+    // a row, while Bluetooth stays up: right after bluetoothd restarts,
+    // bluetooth2 has the adapter back before it can make it pairable, and
+    // refuses (123). Nothing else would register again, since Bluetooth
+    // did not go down as the page sees it.
+    property int retryIntervalMs: 2000
+    property int retries: 5
+
     property var _incoming: null
+    property int _retried: 0
     property QtObject _open: null
     property bool _showing: false
 
@@ -79,6 +88,8 @@ QtObject {
                                            JSON.stringify(manager._withAdapter({"subscribe": true})),
                                            function (message) {
             var reply = manager._parse(message);
+            if (reply.returnValue === true && reply.subscribed === true && reply.request === undefined)
+                _retried = 0;   // registered
             var prompt = Policy.pairingPrompt(reply, "");
             if (prompt !== null) {
                 _show(prompt);
@@ -90,11 +101,27 @@ QtObject {
             if (reply.returnValue === false || reply.subscribed === false) {
                 console.warn("Bluetooth: no longer asked for pairings devices start: " + message.payload);
                 _unregister();
+                // Not when another client has it (104): it keeps it.
+                if (Number(reply.errorCode) !== 104)
+                    _retryLater();
             }
         }, function (message) {
             console.warn("Bluetooth: cannot wait for pairing requests: " + (message ? message.payload : ""));
             _unregister();
+            _retryLater();
         });
+    }
+
+    function _retryLater() {
+        if (!manager || !manager.bluetoothOperational || _retried >= retries)
+            return;
+        _retried++;
+        _retryTimer.restart();
+    }
+
+    property Timer _retryTimer: Timer {
+        interval: agent.retryIntervalMs
+        onTriggered: agent.registerToManager(agent.manager ? agent.manager.btManager : null)
     }
 
     function _unregister() {
@@ -183,6 +210,8 @@ QtObject {
         function onBluetoothOperationalChanged() {
             // Its subscription went with the adapter.
             if (!agent.manager.bluetoothOperational) {
+                agent._retryTimer.stop();
+                agent._retried = 0;
                 agent._unregister();
                 agent._show({"kind": "end"});
             }
@@ -190,6 +219,7 @@ QtObject {
     }
 
     Component.onDestruction: {
+        _retryTimer.stop();
         // An open question goes unanswered with the page: refuse it rather
         // than leave the device waiting.
         if (_open !== null && !_open.answered)

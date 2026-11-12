@@ -679,5 +679,84 @@ Item {
             agent.registerToManager(manager.btManager);
             compare(bus.count("adapter/awaitPairingRequests"), 2);
         }
+
+        // Right after bluetoothd restarts, bluetooth2 has the adapter back
+        // before it can make it pairable: it refuses the registration (123)
+        // while Bluetooth stays up as the page sees it (seen on the Brax3).
+        function test_aRefusedRegistrationIsTriedAgain() {
+            var manager = makeManager();
+            var bus = manager._bus;
+            var agent = makeAgent(manager);
+            agent.retryIntervalMs = 10;
+            // As bluetooth2 does: the refusal is the subscription's only reply.
+            bus.refusals = { "adapter/awaitPairingRequests": [
+                { returnValue: false, subscribed: false, errorCode: 123, errorText: "Failed to make device pairable" }] };
+            agent.registerToManager(manager.btManager);
+            tryVerify(function () { return bus.count("adapter/awaitPairingRequests") === 2; }, 1000, "not registered again");
+            settle();
+            verify(agent.registered);
+            compare(bus.open("adapter/awaitPairingRequests"), 1);
+            wait(60);
+            compare(bus.count("adapter/awaitPairingRequests"), 2, "registered again after it worked");
+        }
+
+        function test_retriesStopAfterAFew() {
+            var manager = makeManager();
+            var bus = manager._bus;
+            var agent = makeAgent(manager);
+            agent.retryIntervalMs = 10;
+            agent.retries = 3;
+            var refusal = { returnValue: false, subscribed: false, errorCode: 123 };
+            bus.refusals = { "adapter/awaitPairingRequests": [refusal, refusal, refusal, refusal, refusal, refusal] };
+            agent.registerToManager(manager.btManager);
+            wait(200);
+            compare(bus.count("adapter/awaitPairingRequests"), 4, "the first registration and three retries");
+            verify(!agent.registered);
+        }
+
+        // Each time bluetoothd restarts gets its retries, not only the first.
+        function test_aWorkingRegistrationGetsItsRetriesBack() {
+            var manager = makeManager();
+            var bus = manager._bus;
+            var agent = makeAgent(manager);
+            agent.retryIntervalMs = 10;
+            agent.retries = 1;
+            var refusal = { returnValue: false, subscribed: false, errorCode: 123 };
+            bus.refusals = { "adapter/awaitPairingRequests": [refusal] };
+            agent.registerToManager(manager.btManager);
+            tryVerify(function () { return bus.count("adapter/awaitPairingRequests") === 2; }, 1000);
+            settle();
+            // Ended by the service again, then refused once more.
+            bus.refusals = { "adapter/awaitPairingRequests": [refusal] };
+            bus.push("adapter/awaitPairingRequests", { returnValue: false, subscribed: false, errorCode: 101 });
+            tryVerify(function () { return bus.count("adapter/awaitPairingRequests") === 3; }, 1000,
+                      "no retries left after a registration that worked");
+        }
+
+        function test_anotherClientsAgentIsLeftAlone() {
+            var manager = makeManager();
+            var bus = manager._bus;
+            var agent = makeAgent(manager);
+            agent.retryIntervalMs = 10;
+            bus.refusals = { "adapter/awaitPairingRequests": [
+                { returnValue: false, errorCode: 104, errorText: "Only one subscription allowed" }] };
+            agent.registerToManager(manager.btManager);
+            wait(60);
+            compare(bus.count("adapter/awaitPairingRequests"), 1, "took the slot from another client");
+            verify(!agent.registered);
+        }
+
+        function test_noRetryOnceBluetoothIsOff() {
+            var manager = makeManager();
+            var bus = manager._bus;
+            var agent = makeAgent(manager);
+            agent.retryIntervalMs = 50;
+            agent.registerToManager(manager.btManager);
+            bus.push("adapter/awaitPairingRequests", { returnValue: false, subscribed: false, errorCode: 101 });
+            bus.setAdapter({ powered: false });
+            tryCompare(manager, "bluetoothOperational", false, 1000);
+            wait(120);
+            compare(bus.count("adapter/awaitPairingRequests"), 1, "registered with Bluetooth off");
+        }
     }
 }

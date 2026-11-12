@@ -39,6 +39,9 @@ QtObject {
                              "discovering": false, "discoverable": false}]
     property var devices: []
     property var answers: ({})
+    // method -> replies the next subscriptions get as their first reply instead of
+    // {"returnValue": true, "subscribed": true}, one each, in order.
+    property var refusals: ({})
 
     // Every call and subscribe, in order: {method, args, subscription}
     property var calls: []
@@ -121,10 +124,20 @@ QtObject {
         else if (method === "device/getStatus")
             _later(function () { bus._status(subscription); });
         else
+        {
+            var first = {"returnValue": true, "subscribed": true};
+            var queued = refusals[method];
+            if (queued && queued.length > 0) {
+                first = queued[0];
+                var rest = Object.assign({}, refusals);
+                rest[method] = queued.slice(1);
+                refusals = rest;
+            }
             _later(function () {
                 if (!subscription.cancelled)
-                    bus._send(onReply, {"returnValue": true, "subscribed": true});
+                    bus._send(onReply, first);
             });
+        }
         return subscription;
     }
 
