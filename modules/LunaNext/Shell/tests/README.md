@@ -27,7 +27,12 @@ gtest, for the module's C++:
   flick from where it began, its length measured on the screen; a short one,
   one along the edge or one in the middle is none. An edge touch held past the
   timeout is a flick that timed out. Unless set, the timeout is 2000 ms and the
-  minimal flick length 100.
+  minimal flick length 100. touchBegin and touchEnd (the shell holds its
+  rotation between them) come for a single touch that begins at an edge, and
+  it always ends, a short one, one held past the timeout or a cancelled one
+  too (once), and the next touch ends one whose end never came; a touch that
+  begins in the middle, even one dragged to an edge, and two fingers at once
+  are not announced.
 - `test_notifications.cpp`: the notifications' C++ (`notifications/`). A
   default `Notification` has defined duration, priority and doNotSuppress;
   `QObjectListModel::setData` stores the object it is given (not a number as a

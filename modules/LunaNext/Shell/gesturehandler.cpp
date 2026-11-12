@@ -124,6 +124,14 @@ ScreenEdgeFlickGestureRecognizer::ScreenEdgeFlickGestureRecognizer(QQuickItem *p
     connect(&mTimer, SIGNAL(timeout()), this, SLOT(slotTimeout()));
 }
 
+void ScreenEdgeFlickGestureRecognizer::endEdgeTouch()
+{
+    if (!mEdgeTouch)
+        return;
+    mEdgeTouch = false;
+    emit touchEnd();
+}
+
 void ScreenEdgeFlickGestureRecognizer::slotTimeout()
 {
     emit screenEdgeFlickGesture(GestureHandler::ScreenEdgeFlickGesture, mStartPos, true);
@@ -136,7 +144,7 @@ bool ScreenEdgeFlickGestureRecognizer::eventFilter(QObject *, QEvent *event)
         {
             QTouchEvent *touchEvent = static_cast<QTouchEvent *>(event);
             mTimer.stop();
-            emit touchBegin();
+            endEdgeTouch();
             if (touchEvent->points().count() != 1)
                 break;
 
@@ -145,7 +153,17 @@ bool ScreenEdgeFlickGestureRecognizer::eventFilter(QObject *, QEvent *event)
             mStartPos = fpoint.toPoint();
             QMargins marg(mFingerSize, mFingerSize, mFingerSize, mFingerSize);
             QRect margRect = QRect(0, 0, parentItem()->width(), parentItem()->height()).marginsRemoved(marg);
-            if (!margRect.contains(mStartPos)) mTimer.start();
+            if (!margRect.contains(mStartPos)) {
+                mTimer.start();
+                // Only a touch that can become an edge flick is announced:
+                // the shell holds the rotation for it, so that the edges do
+                // not move under the finger. A touch in the middle of the
+                // screen - a thumb holding the phone, or the Titan's keyboard
+                // surface, which kbdscroll feeds in as a drag across the
+                // middle - must not stop the screen turning.
+                mEdgeTouch = true;
+                emit touchBegin();
+            }
         }
         break;
     case QEvent::TouchUpdate:
@@ -176,7 +194,7 @@ bool ScreenEdgeFlickGestureRecognizer::eventFilter(QObject *, QEvent *event)
     case QEvent::TouchCancel:
         {
             mTimer.stop();
-            emit touchEnd();
+            endEdgeTouch();
         }
         break;
     case QEvent::TouchEnd:
@@ -187,17 +205,14 @@ bool ScreenEdgeFlickGestureRecognizer::eventFilter(QObject *, QEvent *event)
                 mTimer.stop();
                 const QTouchEvent::TouchPoint &touchPoint = touchEvent->points().first();
                 QPointF fpoint = touchPoint.globalPosition();
-                if (QLineF(mStartPos,fpoint).length() < mMinFlick)
-                    break;
-
-                emit screenEdgeFlickGesture(GestureHandler::ScreenEdgeFlickGesture, mStartPos, false);
-            };
-            // TouchEnd marks the end of the whole touch sequence. Emit
-            // unconditionally: touchBegin() is emitted for every sequence, and
-            // skipping the end when several points are released in the same
-            // event frame leaves the consumers unbalanced (e.g. the shell's
-            // rotation lock stayed engaged until the next tap).
-            emit touchEnd();
+                if (QLineF(mStartPos,fpoint).length() >= mMinFlick)
+                    emit screenEdgeFlickGesture(GestureHandler::ScreenEdgeFlickGesture, mStartPos, false);
+            }
+            // TouchEnd marks the end of the whole touch sequence, so it ends
+            // an edge touch however it went. A short one (a tap near the
+            // edge) used to leave here before this, and the shell's rotation
+            // stayed held until its five-second failsafe.
+            endEdgeTouch();
         }
         break;
     default: break;

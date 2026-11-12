@@ -161,3 +161,139 @@ TEST_F(GestureHandlerTest, aFlickIsMeasuredOnTheScreen)
     QTest::touchEvent(&window, touchScreen()).release(0, QPoint(95, 160), &window);
     EXPECT_EQ(spy->count(), 0);
 }
+
+/*
+ * touchBegin and touchEnd hold the shell's rotation while a finger is on an
+ * edge, so the edges do not move under it. Only such a touch is announced: a
+ * touch in the middle of the screen (a thumb holding the phone, the Titan's
+ * keyboard surface fed in by kbdscroll) must not stop the screen turning, and
+ * every announced touch ends, however short.
+ */
+namespace
+{
+
+class EdgeTouchTest : public GestureHandlerTest
+{
+protected:
+    void SetUp() override
+    {
+        GestureHandlerTest::SetUp();
+        begins.reset(new QSignalSpy(handler, &luna::GestureHandler::touchBegin));
+        ends.reset(new QSignalSpy(handler, &luna::GestureHandler::touchEnd));
+    }
+
+    std::unique_ptr<QSignalSpy> begins;
+    std::unique_ptr<QSignalSpy> ends;
+};
+
+}
+
+TEST_F(EdgeTouchTest, aTouchAtTheEdgeIsAnnouncedAndEnds)
+{
+    QTest::touchEvent(&window, touchScreen()).press(0, QPoint(5, 200), &window);
+    EXPECT_EQ(begins->count(), 1);
+    EXPECT_EQ(ends->count(), 0);
+    QTest::touchEvent(&window, touchScreen()).release(0, QPoint(5, 200), &window);
+    EXPECT_EQ(begins->count(), 1);
+    EXPECT_EQ(ends->count(), 1);
+}
+
+TEST_F(EdgeTouchTest, aShortTouchFromTheEdgeEnds)
+{
+    // Too short for a flick; this one used to keep the rotation held.
+    QTest::touchEvent(&window, touchScreen()).press(0, QPoint(5, 200), &window);
+    QTest::touchEvent(&window, touchScreen()).move(0, QPoint(30, 200), &window);
+    QTest::touchEvent(&window, touchScreen()).release(0, QPoint(40, 200), &window);
+    EXPECT_EQ(spy->count(), 0);
+    EXPECT_EQ(begins->count(), 1);
+    EXPECT_EQ(ends->count(), 1);
+}
+
+TEST_F(EdgeTouchTest, aFlickFromTheEdgeEnds)
+{
+    QTest::touchEvent(&window, touchScreen()).press(0, QPoint(395, 200), &window);
+    QTest::touchEvent(&window, touchScreen()).move(0, QPoint(300, 200), &window);
+    QTest::touchEvent(&window, touchScreen()).release(0, QPoint(250, 200), &window);
+    EXPECT_EQ(spy->count(), 1);
+    EXPECT_EQ(begins->count(), 1);
+    EXPECT_EQ(ends->count(), 1);
+}
+
+TEST_F(EdgeTouchTest, aTouchInTheMiddleIsNotAnnounced)
+{
+    QTest::touchEvent(&window, touchScreen()).press(0, QPoint(200, 200), &window);
+    QTest::touchEvent(&window, touchScreen()).move(0, QPoint(260, 200), &window);
+    QTest::touchEvent(&window, touchScreen()).release(0, QPoint(350, 200), &window);
+    EXPECT_EQ(begins->count(), 0);
+    EXPECT_EQ(ends->count(), 0);
+}
+
+TEST_F(EdgeTouchTest, aDragIntoTheEdgeIsNotAnnounced)
+{
+    // Where it began counts, not where it goes.
+    QTest::touchEvent(&window, touchScreen()).press(0, QPoint(200, 200), &window);
+    QTest::touchEvent(&window, touchScreen()).move(0, QPoint(395, 200), &window);
+    QTest::touchEvent(&window, touchScreen()).release(0, QPoint(395, 200), &window);
+    EXPECT_EQ(begins->count(), 0);
+    EXPECT_EQ(ends->count(), 0);
+}
+
+TEST_F(EdgeTouchTest, twoFingersAtOnceAreNotAnnounced)
+{
+    QTest::touchEvent(&window, touchScreen())
+        .press(0, QPoint(5, 200), &window).press(1, QPoint(200, 200), &window);
+    QTest::touchEvent(&window, touchScreen())
+        .release(0, QPoint(5, 200), &window).release(1, QPoint(200, 200), &window);
+    EXPECT_EQ(begins->count(), 0);
+    EXPECT_EQ(ends->count(), 0);
+}
+
+TEST_F(EdgeTouchTest, anEdgeTouchHeldPastTheTimeoutStillEnds)
+{
+    handler->setTimeout(50);
+    QTest::touchEvent(&window, touchScreen()).press(0, QPoint(5, 200), &window);
+    ASSERT_TRUE(spy->wait(1000));
+    EXPECT_EQ(ends->count(), 0);
+    QTest::touchEvent(&window, touchScreen()).release(0, QPoint(5, 200), &window);
+    EXPECT_EQ(begins->count(), 1);
+    EXPECT_EQ(ends->count(), 1);
+}
+
+namespace
+{
+
+// A touch event sent as it is, for what QTest does not make: a cancel, and a
+// new sequence while the last one never ended.
+void sendTouch(QWindow *window, QEvent::Type type, QEventPoint::State state, QPointF onScreen)
+{
+    QTouchEvent event(type, touchScreen(), Qt::NoModifier,
+                      { QEventPoint(0, state, window->mapFromGlobal(onScreen), onScreen) });
+    QCoreApplication::sendEvent(window, &event);
+}
+
+}
+
+TEST_F(EdgeTouchTest, aCancelledEdgeTouchEndsOnce)
+{
+    const QPointF edge = window.mapToGlobal(QPointF(5, 200));
+    sendTouch(&window, QEvent::TouchBegin, QEventPoint::State::Pressed, edge);
+    EXPECT_EQ(begins->count(), 1);
+    sendTouch(&window, QEvent::TouchCancel, QEventPoint::State::Released, edge);
+    EXPECT_EQ(ends->count(), 1);
+    // An end after the cancel ends nothing more.
+    sendTouch(&window, QEvent::TouchEnd, QEventPoint::State::Released, edge);
+    EXPECT_EQ(ends->count(), 1);
+}
+
+TEST_F(EdgeTouchTest, aNewTouchEndsAnEdgeTouchThatNeverEnded)
+{
+    QStringList order;
+    QObject::connect(handler, &luna::GestureHandler::touchBegin, [&order] { order << "begin"; });
+    QObject::connect(handler, &luna::GestureHandler::touchEnd, [&order] { order << "end"; });
+    const QPointF edge = window.mapToGlobal(QPointF(5, 200));
+    sendTouch(&window, QEvent::TouchBegin, QEventPoint::State::Pressed, edge);
+    // Its end never came; the next touch ends it before it begins.
+    sendTouch(&window, QEvent::TouchBegin, QEventPoint::State::Pressed, edge);
+    sendTouch(&window, QEvent::TouchEnd, QEventPoint::State::Released, edge);
+    EXPECT_EQ(order, QStringList({ "begin", "end", "begin", "end" }));
+}

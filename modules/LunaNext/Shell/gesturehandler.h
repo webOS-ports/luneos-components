@@ -46,6 +46,8 @@ public:
     void setMinimalFlickLength(qreal length);
 
 signals:
+    // A single touch that begins at an edge of the screen, one that can
+    // become an edge flick, and its end. Touches anywhere else are neither.
     void touchBegin();
     void touchEnd();
     void gestureEvent(GestureType gestureType, QPoint pos, bool timeout);
@@ -94,7 +96,10 @@ private slots:
     void slotTimeout();
 
 private:
+    void endEdgeTouch();
+
     QTimer mTimer;
+    bool mEdgeTouch = false;
     qreal mFingerSize;
     qreal mMinFlick;
     QPoint mStartPos;
