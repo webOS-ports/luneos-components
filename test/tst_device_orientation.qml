@@ -185,4 +185,84 @@ Item {
             verify(writer.set("rotationLock", 400));
         }
     }
+
+    Component {
+        id: watchedComponent
+        DeviceOrientation { settleInterval: 50; stallInterval: 300 }
+    }
+
+    /*
+     * The watchdog for an accelerometer that stops sending: with nothing for
+     * stallInterval while active it is created again, waiting twice as long
+     * each time it does not come back, and never while it sends.
+     */
+    TestCase {
+        name: "DeviceOrientationStall"
+
+        function make(file, props) {
+            var p = props || {};
+            p._sensorSource = Qt.resolvedUrl("data/" + file);
+            return createTemporaryObject(watchedComponent, root, p);
+        }
+
+        function test_a_sending_sensor_is_left_alone() {
+            var o = make("StreamingAccelerometer.qml");
+            tryCompare(o, "available", true);
+            wait(1000);
+            compare(o.restarts, 0);
+        }
+
+        // The Loader holding the sensor, which has no id outside.
+        function sensorOf(o) {
+            for (var i = 0; i < o.data.length; ++i) {
+                var child = o.data[i];
+                if (child && child.source !== undefined && child.item !== undefined
+                        && String(child.source).indexOf("Accelerometer") >= 0)
+                    return child.item;
+            }
+            return null;
+        }
+
+        function test_a_silent_sensor_is_created_again() {
+            var o = make("SilentAccelerometer.qml");
+            tryCompare(o, "available", true);
+            var before = sensorOf(o);
+            verify(before !== null);
+            tryCompare(o, "restarts", 1, 2000);
+            tryCompare(o, "available", true, 1000, "loaded again");
+            var after = sensorOf(o);
+            verify(after !== null);
+            verify(after !== before, "a new sensor, not the silent one");
+        }
+
+        function test_it_waits_longer_each_time() {
+            var o = make("SilentAccelerometer.qml");
+            tryCompare(o, "restarts", 1, 2000);
+            var first = Date.now();
+            tryCompare(o, "restarts", 2, 3000);
+            verify(Date.now() - first >= 550, "the second wait is twice the first");
+        }
+
+        function test_a_sample_ends_the_backoff() {
+            var o = make("SilentAccelerometer.qml");
+            tryCompare(o, "restarts", 1, 2000);
+            o.sample(0, 9.80665, 0);
+            compare(o._stalled, false);
+            compare(o._stallLimit, 300);
+        }
+
+        function test_not_watched_while_inactive() {
+            var o = make("SilentAccelerometer.qml", { active: false });
+            wait(1000);
+            compare(o.restarts, 0);
+            compare(o.available, false);
+        }
+
+        function test_zero_turns_it_off() {
+            var o = make("SilentAccelerometer.qml", { stallInterval: 0 });
+            tryCompare(o, "available", true);
+            wait(1000);
+            compare(o.restarts, 0);
+        }
+    }
 }

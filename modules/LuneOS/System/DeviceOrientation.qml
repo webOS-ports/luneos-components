@@ -46,6 +46,13 @@ import "OrientationFilter.js" as OrientationFilter
  * With followRotationLock, the system's rotationLock preference is read
  * too: screenAngle is the locked angle while it is set, and angle
  * otherwise. The shell keeps its own lock and leaves this off.
+ *
+ * The accelerometer sends a steady stream while it runs (50 a second on the
+ * Brax3, lying still). If that stops while active, the screen stops turning
+ * with nothing to say why, until the next time the display goes off and on.
+ * So when nothing has come for stallInterval the sensor is created again,
+ * and that, a sensor error, and the samples coming back are logged as
+ * warnings, which reach the journal.
  */
 Item {
     id: orientation
@@ -58,6 +65,12 @@ Item {
     property bool followRotationLock: false
     /// The name to read the preference as. Empty means the application's own.
     property string clientName: ""
+    /// Create the accelerometer again when it has sent nothing for this
+    /// long while active, in ms; 0 never does. Doubles, up to 30 s, while
+    /// that does not bring it back.
+    property int stallInterval: 2000
+    /// How many times the accelerometer was created again for being silent.
+    readonly property int restarts: _restarts
 
     /// The phone, settled: 0, 90, 180 or 270.
     readonly property int angle: _angle
@@ -77,8 +90,22 @@ Item {
     // turns freely (luna-next-cardshell's LunaSysAPI/Preferences.qml).
     property int _lockAngle: 400
 
+    property int _restarts: 0
+    property double _lastSample: 0
+    property int _stallLimit: stallInterval
+    property bool _stalled: false
+    property bool _reloading: false
+    // The sensor's file; a test points it at one it feeds itself.
+    property url _sensorSource: "DeviceOrientationSensor.qml"
+
     /// One accelerometer sample, in m/s^2 along Qt's axes.
     function sample(x, y, z) {
+        _lastSample = Date.now();
+        if (_stalled) {
+            _stalled = false;
+            _stallLimit = stallInterval;
+            console.warn("DeviceOrientation: the accelerometer sends again");
+        }
         var proposed = OrientationFilter.orientationFor(x, y, z, _angle);
         if (proposed === _angle) {
             _pending = -1;
@@ -110,8 +137,33 @@ Item {
 
     Loader {
         id: sensorLoader
-        active: orientation.active
-        source: "DeviceOrientationSensor.qml"
+        active: orientation.active && !orientation._reloading
+        source: orientation._sensorSource
+    }
+
+    // A silent accelerometer while active.
+    Timer {
+        id: stallWatch
+        interval: Math.max(250, orientation.stallInterval / 2)
+        repeat: true
+        running: orientation.active && orientation.available && orientation.stallInterval > 0
+        onRunningChanged: if (running) orientation._lastSample = Date.now()
+        onTriggered: {
+            var silent = Date.now() - orientation._lastSample;
+            if (silent < orientation._stallLimit)
+                return;
+            var s = sensorLoader.item;
+            console.warn("DeviceOrientation: no accelerometer sample for " + silent + " ms"
+                         + (s && s.connectedToBackend !== undefined
+                            ? " (connectedToBackend " + s.connectedToBackend + ", active " + s.active
+                              + ", busy " + s.busy + ")" : "")
+                         + "; creating it again");
+            orientation._stalled = true;
+            orientation._restarts++;
+            orientation._stallLimit = Math.min(orientation._stallLimit * 2, 30000);
+            orientation._reloading = true;
+            Qt.callLater(function () { orientation._reloading = false; });
+        }
     }
 
     Connections {
