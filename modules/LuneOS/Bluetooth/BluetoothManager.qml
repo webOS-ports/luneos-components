@@ -22,109 +22,152 @@ pragma Singleton
 import QtQuick 2.0
 // Connman
 import Connman 0.2
-// LuneOS Bluetooth wrapper
-import org.kde.bluezqt 1.0 as BluezQt
+import LuneOS.Service 1.0
+import LuneOS.System 1.0
 
 import "BluetoothPolicy.js" as Policy
 
+/*
+ * Bluetooth for the shell and the apps, through com.webos.service.bluetooth2:
+ * the adapter, its devices, searching, pairing and connecting. bluetooth2 is
+ * the one owner of BlueZ on LuneOS - its agent answers pairings, it brings
+ * the last headset back at power-on - so nothing here talks to BlueZ itself.
+ *
+ * The properties and functions are those the BluezQt-based module had, so
+ * the shell and Settings work unchanged: connectDeviceAddress() and
+ * disconnectDeviceAddress() return a call with finished(call) and error, and
+ * btManager.deviceForAddress() still finds a device and its adapter.
+ *
+ * Power stays connman's: its Bluetooth technology is what airplane mode and
+ * the user's switch set, and it keeps that across reboots.
+ */
 Item {
     id: root
 
     property alias powered: bluetoothTech.powered
-    // Not btManager.bluetoothOperational: BluezQt also requires every
-    // Bluetooth rfkill switch to be unblocked, and some devices carry one
-    // that never is - on the BlackBerry KEY2 (WCN3990) the vendor bt_power
-    // switch stays soft-blocked because the chip has no enable GPIO, while
-    // the Android HAL powers it through /dev/btpower. Power is connman's
-    // call (see "powered" above); once it powers the adapter off, BluezQt
-    // drops it as the usable adapter anyway.
-    readonly property bool bluetoothOperational: btManager.operational && btManager.usableAdapter !== null
+    // The adapter bluetooth2 uses is up. Not BlueZ's rfkill view: some
+    // devices carry a Bluetooth rfkill switch that never unblocks - on the
+    // BlackBerry KEY2 (WCN3990) the vendor bt_power switch stays
+    // soft-blocked because the chip has no enable GPIO, while the Android
+    // HAL powers it through /dev/btpower.
+    readonly property bool bluetoothOperational: _adapter !== null && _adapter.powered === true
     readonly property bool initializing: powered && !bluetoothOperational
     // Set while a device list is on screen. Discovery then runs for
     // discoveryTimeoutMs and stops; searchAgain() runs another.
     property bool discoveringMode: false
     property int discoveryTimeoutMs: Policy.discoveryTimeoutMs
     // The adapter is searching right now - for a "Searching..." indicator.
-    readonly property bool discovering: bluetoothOperational && btManager.usableAdapter.discovering === true
-    readonly property bool discoverable: bluetoothOperational && btManager.usableAdapter.discoverable
-    // BluezQt's Adapter has no "connected" (Mer's had); undefined is false.
-    readonly property bool connected: bluetoothOperational && btManager.usableAdapter.connected === true
+    readonly property bool discovering: bluetoothOperational && _adapter.discovering === true
+    readonly property bool discoverable: bluetoothOperational && _adapter.discoverable === true
+    // Some device is connected.
+    readonly property bool connected: {
+        for (var i = 0; i < _devices.length; i++) {
+            if (Policy.deviceConnected(_devices[i]))
+                return true;
+        }
+        return false;
+    }
+    // Set before _adapter, not bound to it: a handler of bluetoothOperationalChanged
+    // (Settings registers its agent from one) has to find the address already,
+    // where a binding on _adapter could still hold the old one.
+    readonly property string adapterAddress: _adapterAddress
+    // The devices the adapter knows, paired or found, as device/getStatus
+    // gives them. BluetoothDevicesModel shows them.
+    readonly property var devices: _devices
 
+    // The device being paired or connected: {address, name}, or null.
+    property var connectingDevice: null
+
+    // What callers used of BluezQt's Manager.
+    property QtObject btManager: QtObject {
+        // {address, name, paired, trusted, connected, adapter: {address}}, or null.
+        function deviceForAddress(address) {
+            var device = Policy.findDevice(root._devices, address);
+            if (!device)
+                return null;
+            return {
+                "address": device.address,
+                "name": device.name || "",
+                "paired": device.paired === true,
+                "trusted": device.trusted === true,
+                "connected": Policy.deviceConnected(device),
+                "adapter": {"address": root.adapterAddress}
+            };
+        }
+    }
+
+    // A pairing this manager started asks something of the user, or ended
+    // (Policy.pairingPrompt). LuneOSBluetoothAgent shows it.
+    signal pairingRequested(var prompt)
+    // A pairing this manager started ended without the device paired, and
+    // not because the user said no or gave up: bluetooth2's reason.
+    // LuneOSBluetoothAgent passes it on.
+    signal pairingFailed(string address, string reason)
+
+    property var _adapter: null
+    property string _adapterAddress: ""
+    property var _devices: []
+    property var _adapterCall: null
+    property var _devicesCall: null
+    property var _pairCall: null
+    property string _pairAddress: ""
+    // The device whose pairing the user refused or cancelled: that it then
+    // fails is no news.
+    property string _refusedAddress: ""
+    property QtObject _connectCall: null
     // This search has run its time; cleared by searchAgain() and by
     // discoveringMode being set again.
     property bool _discoveryTimedOut: false
+    property bool _discoveryStarted: false
+    // adapter/startDiscovery sent, "discovering" not on yet.
+    property bool _startPending: false
 
-    property QtObject btManager: BluezQt.Manager
-    property QtObject connectingDevice;
+    property QtObject _bus: LunaService {
+        name: Policy.clientName(Qt.application.name)
+    }
+
+    property QtObject _serviceStatus: ServiceStatus {
+        serviceName: Policy.service
+        clientName: Policy.clientName(Qt.application.name)
+    }
+    readonly property bool _serviceAvailable: _serviceStatus.available === true
 
     function connectDeviceAddress(btDeviceAddress)
     {
-        var pendingCall;
+        if (!bluetoothOperational)
+            return undefined;
 
-        function __doConnect(device) {
-            pendingCall = device.connectToDevice();
-            pendingCall.finished.connect(function(call) {
-                connectingDevice = null;
-                if (call.error === 0)
-                    _trustIfPaired(device);
-            });
-        }
+        var device = Policy.findDevice(_devices, btDeviceAddress);
+        var connecting = connectingDevice !== null && _sameAddress(connectingDevice.address, btDeviceAddress);
+        if (connecting || Policy.deviceConnected(device))
+            return disconnectDeviceAddress(btDeviceAddress);
 
-        if (root.bluetoothOperational) {
-            var device = btManager.deviceForAddress(btDeviceAddress);
-            if(root.connectingDevice === device || device.connected) {
-                pendingCall = device.disconnectFromDevice();
-                root.connectingDevice = null;
-            }
-            else {
-                if(connectingDevice) {
-                    connectingDevice.disconnectFromDevice();
-                }
+        if (connectingDevice !== null)
+            _abandonConnecting("Another device was picked");
 
-                connectingDevice = device;
-                if(!device.paired) {
-                    device.onPairedChanged.connect(function() {
-                        if(connectingDevice === device && device.paired) {
-                            console.log("Pairing has succeeded, connecting now...");
-                            _trustIfPaired(device);
-                            __doConnect(device);
-                        }
-                    });
-                    pendingCall = device.pair();
-                    pendingCall.finished.connect(function(call) {
-                        console.log("Pairing call is now finished.");
-                    });
-                }
-                else {
-                    __doConnect(device);
-                }
-            }
-        }
-
-        return pendingCall;
+        var call = _newCall();
+        _connectCall = call;
+        connectingDevice = {"address": btDeviceAddress, "name": device && device.name ? device.name : ""};
+        if (device && device.paired === true)
+            _connect(btDeviceAddress, call);
+        else
+            _pair(btDeviceAddress, call);
+        return call;
     }
 
     function disconnectDeviceAddress(btDeviceAddress)
     {
-        var pendingCall;
+        if (connectingDevice !== null && _sameAddress(connectingDevice.address, btDeviceAddress))
+            _abandonConnecting("Disconnected");
 
-        var device = btManager.deviceForAddress(btDeviceAddress);
-        if(connectingDevice === device) {
-            connectingDevice = null;
-        }
-        pendingCall = device.disconnectFromDevice();
-
-        return pendingCall;
-    }
-
-    // The user picked this device and it is paired: let it connect back
-    // (a headset switched on again) without the agent being asked.
-    function _trustIfPaired(device)
-    {
-        if (Policy.shouldTrust(device)) {
-            console.log("Marking", device.address, "trusted.");
-            device.trusted = true;
-        }
+        var call = _newCall();
+        _bt("device/disconnect", {"address": btDeviceAddress}, function (reply) {
+            call._finish(0, "");
+        }, function (reply) {
+            var failure = Policy.replyError(reply);
+            call._finish(failure.error, failure.errorText);
+        });
+        return call;
     }
 
     // Start a new search, for the "Search again" button.
@@ -137,29 +180,288 @@ Item {
         _updateDiscovery();
     }
 
-    function _updateDiscovery()
+    function setDiscoverable(isDiscoverable)
     {
-        var adapter = btManager ? btManager.usableAdapter : null;
-        var action = Policy.discoveryAction(discoveringMode, !!adapter,
-                                            !!adapter && adapter.discovering === true,
-                                            _discoveryTimedOut);
-        if (action === "start") {
-            console.log("Starting bluetooth discovery.");
-            adapter.startDiscovery();
-            discoveryTimer.restart();
-        }
-        else if (action === "stop") {
-            console.log("Stopping bluetooth discovery.");
-            adapter.stopDiscovery();
-            discoveryTimer.stop();
+        if (bluetoothOperational)
+            _bt("adapter/setState", {"discoverable": isDiscoverable === true});
+    }
+
+    // A call to bluetooth2 on the adapter in use. onReply gets the parsed
+    // reply when it says returnValue true, onFailure (if any) when it does
+    // not or the call failed.
+    // The arguments with the adapter in use, when one is known: bluetooth2
+    // refuses an empty adapterAddress, and takes its default without one.
+    function _withAdapter(args)
+    {
+        if (adapterAddress !== "" && args.adapterAddress === undefined)
+            args.adapterAddress = adapterAddress;
+        return args;
+    }
+
+    function _bt(method, args, onReply, onFailure)
+    {
+        var payload = {};
+        for (var key in args)
+            payload[key] = args[key];
+        _withAdapter(payload);
+        return _bus.call(Policy.uri + method, JSON.stringify(payload), function (message) {
+            var reply = _parse(message);
+            if (reply.returnValue === true) {
+                if (onReply)
+                    onReply(reply);
+            } else {
+                console.warn("Bluetooth: " + method + " failed: " + message.payload);
+                if (onFailure)
+                    onFailure(reply);
+            }
+        }, function (message) {
+            console.warn("Bluetooth: " + method + " failed: " + (message ? message.payload : ""));
+            if (onFailure)
+                onFailure(_parse(message));
+        });
+    }
+
+    function _parse(message)
+    {
+        try {
+            return JSON.parse(message.payload) || {};
+        } catch (e) {
+            return {};
         }
     }
 
-    function setDiscoverable(isDiscoverable)
+    function _sameAddress(a, b)
     {
-        if(btManager && btManager.usableAdapter) {
-            btManager.usableAdapter.discoverable = isDiscoverable;
+        return String(a).toLowerCase() === String(b).toLowerCase();
+    }
+
+    function _newCall()
+    {
+        return pendingCallComponent.createObject(root);
+    }
+
+    function _pair(address, call)
+    {
+        _endPairing();
+        _pairAddress = address;
+        _refusedAddress = "";
+        console.log("Pairing with", address);
+        _pairCall = _bus.subscribe(Policy.uri + "adapter/pair",
+                                   JSON.stringify(_withAdapter({"address": address, "subscribe": true})),
+                                   function (message) {
+            var reply = _parse(message);
+            var prompt = Policy.pairingPrompt(reply, address);
+            if (prompt !== null)
+                root.pairingRequested(prompt);
+
+            var outcome = Policy.pairOutcome(reply);
+            if (outcome === "pending")
+                return;
+            _endPairing();
+            if (call !== _connectCall)
+                return;     // given up on meanwhile
+            if (outcome === "paired") {
+                console.log("Pairing has succeeded, connecting now...");
+                _trust(address, true);
+                _connect(address, call);
+            } else {
+                console.warn("Bluetooth: pairing with " + address + " failed: " + message.payload);
+                _pairingFailed(address, call, reply);
+            }
+        }, function (message) {
+            _endPairing();
+            if (call === _connectCall)
+                _pairingFailed(address, call, _parse(message));
+        });
+    }
+
+    function _pairingFailed(address, call, reply)
+    {
+        if (!_refusedBy(address))
+            root.pairingFailed(address, Policy.replyError(reply).errorText);
+        _failConnecting(call, reply);
+    }
+
+    // LuneOSBluetoothRequest: the user said no to this device's pairing.
+    function _userRefused(address)
+    {
+        _refusedAddress = address;
+    }
+
+    function _refusedBy(address)
+    {
+        return _refusedAddress !== "" && _sameAddress(_refusedAddress, address);
+    }
+
+    function _endPairing()
+    {
+        if (_pairCall) {
+            _pairCall.cancel();
+            _pairCall = null;
         }
+        _pairAddress = "";
+    }
+
+    function _connect(address, call)
+    {
+        _bt("device/connect", {"address": address}, function (reply) {
+            if (call !== _connectCall)
+                return;
+            _connectCall = null;
+            connectingDevice = null;
+            _trust(address, false);
+            call._finish(0, "");
+        }, function (reply) {
+            if (call === _connectCall)
+                _failConnecting(call, reply);
+        });
+    }
+
+    function _failConnecting(call, reply)
+    {
+        if (call === _connectCall) {
+            _connectCall = null;
+            connectingDevice = null;
+        }
+        var failure = Policy.replyError(reply);
+        call._finish(failure.error, failure.errorText);
+    }
+
+    // The user gave up on the device being connected, or picked another.
+    function _abandonConnecting(reason)
+    {
+        var call = _connectCall;
+        var address = connectingDevice ? connectingDevice.address : "";
+        _connectCall = null;
+        connectingDevice = null;
+        if (_pairAddress !== "" && _sameAddress(_pairAddress, address))
+            _bt("adapter/cancelPairing", {"address": address});
+        _endPairing();
+        if (call)
+            call._finish(1, reason);
+    }
+
+    // The user picked this device and it is paired: let it connect back
+    // (a headset switched on again) without the agent being asked.
+    // justPaired: the device list may not say "paired" yet.
+    function _trust(address, justPaired)
+    {
+        var device = Policy.findDevice(_devices, address);
+        var state = {"paired": justPaired || (device !== null && device.paired === true),
+                     "trusted": device !== null && device.trusted === true};
+        if (Policy.shouldTrust(state)) {
+            console.log("Marking", address, "trusted.");
+            _bt("device/setState", {"address": address, "trusted": true});
+        }
+    }
+
+    function _updateDiscovery()
+    {
+        var action = Policy.discoveryAction(discoveringMode && connectingDevice === null,
+                                            bluetoothOperational, discovering, _discoveryTimedOut);
+        if (action === "start") {
+            // Asked already: "discovering" comes on only when BlueZ says so,
+            // and a second start before that is refused (115).
+            if (_startPending)
+                return;
+            console.log("Starting bluetooth discovery.");
+            _discoveryStarted = true;
+            _startPending = true;
+            _bt("adapter/startDiscovery", {}, null, function () { root._startPending = false; });
+            discoveryTimer.restart();
+        }
+        else if (action === "stop") {
+            _discoveryStarted = false;
+            _startPending = false;
+            discoveryTimer.stop();
+            // A pairing about to start: bluetooth2's adapter/pair stops the
+            // search itself, and a stop of ours just before it races that
+            // one - the second StopDiscovery is refused while the first is
+            // settling, and the pairing fails with 117.
+            if (_pairingStarts())
+                return;
+            console.log("Stopping bluetooth discovery.");
+            _bt("adapter/cancelDiscovery", {});
+        }
+    }
+
+    function _pairingStarts()
+    {
+        if (connectingDevice === null)
+            return false;
+        var device = Policy.findDevice(_devices, connectingDevice.address);
+        return !(device && device.paired === true);
+    }
+
+    function _watchService()
+    {
+        _unwatchService();
+        if (!_serviceAvailable)
+            return;
+        _adapterCall = _bus.subscribe(Policy.uri + "adapter/getStatus", JSON.stringify({"subscribe": true}),
+                                      function (message) {
+            var reply = _parse(message);
+            if (reply.returnValue === false) {
+                console.warn("Bluetooth: adapter/getStatus failed: " + message.payload);
+                return;
+            }
+            if (reply.adapters !== undefined)
+                _setAdapter(Policy.pickAdapter(reply.adapters));
+        }, function (message) {
+            console.warn("Bluetooth: cannot watch the adapter: " + (message ? message.payload : ""));
+        });
+    }
+
+    function _unwatchService()
+    {
+        if (_adapterCall) {
+            _adapterCall.cancel();
+            _adapterCall = null;
+        }
+        _unwatchDevices();
+        _setAdapter(null);
+    }
+
+    function _setAdapter(adapter)
+    {
+        _adapterAddress = adapter && adapter.adapterAddress ? String(adapter.adapterAddress) : "";
+        _adapter = adapter;
+    }
+
+    // The devices of the adapter in use; again whenever that changes.
+    function _watchDevices()
+    {
+        _unwatchDevices();
+        if (adapterAddress === "")
+            return;
+        _devicesCall = _bus.subscribe(Policy.uri + "device/getStatus",
+                                      JSON.stringify({"subscribe": true, "adapterAddress": adapterAddress}),
+                                      function (message) {
+            var reply = _parse(message);
+            if (reply.returnValue === false) {
+                console.warn("Bluetooth: device/getStatus failed: " + message.payload);
+                return;
+            }
+            if (reply.devices !== undefined)
+                _devices = reply.devices;
+        }, function (message) {
+            console.warn("Bluetooth: cannot watch the devices: " + (message ? message.payload : ""));
+        });
+    }
+
+    function _unwatchDevices()
+    {
+        if (_devicesCall) {
+            _devicesCall.cancel();
+            _devicesCall = null;
+        }
+        if (_devices.length > 0)
+            _devices = [];
+    }
+
+    Component {
+        id: pendingCallComponent
+        BluetoothPendingCall { }
     }
 
     TechnologyModel {
@@ -172,27 +474,41 @@ Item {
         interval: root.discoveryTimeoutMs
         onTriggered: {
             root._discoveryTimedOut = true;
+            root._startPending = false;
             root._updateDiscovery();
         }
     }
 
-    /* Bindings to keep the discovering mode updated */
-    Connections {
-        target: btManager
-        function onUsableAdapterChanged() {
-            root._updateDiscovery();
-        }
+    on_ServiceAvailableChanged: _watchService()
+    onAdapterAddressChanged: _watchDevices()
+    onBluetoothOperationalChanged: {
+        // The adapter went: so did whatever was being connected on it.
+        if (!bluetoothOperational && _connectCall)
+            _failConnecting(_connectCall, {"errorText": "Bluetooth was switched off"});
+        if (!bluetoothOperational)
+            _startPending = false;
+        _updateDiscovery();
+    }
+    onConnectingDeviceChanged: _updateDiscovery()
+    onDiscoveringChanged: {
+        if (discovering)
+            _startPending = false;
     }
     onDiscoveringModeChanged: {
         if (discoveringMode)
             _discoveryTimedOut = false;
         _updateDiscovery();
     }
-    Component.onCompleted: _updateDiscovery()
+    Component.onCompleted: {
+        _watchService();
+        _updateDiscovery();
+    }
     Component.onDestruction: {
-        if(btManager.usableAdapter && btManager.usableAdapter.discovering) {
+        if (_discoveryStarted && discovering) {
             console.log("Stopping bluetooth discovery.");
-            btManager.usableAdapter.stopDiscovery();
+            _bt("adapter/cancelDiscovery", {});
         }
+        _endPairing();
+        _unwatchService();
     }
 }
