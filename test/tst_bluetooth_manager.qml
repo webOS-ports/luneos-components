@@ -189,6 +189,32 @@ Item {
             compare(Policy.replyError(null).error, 1);
         }
 
+        function test_policy_deviceType() {
+            // Classes from real devices, and BluezQt's answer for each.
+            compare(Policy.deviceType(7078148), Policy.deviceTypes.Computer, "desktop 0x6c0104");
+            compare(Policy.deviceType(0x240404), Policy.deviceTypes.Headset, "headset 0x240404");
+            compare(Policy.deviceType(0x240418), Policy.deviceTypes.Headphones, "headphones 0x240418");
+            compare(Policy.deviceType(0x240414), Policy.deviceTypes.AudioVideo, "loudspeaker 0x240414");
+            compare(Policy.deviceType(0x5a020c), Policy.deviceTypes.Phone, "smartphone 0x5a020c");
+            compare(Policy.deviceType(0x000210), Policy.deviceTypes.Modem);
+            compare(Policy.deviceType(0x000540), Policy.deviceTypes.Keyboard);
+            compare(Policy.deviceType(0x000580), Policy.deviceTypes.Mouse);
+            compare(Policy.deviceType(0x000594), Policy.deviceTypes.Tablet);
+            compare(Policy.deviceType(0x000508), Policy.deviceTypes.Joypad);
+            compare(Policy.deviceType(0x000500), Policy.deviceTypes.Peripheral);
+            compare(Policy.deviceType(0x000680), Policy.deviceTypes.Printer);
+            compare(Policy.deviceType(0x000620), Policy.deviceTypes.Camera);
+            compare(Policy.deviceType(0x000610), Policy.deviceTypes.Imaging);
+            compare(Policy.deviceType(0x000704), Policy.deviceTypes.Wearable);
+            compare(Policy.deviceType(0x000804), Policy.deviceTypes.Toy);
+            compare(Policy.deviceType(0x000904), Policy.deviceTypes.Health);
+            compare(Policy.deviceType(0x000300), Policy.deviceTypes.Network);
+            compare(Policy.deviceType(0), Policy.deviceTypes.Uncategorized, "LE device, no class");
+            compare(Policy.deviceType(undefined), Policy.deviceTypes.Uncategorized);
+            compare(Policy.deviceRow({ address: "aa", classOfDevice: 7078148 }).Type, Policy.deviceTypes.Computer);
+            compare(Policy.roleName(256 + 106), "Type", "BluezQt's TypeRole");
+        }
+
         function test_policy_rowsKeepTheirPlace() {
             var model = Qt.createQmlObject("import QtQuick; ListModel {}", root);
             var a = { address: "aa", name: "A", paired: true };

@@ -117,6 +117,7 @@ var roles = {
     "FriendlyName": 256 + 103,
     "RemoteName": 256 + 104,
     "Class": 256 + 105,
+    "Type": 256 + 106,
     "Paired": 256 + 109,
     "Trusted": 256 + 110,
     "Blocked": 256 + 111,
@@ -124,6 +125,73 @@ var roles = {
     "Connected": 256 + 114,
     "AdapterAddress": 256 + 118
 };
+
+/**
+ * BluezQt's Device::Type for a class of device, as a number in the order of
+ * its enum (Phone, Modem, Computer, Network, Headset, Headphones, AudioVideo,
+ * Keyboard, Mouse, Joypad, Tablet, Peripheral, Camera, Printer, Imaging,
+ * Wearable, Toy, Health, Uncategorized): bluez-qt's classToType in
+ * src/utils.cpp. BluezQt takes the LE appearance instead for class 0, which
+ * bluetooth2 does not report; an appearance of 0 is Uncategorized there too.
+ */
+var deviceTypes = {
+    "Phone": 0, "Modem": 1, "Computer": 2, "Network": 3, "Headset": 4, "Headphones": 5,
+    "AudioVideo": 6, "Keyboard": 7, "Mouse": 8, "Joypad": 9, "Tablet": 10, "Peripheral": 11,
+    "Camera": 12, "Printer": 13, "Imaging": 14, "Wearable": 15, "Toy": 16, "Health": 17,
+    "Uncategorized": 18
+};
+
+function deviceType(classOfDevice) {
+    var c = Number(classOfDevice) || 0;
+    var t = deviceTypes;
+    switch ((c & 0x1f00) >> 8) {
+    case 0x01:
+        return t.Computer;
+    case 0x02:
+        return ((c & 0xfc) >> 2) === 0x04 ? t.Modem : t.Phone;
+    case 0x03:
+        return t.Network;
+    case 0x04:
+        switch ((c & 0xfc) >> 2) {
+        case 0x01:
+        case 0x02:
+            return t.Headset;
+        case 0x06:
+            return t.Headphones;
+        default:
+            return t.AudioVideo;
+        }
+    case 0x05:
+        switch ((c & 0xc0) >> 6) {
+        case 0x00:
+            switch ((c & 0x1e) >> 2) {
+            case 0x01:
+            case 0x02:
+                return t.Joypad;
+            }
+            break;
+        case 0x01:
+            return t.Keyboard;
+        case 0x02:
+            return ((c & 0x1e) >> 2) === 0x05 ? t.Tablet : t.Mouse;
+        }
+        return t.Peripheral;
+    case 0x06:
+        if (c & 0x80)
+            return t.Printer;
+        if (c & 0x20)
+            return t.Camera;
+        return t.Imaging;
+    case 0x07:
+        return t.Wearable;
+    case 0x08:
+        return t.Toy;
+    case 0x09:
+        return t.Health;
+    default:
+        return t.Uncategorized;
+    }
+}
 
 /** A BluetoothDevicesModel row for a device from device/getStatus. */
 function deviceRow(device) {
@@ -134,6 +202,7 @@ function deviceRow(device) {
         "FriendlyName": name,
         "RemoteName": name,
         "Class": Number(device.classOfDevice) || 0,
+        "Type": deviceType(device.classOfDevice),
         "Paired": device.paired === true,
         "Trusted": device.trusted === true,
         "Blocked": device.blocked === true,
