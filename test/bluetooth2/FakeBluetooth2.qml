@@ -123,6 +123,17 @@ QtObject {
             _later(function () { bus._status(subscription); });
         else if (method === "device/getStatus")
             _later(function () { bus._status(subscription); });
+        else if (subscription.args.subscribe !== true)
+        {
+            // bluetooth2 takes a call as a subscription only when the
+            // payload says so, and refuses pair and awaitPairingRequests
+            // otherwise.
+            _later(function () {
+                if (!subscription.cancelled)
+                    bus._send(onReply, {"returnValue": false, "errorCode": 103,
+                                        "errorText": "Method needs to be subscribed"});
+            });
+        }
         else
         {
             var first = {"returnValue": true, "subscribed": true};

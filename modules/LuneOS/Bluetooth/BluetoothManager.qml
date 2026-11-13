@@ -237,7 +237,7 @@ Item {
         _pairAddress = address;
         console.log("Pairing with", address);
         _pairCall = _bus.subscribe(Policy.uri + "adapter/pair",
-                                   JSON.stringify(_withAdapter({"address": address})),
+                                   JSON.stringify(_withAdapter({"address": address, "subscribe": true})),
                                    function (message) {
             var reply = _parse(message);
             var prompt = Policy.pairingPrompt(reply, address);
