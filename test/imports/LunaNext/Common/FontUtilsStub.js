@@ -17,6 +17,8 @@
  */
 
 .pragma library
+// So the dp() included below follows Settings.setProfile(); see UnitsStub.js.
+.import "SettingsStub.js" as Profile
 
 Qt.include("UnitsStub.js")
 
