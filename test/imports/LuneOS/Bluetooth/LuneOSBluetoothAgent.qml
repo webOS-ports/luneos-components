@@ -22,9 +22,16 @@ QtObject {
     property string path: "/"
     property variant capability;
 
+    // Whether bluetooth2 asks this agent the pairings devices start; a test
+    // sets it false again for a subscription that went.
+    property bool registered: false
+    property int registerCalls: 0
+
     function registerToManager(btManager) {
         console.log("==> registerToManager()");
+        registerCalls++;
         btManager.registerAgent(agentId);
+        registered = true;
     }
 
     signal requestPinCodeFromUser(variant device, variant request);
@@ -36,4 +43,5 @@ QtObject {
     signal displayPinCodeToUser(variant device, variant pinCode);
     signal cancel();
     signal release();
+    signal pairingFailed(variant device, string reason);
 }

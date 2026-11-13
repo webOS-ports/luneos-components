@@ -660,12 +660,14 @@ Item {
             agent.registerToManager(manager.btManager);
             var shown = null;
             var cancelled = 0;
+            var failed = failures(agent);
             agent.displayPasskeyToUser.connect(function (device, passkey, entered) { shown = passkey; });
             agent.cancel.connect(function () { cancelled++; });
             bus.push("adapter/awaitPairingRequests", { returnValue: true, request: "displayPasskey", address: speaker, passkey: 7 });
             compare(shown, "000007");
             bus.push("adapter/awaitPairingRequests", { returnValue: true, request: "endPairing" });
             compare(cancelled, 1);
+            compare(failed.length, 0, "a pairing that ended well was said to fail");
             bus.push("adapter/awaitPairingRequests", { returnValue: true, request: "endPairing" });
             compare(cancelled, 1, "cancelled with nothing on screen");
         }
@@ -693,6 +695,178 @@ Item {
             var calls = bus.count("adapter/supplyPasskeyConfirmation");
             request.cancel();
             compare(bus.count("adapter/supplyPasskeyConfirmation"), calls, "answered a pairing that had ended");
+        }
+
+        // ---- A pairing that did not work is said, one the user refused is not.
+
+        function failures(agent) {
+            var list = [];
+            agent.pairingFailed.connect(function (device, reason) { list.push({ device: device, reason: reason }); });
+            return list;
+        }
+
+        function test_aFailedPairingIsReported() {
+            var manager = makeManager();
+            var bus = manager._bus;
+            var agent = makeAgent(manager);
+            agent.pairingTimeoutMs = 100;
+            var failed = failures(agent);
+            var request = null;
+            agent.requestPinCodeFromUser.connect(function (device, r) { request = r; });
+            bus.setDevice(speaker, { name: "Speaker" });
+            tryVerify(function () { return manager.devices.length === 1; }, 1000);
+            manager.connectDeviceAddress(speaker);
+            settle();
+            bus.push("adapter/pair", { returnValue: true, request: "enterPinCode", address: speaker });
+            request.accept("0000");
+            bus.push("adapter/pair", { returnValue: false, subscribed: false, request: "endPairing", errorCode: 116, errorText: "Pairing canceled or timed out" });
+            compare(failed.length, 1);
+            compare(failed[0].device.address, speaker);
+            compare(failed[0].device.name, "Speaker");
+            compare(failed[0].reason, "Pairing canceled or timed out");
+            wait(250);
+            compare(failed.length, 1, "said twice");
+        }
+
+        function test_aPairingRefusedUpFrontIsReported() {
+            var manager = makeManager();
+            var bus = manager._bus;
+            var agent = makeAgent(manager);
+            var failed = failures(agent);
+            bus.setDevice(speaker, {});
+            tryVerify(function () { return manager.devices.length === 1; }, 1000);
+            manager.connectDeviceAddress(speaker);
+            settle();
+            bus.push("adapter/pair", { returnValue: false, errorCode: 117, errorText: "Failed to stop discovery" });
+            compare(failed.length, 1);
+            compare(failed[0].reason, "Failed to stop discovery");
+        }
+
+        function test_aPairingTheUserSaidNoToIsNoFailure_data() {
+            return [ { tag: "reject" }, { tag: "cancel" } ];
+        }
+        function test_aPairingTheUserSaidNoToIsNoFailure(data) {
+            var manager = makeManager();
+            var bus = manager._bus;
+            var agent = makeAgent(manager);
+            var failed = failures(agent);
+            var request = null;
+            agent.requestConfirmationFromUser.connect(function (device, passkey, r) { request = r; });
+            bus.setDevice(speaker, {});
+            tryVerify(function () { return manager.devices.length === 1; }, 1000);
+            manager.connectDeviceAddress(speaker);
+            settle();
+            bus.push("adapter/pair", { returnValue: true, request: "confirmPasskey", passkey: 1, address: speaker });
+            request[data.tag]();
+            bus.push("adapter/pair", { returnValue: false, subscribed: false, request: "endPairing", errorCode: 116, errorText: "Pairing canceled or timed out" });
+            compare(failed.length, 0, "the user's own no was reported as a failure");
+
+            // The next pairing failing is news again.
+            manager.connectDeviceAddress(speaker);
+            settle();
+            bus.push("adapter/pair", { returnValue: false, subscribed: false, request: "endPairing", errorCode: 116, errorText: "Pairing canceled or timed out" });
+            compare(failed.length, 1);
+        }
+
+        function test_givingUpOnAPairingIsNoFailure() {
+            var manager = makeManager();
+            var bus = manager._bus;
+            var agent = makeAgent(manager);
+            var failed = failures(agent);
+            bus.setDevice(speaker, {});
+            tryVerify(function () { return manager.devices.length === 1; }, 1000);
+            manager.connectDeviceAddress(speaker);
+            settle();
+            manager.connectDeviceAddress(speaker);  // tapped again: give up
+            bus.push("adapter/pair", { returnValue: false, subscribed: false, request: "endPairing", errorCode: 116, errorText: "Pairing canceled or timed out" });
+            compare(failed.length, 0);
+        }
+
+        // bluetooth2 says nothing once a device's pairing is answered, so a
+        // wrong PIN shows only in the device: it drops its connection unpaired.
+        function test_aDevicesPairingThatDoesNotTakeIsReported() {
+            var manager = makeManager();
+            var bus = manager._bus;
+            var agent = makeAgent(manager);
+            agent.registerToManager(manager.btManager);
+            var failed = failures(agent);
+            var request = null;
+            agent.requestPinCodeFromUser.connect(function (device, r) { request = r; });
+            bus.setDevice(speaker, { name: "herrie-desktop", connected: true });
+            tryVerify(function () { return manager.devices.length === 1; }, 1000);
+            bus.push("adapter/awaitPairingRequests", { returnValue: true, subscribed: true, request: "enterPinCode", address: speaker });
+            request.accept("0000");
+            settle();
+            compare(failed.length, 0, "failed while still connected");
+            bus.setDevice(speaker, { connected: false });
+            tryVerify(function () { return failed.length === 1; }, 1000, "a wrong PIN went unsaid");
+            compare(failed[0].device.name, "herrie-desktop");
+            compare(failed[0].device.address, speaker);
+            bus.setDevice(speaker, { connected: true });
+            bus.setDevice(speaker, { connected: false });
+            settle();
+            compare(failed.length, 1, "said twice");
+        }
+
+        function test_aDevicesPairingThatTakesIsNoFailure() {
+            var manager = makeManager();
+            var bus = manager._bus;
+            var agent = makeAgent(manager);
+            agent.pairingTimeoutMs = 100;
+            agent.registerToManager(manager.btManager);
+            var failed = failures(agent);
+            var request = null;
+            agent.requestConfirmationFromUser.connect(function (device, passkey, r) { request = r; });
+            bus.setDevice(speaker, { connected: true });
+            tryVerify(function () { return manager.devices.length === 1; }, 1000);
+            bus.push("adapter/awaitPairingRequests", { returnValue: true, request: "confirmPasskey", address: speaker, passkey: 1 });
+            request.accept();
+            bus.setDevice(speaker, { paired: true });
+            settle();
+            bus.setDevice(speaker, { connected: false });
+            wait(250);
+            compare(failed.length, 0);
+        }
+
+        function test_aDevicesPairingNotDoneInTimeIsReported() {
+            var manager = makeManager();
+            var bus = manager._bus;
+            var agent = makeAgent(manager);
+            agent.pairingTimeoutMs = 100;
+            agent.registerToManager(manager.btManager);
+            var failed = failures(agent);
+            var request = null;
+            agent.requestPasskeyFromUser.connect(function (device, r) { request = r; });
+            bus.push("adapter/awaitPairingRequests", { returnValue: true, request: "enterPasskey", address: speaker });
+            request.accept("1234");
+            compare(failed.length, 0);
+            tryVerify(function () { return failed.length === 1; }, 1000);
+            compare(failed[0].device.address, speaker);
+        }
+
+        function test_aDevicesPairingCancelledIsReportedUnlessTheUserSaidNo_data() {
+            return [ { tag: "unanswered", refuse: false, expected: 1 },
+                     { tag: "refused",    refuse: true,  expected: 0 } ];
+        }
+        function test_aDevicesPairingCancelledIsReportedUnlessTheUserSaidNo(data) {
+            var manager = makeManager();
+            var bus = manager._bus;
+            var agent = makeAgent(manager);
+            agent.registerToManager(manager.btManager);
+            var failed = failures(agent);
+            var request = null;
+            agent.requestPinCodeFromUser.connect(function (device, r) { request = r; });
+            bus.push("adapter/awaitPairingRequests", { returnValue: true, request: "enterPinCode", address: speaker, name: "herrie-desktop" });
+            if (data.refuse)
+                request.cancel();
+            bus.push("adapter/awaitPairingRequests", { returnValue: false, subscribed: true, request: "endPairing",
+                                                       errorCode: 124, errorText: "Pairing canceled or timed out" });
+            compare(failed.length, data.expected);
+            if (data.expected)
+                compare(failed[0].device.name, "herrie-desktop");
+            // An end with nothing asked is nobody's failure.
+            bus.push("adapter/awaitPairingRequests", { returnValue: false, subscribed: true, request: "endPairing", errorCode: 124 });
+            compare(failed.length, data.expected);
         }
 
         function test_aQuestionLeftOpenIsRefusedWithThePage() {

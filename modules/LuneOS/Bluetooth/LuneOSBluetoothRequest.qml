@@ -35,6 +35,8 @@ QtObject {
     property string address: ""
     property string adapterAddress: ""
     property QtObject manager: null
+    // Told when the user answers yes, to see whether the pairing then worked.
+    property QtObject agent: null
 
     readonly property bool answered: _answered
     property bool _answered: false
@@ -48,6 +50,8 @@ QtObject {
             _send("adapter/supplyPasskey", {"passkey": parseInt(returnValue, 10) || 0});
         else if (kind === "pinCode")
             _send("adapter/supplyPinCode", {"pin": returnValue === undefined || returnValue === null ? "" : String(returnValue)});
+        if (agent)
+            agent._answered(request);
     }
 
     function reject() {
@@ -61,6 +65,8 @@ QtObject {
     }
 
     function _refuse() {
+        if (manager)
+            manager._userRefused(address);
         if (kind === "confirmation" || kind === "authorization")
             _send("adapter/supplyPasskeyConfirmation", {"accept": false});
         else

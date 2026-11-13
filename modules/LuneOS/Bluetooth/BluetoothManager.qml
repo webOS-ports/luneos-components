@@ -99,6 +99,10 @@ Item {
     // A pairing this manager started asks something of the user, or ended
     // (Policy.pairingPrompt). LuneOSBluetoothAgent shows it.
     signal pairingRequested(var prompt)
+    // A pairing this manager started ended without the device paired, and
+    // not because the user said no or gave up: bluetooth2's reason.
+    // LuneOSBluetoothAgent passes it on.
+    signal pairingFailed(string address, string reason)
 
     property var _adapter: null
     property string _adapterAddress: ""
@@ -107,6 +111,9 @@ Item {
     property var _devicesCall: null
     property var _pairCall: null
     property string _pairAddress: ""
+    // The device whose pairing the user refused or cancelled: that it then
+    // fails is no news.
+    property string _refusedAddress: ""
     property QtObject _connectCall: null
     // This search has run its time; cleared by searchAgain() and by
     // discoveringMode being set again.
@@ -237,6 +244,7 @@ Item {
     {
         _endPairing();
         _pairAddress = address;
+        _refusedAddress = "";
         console.log("Pairing with", address);
         _pairCall = _bus.subscribe(Policy.uri + "adapter/pair",
                                    JSON.stringify(_withAdapter({"address": address, "subscribe": true})),
@@ -258,13 +266,31 @@ Item {
                 _connect(address, call);
             } else {
                 console.warn("Bluetooth: pairing with " + address + " failed: " + message.payload);
-                _failConnecting(call, reply);
+                _pairingFailed(address, call, reply);
             }
         }, function (message) {
             _endPairing();
             if (call === _connectCall)
-                _failConnecting(call, _parse(message));
+                _pairingFailed(address, call, _parse(message));
         });
+    }
+
+    function _pairingFailed(address, call, reply)
+    {
+        if (!_refusedBy(address))
+            root.pairingFailed(address, Policy.replyError(reply).errorText);
+        _failConnecting(call, reply);
+    }
+
+    // LuneOSBluetoothRequest: the user said no to this device's pairing.
+    function _userRefused(address)
+    {
+        _refusedAddress = address;
+    }
+
+    function _refusedBy(address)
+    {
+        return _refusedAddress !== "" && _sameAddress(_refusedAddress, address);
     }
 
     function _endPairing()

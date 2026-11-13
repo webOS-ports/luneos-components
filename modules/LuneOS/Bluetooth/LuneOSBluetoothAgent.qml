@@ -65,6 +65,13 @@ QtObject {
     signal authorizeServiceFromUser(var device, string uuid, var request)
     signal cancel()
     signal release()
+    // A pairing ended without the device paired, and not because the user
+    // said no: for the page to say so. reason is bluetooth2's, or the
+    // agent's own when bluetooth2 says nothing - it does not tell how a
+    // pairing a device started went once it is answered (a wrong PIN), so
+    // the device is watched: paired, fine; its connection gone or not
+    // paired within pairingTimeoutMs, failed.
+    signal pairingFailed(var device, string reason)
 
     // A refused registration is tried again this often, this many times in
     // a row, while Bluetooth stays up: right after bluetoothd restarts,
@@ -73,11 +80,17 @@ QtObject {
     // did not go down as the page sees it.
     property int retryIntervalMs: 2000
     property int retries: 5
+    property int pairingTimeoutMs: 30000
 
     property var _incoming: null
     property int _retried: 0
     property QtObject _open: null
     property bool _showing: false
+    // The device of the question a device's pairing asked last, till it ends.
+    property var _incomingDevice: null
+    // A device's pairing the user said yes to, not paired yet.
+    property var _waitingDevice: null
+    property bool _sawConnected: false
 
     // Pairings devices start are asked here too, from now on. Again after
     // Bluetooth came back on; doing it twice is harmless.
@@ -92,6 +105,7 @@ QtObject {
                 _retried = 0;   // registered
             var prompt = Policy.pairingPrompt(reply, "");
             if (prompt !== null) {
+                _incomingAsks(prompt, reply);
                 _show(prompt);
                 return;
             }
@@ -110,6 +124,70 @@ QtObject {
             _unregister();
             _retryLater();
         });
+    }
+
+    // A device's pairing asks, or ended; bluetooth2 ends it with an error
+    // when it was cancelled or nobody answered in time.
+    function _incomingAsks(prompt, reply) {
+        if (prompt.kind !== "end") {
+            _stopWaiting();
+            manager._userRefused("");
+            _incomingDevice = _deviceFor(prompt);
+            return;
+        }
+        var device = _incomingDevice;
+        _incomingDevice = null;
+        if (device === null || reply.returnValue !== false)
+            return;
+        _stopWaiting();
+        if (!manager._refusedBy(device.address))
+            _failed(device, Policy.replyError(reply).errorText);
+    }
+
+    // LuneOSBluetoothRequest: the user said yes. To a pairing the manager
+    // started, its adapter/pair says how it went; to one a device started,
+    // nothing does.
+    function _answered(request) {
+        if (!manager || (manager._pairAddress !== "" && manager._sameAddress(manager._pairAddress, request.address)))
+            return;
+        _waitingDevice = _deviceFor({"name": "", "address": request.address});
+        _sawConnected = false;
+        _pairingTimer.restart();
+        _checkWaiting();
+    }
+
+    function _checkWaiting() {
+        if (_waitingDevice === null || !manager)
+            return;
+        var device = Policy.findDevice(manager._devices, _waitingDevice.address);
+        if (device && device.paired === true)
+            _stopWaiting();
+        else if (device && device.connected === true)
+            _sawConnected = true;
+        else if (_sawConnected)
+            _failWaiting("The device disconnected before it was paired");
+    }
+
+    function _stopWaiting() {
+        _waitingDevice = null;
+        _pairingTimer.stop();
+    }
+
+    function _failWaiting(reason) {
+        var device = _waitingDevice;
+        _stopWaiting();
+        if (device !== null)
+            _failed(device, reason);
+    }
+
+    function _failed(device, reason) {
+        console.warn("Bluetooth: pairing with " + device.name + " (" + device.address + ") failed: " + reason);
+        pairingFailed(device, reason);
+    }
+
+    property Timer _pairingTimer: Timer {
+        interval: agent.pairingTimeoutMs
+        onTriggered: agent._failWaiting("The device was not paired in time")
     }
 
     function _retryLater() {
@@ -147,7 +225,8 @@ QtObject {
             "kind": prompt.kind,
             "address": prompt.address,
             "adapterAddress": prompt.adapterAddress,
-            "manager": manager
+            "manager": manager,
+            "agent": agent
         });
         return _open;
     }
@@ -207,12 +286,20 @@ QtObject {
         function onPairingRequested(prompt) {
             agent._show(prompt);
         }
+        function onPairingFailed(address, reason) {
+            agent._failed(agent._deviceFor({"name": "", "address": address}), reason);
+        }
+        function onDevicesChanged() {
+            agent._checkWaiting();
+        }
         function onBluetoothOperationalChanged() {
             // Its subscription went with the adapter.
             if (!agent.manager.bluetoothOperational) {
                 agent._retryTimer.stop();
                 agent._retried = 0;
                 agent._unregister();
+                agent._stopWaiting();
+                agent._incomingDevice = null;
                 agent._show({"kind": "end"});
             }
         }
@@ -220,6 +307,7 @@ QtObject {
 
     Component.onDestruction: {
         _retryTimer.stop();
+        _pairingTimer.stop();
         // An open question goes unanswered with the page: refuse it rather
         // than leave the device waiting.
         if (_open !== null && !_open.answered)
