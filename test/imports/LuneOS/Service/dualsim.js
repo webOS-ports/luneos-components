@@ -28,6 +28,26 @@ var sims = [
         "simStatus": "simready", "powered": true, "ready": true, "bars": 2,
         "state": "service", "registration": "roam",
         "networkRegistered": true, "dataRegistered": false
+    },
+    /*
+     * Slots 3 and 4, for a phone with four (brax3). Not reported until
+     * setSimCount() asks for them, so a run that does not is still dual SIM.
+     */
+    {
+        "simId": 2, "present": true, "name": "SIM 3",
+        "iccid": "8931440000000000003", "imsi": "204160000000003",
+        "msisdn": "+31600000003", "operatorName": "Odido",
+        "simStatus": "simready", "powered": true, "ready": true, "bars": 3,
+        "state": "service", "registration": "home",
+        "networkRegistered": true, "dataRegistered": false
+    },
+    {
+        "simId": 3, "present": true, "name": "SIM 4",
+        "iccid": "8931440000000000004", "imsi": "204200000000004",
+        "msisdn": "+31600000004", "operatorName": "Lebara",
+        "simStatus": "simready", "powered": true, "ready": true, "bars": 1,
+        "state": "service", "registration": "home",
+        "networkRegistered": true, "dataRegistered": false
     }
 ];
 
@@ -37,7 +57,7 @@ var simListSubscribers = [];
 var defaultSimSubscribers = [];
 
 function simById(simId) {
-    for (var i = 0; i < sims.length; i++)
+    for (var i = 0; i < simCountMock && i < sims.length; i++)
         if (sims[i].simId === simId)
             return sims[i];
     return null;
@@ -75,4 +95,19 @@ function postSimList() {
         "returnValue": true, "subscribed": true, "defaultSim": defaultSim }) };
     for (var j = 0; j < defaultSimSubscribers.length; j++)
         defaultSimSubscribers[j](def);
+}
+
+/*
+ * How many slots the mock reports, 1 to sims.length, posted to every
+ * simListQuery subscriber at once. For a test: assigning simCountMock from QML
+ * is not a reliable way to change a .pragma library's state, and the test case
+ * runs after the shell has already subscribed, so the new list has to be
+ * posted. Reachable as DualSim.setSimCount() through "import LuneOS.Service 1.0".
+ */
+function setSimCount(count) {
+    if (count < 1 || count > sims.length)
+        return false;
+    simCountMock = count;
+    postSimList();
+    return true;
 }
