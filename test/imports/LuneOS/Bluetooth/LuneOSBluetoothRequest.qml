@@ -20,11 +20,40 @@ import QtQuick 2.0
 QtObject {
     id: luneosRequest
     property int requestType: 0 // 0=void, 1=uint32, 2=string
-    signal accept(variant returnValue);
-    signal reject();
-    signal cancel();
 
-    onAccept: { console.log("bluetooth request accepted (value="+returnValue+")."); }
-    onReject: { console.log("bluetooth request rejected."); }
-    onCancel: { console.log("bluetooth request canceled."); }
+    // As the plugin's LuneOSBluetoothRequest: slots, the value optional, and
+    // only the first answer counts. These were signals, so a page calling
+    // accept() with no value threw "Insufficient arguments" here although it
+    // works on a device. The signals below are for tests to watch.
+    readonly property bool answered: _answered
+    property bool _answered: false
+
+    signal accepted(variant returnValue)
+    signal rejected()
+    signal canceled()
+
+    function _markAnswered() {
+        if (_answered)
+            return false;
+        _answered = true;
+        return true;
+    }
+    function accept(returnValue) {
+        if (!_markAnswered())
+            return;
+        console.log("bluetooth request accepted (value=" + returnValue + ").");
+        accepted(returnValue);
+    }
+    function reject() {
+        if (!_markAnswered())
+            return;
+        console.log("bluetooth request rejected.");
+        rejected();
+    }
+    function cancel() {
+        if (!_markAnswered())
+            return;
+        console.log("bluetooth request canceled.");
+        canceled();
+    }
 }
