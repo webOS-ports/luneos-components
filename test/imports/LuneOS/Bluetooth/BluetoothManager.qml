@@ -55,7 +55,7 @@ Item {
     function newLuneosRequestComponent(iRequestType, acceptFct) {
         var luneosRequestComponent = Qt.createComponent(Qt.resolvedUrl("LuneOSBluetoothRequest.qml"));
         var newRequestObj = luneosRequestComponent.createObject(root, {requestType: iRequestType});
-        if(typeof acceptFct !== 'undefined') newRequestObj.onAccept.connect(acceptFct);
+        if(typeof acceptFct !== 'undefined') newRequestObj.accepted.connect(acceptFct);
 
         return newRequestObj;
     }
