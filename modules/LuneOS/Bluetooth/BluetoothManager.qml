@@ -112,6 +112,8 @@ Item {
     // discoveringMode being set again.
     property bool _discoveryTimedOut: false
     property bool _discoveryStarted: false
+    // adapter/startDiscovery sent, "discovering" not on yet.
+    property bool _startPending: false
 
     property QtObject _bus: LunaService {
         name: Policy.clientName(Qt.application.name)
@@ -332,17 +334,37 @@ Item {
         var action = Policy.discoveryAction(discoveringMode && connectingDevice === null,
                                             bluetoothOperational, discovering, _discoveryTimedOut);
         if (action === "start") {
+            // Asked already: "discovering" comes on only when BlueZ says so,
+            // and a second start before that is refused (115).
+            if (_startPending)
+                return;
             console.log("Starting bluetooth discovery.");
             _discoveryStarted = true;
-            _bt("adapter/startDiscovery", {});
+            _startPending = true;
+            _bt("adapter/startDiscovery", {}, null, function () { root._startPending = false; });
             discoveryTimer.restart();
         }
         else if (action === "stop") {
-            console.log("Stopping bluetooth discovery.");
             _discoveryStarted = false;
-            _bt("adapter/cancelDiscovery", {});
+            _startPending = false;
             discoveryTimer.stop();
+            // A pairing about to start: bluetooth2's adapter/pair stops the
+            // search itself, and a stop of ours just before it races that
+            // one - the second StopDiscovery is refused while the first is
+            // settling, and the pairing fails with 117.
+            if (_pairingStarts())
+                return;
+            console.log("Stopping bluetooth discovery.");
+            _bt("adapter/cancelDiscovery", {});
         }
+    }
+
+    function _pairingStarts()
+    {
+        if (connectingDevice === null)
+            return false;
+        var device = Policy.findDevice(_devices, connectingDevice.address);
+        return !(device && device.paired === true);
     }
 
     function _watchService()
@@ -426,6 +448,7 @@ Item {
         interval: root.discoveryTimeoutMs
         onTriggered: {
             root._discoveryTimedOut = true;
+            root._startPending = false;
             root._updateDiscovery();
         }
     }
@@ -436,9 +459,15 @@ Item {
         // The adapter went: so did whatever was being connected on it.
         if (!bluetoothOperational && _connectCall)
             _failConnecting(_connectCall, {"errorText": "Bluetooth was switched off"});
+        if (!bluetoothOperational)
+            _startPending = false;
         _updateDiscovery();
     }
     onConnectingDeviceChanged: _updateDiscovery()
+    onDiscoveringChanged: {
+        if (discovering)
+            _startPending = false;
+    }
     onDiscoveringModeChanged: {
         if (discoveringMode)
             _discoveryTimedOut = false;

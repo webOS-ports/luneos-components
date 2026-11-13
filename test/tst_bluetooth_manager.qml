@@ -443,6 +443,38 @@ Item {
             compare(bus.count("adapter/startDiscovery"), 2, "the search did not go on");
         }
 
+        function test_searchAgainStartsOnce() {
+            var manager = makeManager();
+            var bus = manager._bus;
+            tryVerify(function () { return manager.bluetoothOperational; }, 1000);
+            bus.answers = { "adapter/startDiscovery": function () { return null; } };
+            manager.searchAgain();
+            settle();
+            compare(bus.count("adapter/startDiscovery"), 1, "started twice before discovering came on");
+            bus.answerHeld("adapter/startDiscovery", { returnValue: false, errorCode: 115 });
+            manager.searchAgain();
+            settle();
+            compare(bus.count("adapter/startDiscovery"), 2, "a refused start kept the next one back");
+        }
+
+        function test_pairingLeavesStoppingTheSearchToBluetooth2() {
+            var manager = makeManager();
+            var bus = manager._bus;
+            bus.setDevice(headset, { name: "Headset" });
+            tryVerify(function () { return manager.devices.length === 1; }, 1000);
+            manager.discoveringMode = true;
+            bus.setAdapter({ discovering: true });
+            tryCompare(manager, "discovering", true, 1000);
+            manager.connectDeviceAddress(headset);
+            compare(bus.open("adapter/pair"), 1);
+            settle();
+            compare(bus.count("adapter/cancelDiscovery"), 0, "stopped the search as well as adapter/pair");
+            bus.setAdapter({ discovering: false });
+            tryCompare(manager, "discovering", false, 1000);
+            settle();
+            compare(bus.count("adapter/startDiscovery"), 1, "searched again while pairing");
+        }
+
         function test_switchedOffWhileConnecting() {
             var manager = makeManager();
             var bus = manager._bus;
