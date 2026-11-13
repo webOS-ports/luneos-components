@@ -57,6 +57,18 @@ var profiles = {
                  cutouts: [ { x: 324, y: 0, width: 72, height: 102 } ],
                  cornerRadii: [ 75, 75, 75, 75 ] },
     /*
+     * Brax3 (brax3) - 720x1612 with a centred teardrop notch. The cutout and
+     * radius are meta-brax's brax3-deviceinfo (the cutout read off the vendor's
+     * `dumpsys display`, the radius radon's); DPI 280 and GridUnit 16 are what
+     * the phone's /etc/palm/luna-platform.conf ended up with. The notch is
+     * 46px deep against a 48px bar, so the bar does not grow for it, and it
+     * is wide (161px): the case where the indicators, not the clock, run into
+     * the camera once four SIMs are up.
+     */
+    "brax3":   { tabletUi: false, displayWidth:  720, displayHeight: 1612, dpi: 280, gridUnit: 16,
+                 cutouts: [ { x: 280, y: 0, width: 161, height: 46 } ],
+                 cornerRadii: [ 75, 75, 75, 75 ] },
+    /*
      * Not a real device: a deliberately asymmetric panel, so a test can tell the
      * four corners and the four rotations apart. Every radius differs and the
      * cutout sits in a corner rather than centred, which radon's cannot pin down

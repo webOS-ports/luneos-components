@@ -1,3 +1,5 @@
 module LuneOS.Service
 LunaService 1.0 LunaService.qml
 Db8Model 1.0 Db8Model.qml
+DualSim 1.0 dualsim.js
+DevMode 1.0 devmode.js
