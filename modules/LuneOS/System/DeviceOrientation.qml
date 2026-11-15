@@ -53,6 +53,14 @@ import "OrientationFilter.js" as OrientationFilter
  * So when nothing has come for stallInterval the sensor is created again,
  * and that, a sensor error, and the samples coming back are logged as
  * warnings, which reach the journal.
+ *
+ * Where there is no accelerometer at all (VirtualBox and qemu, or a device
+ * without one) nothing ever comes, and creating it again does not change
+ * that: it went on every 30 s for as long as the screen was lit, two
+ * warnings each time. So until the first sample it is tried startAttempts
+ * times and then left alone, with one warning saying so. Once a sample has
+ * come the watchdog has no such limit, and a sample after it gave up starts
+ * it again.
  */
 Item {
     id: orientation
@@ -69,8 +77,13 @@ Item {
     /// long while active, in ms; 0 never does. Doubles, up to 30 s, while
     /// that does not bring it back.
     property int stallInterval: 2000
+    /// How many times to create the accelerometer again before its first
+    /// sample has come; then it is taken to be missing and left alone.
+    property int startAttempts: 3
     /// How many times the accelerometer was created again for being silent.
     readonly property int restarts: _restarts
+    /// The accelerometer is watched for going silent.
+    readonly property bool watching: stallWatch.running
 
     /// The phone, settled: 0, 90, 180 or 270.
     readonly property int angle: _angle
@@ -95,12 +108,21 @@ Item {
     property int _stallLimit: stallInterval
     property bool _stalled: false
     property bool _reloading: false
+    // A sample has come since this was created: the accelerometer is there.
+    property bool _everSampled: false
+    // It never sent anything and has been tried startAttempts times.
+    property bool _gaveUp: false
     // The sensor's file; a test points it at one it feeds itself.
     property url _sensorSource: "DeviceOrientationSensor.qml"
 
     /// One accelerometer sample, in m/s^2 along Qt's axes.
     function sample(x, y, z) {
         _lastSample = Date.now();
+        _everSampled = true;
+        if (_gaveUp) {
+            _gaveUp = false;
+            console.warn("DeviceOrientation: the accelerometer sends after all");
+        }
         if (_stalled) {
             _stalled = false;
             _stallLimit = stallInterval;
@@ -147,12 +169,20 @@ Item {
         interval: Math.max(250, orientation.stallInterval / 2)
         repeat: true
         running: orientation.active && orientation.available && orientation.stallInterval > 0
+                 && !orientation._gaveUp
         onRunningChanged: if (running) orientation._lastSample = Date.now()
         onTriggered: {
             var silent = Date.now() - orientation._lastSample;
             if (silent < orientation._stallLimit)
                 return;
             var s = sensorLoader.item;
+            if (!orientation._everSampled && orientation._restarts >= orientation.startAttempts) {
+                console.warn("DeviceOrientation: no accelerometer sample since it was first created, "
+                             + "created again " + orientation._restarts
+                             + " times; taking it to be missing and not trying again");
+                orientation._gaveUp = true;
+                return;
+            }
             console.warn("DeviceOrientation: no accelerometer sample for " + silent + " ms"
                          + (s && s.connectedToBackend !== undefined
                             ? " (connectedToBackend " + s.connectedToBackend + ", active " + s.active

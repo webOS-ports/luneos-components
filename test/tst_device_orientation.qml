@@ -258,6 +258,35 @@ Item {
             compare(o.available, false);
         }
 
+        // No accelerometer at all (VirtualBox): tried startAttempts times
+        // before the first sample, then left alone.
+        function test_one_that_never_sends_is_given_up() {
+            var o = make("SilentAccelerometer.qml", { startAttempts: 1 });
+            tryCompare(o, "restarts", 1, 2000);
+            tryCompare(o, "watching", false, 2000, "gave up after one attempt");
+            wait(1500);
+            compare(o.restarts, 1);
+        }
+
+        // One that has sent something and then goes quiet (the Brax3) is
+        // created again however often it takes.
+        function test_one_that_sent_is_not_given_up() {
+            var o = make("SilentAccelerometer.qml", { startAttempts: 1 });
+            tryCompare(o, "available", true);
+            o.sample(0, 9.80665, 0);
+            tryCompare(o, "restarts", 1, 2000);
+            tryCompare(o, "restarts", 2, 3000);
+            verify(o.watching);
+        }
+
+        function test_a_sample_after_giving_up_watches_again() {
+            var o = make("SilentAccelerometer.qml", { startAttempts: 1 });
+            tryCompare(o, "watching", false, 3000);
+            o.sample(0, 9.80665, 0);
+            verify(o.watching);
+            tryCompare(o, "restarts", 2, 3000);
+        }
+
         function test_zero_turns_it_off() {
             var o = make("SilentAccelerometer.qml", { stallInterval: 0 });
             tryCompare(o, "available", true);
