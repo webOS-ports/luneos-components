@@ -6,7 +6,7 @@
 # the Free Software Foundation; version 3.
 #
 # static-analysis.sh - static-analysis gate for LuneOS.Components' C++
-# (plugin/artworkcache.cpp):
+# (plugin/artworkcache.cpp, qrencoder.cpp, qrcodeitem.cpp, wifiqrcode.cpp):
 #
 #   gcc -fanalyzer    at -O0 and -O2
 #   clang analyzer    with the alpha checkers for unix, security and core
@@ -18,7 +18,7 @@
 # sparse parses C only and Coccinelle does not get through Qt's headers, so
 # neither is run.
 #
-# Needs a sysroot with Qt 6 (Core, Gui, Svg) headers:
+# Needs a sysroot with Qt 6 (Core, Gui, Qml, Quick, Svg) and libqrencode headers:
 #   APP_SYSROOT=<.../recipe-sysroot> ./static-analysis.sh
 set -u
 
@@ -29,9 +29,10 @@ CXXV=$(ls "$U/c++" | head -1)
 TRIPLE=$(ls "$U/c++/$CXXV" | grep -- -linux | head -1)
 
 FLAGS="-std=c++17 -fPIC -nostdinc++ -isystem $U/c++/$CXXV -isystem $U/c++/$CXXV/$TRIPLE --sysroot=$SYSROOT
- -isystem $U -isystem $U/QtCore -isystem $U/QtGui -isystem $U/QtSvg -I$DIR"
-SOURCES="artworkcache.cpp"
-OURS='artworkcache[.](cpp|h)'
+ -isystem $U -isystem $U/QtCore -isystem $U/QtGui -isystem $U/QtQml -isystem $U/QtQmlIntegration
+ -isystem $U/QtQuick -isystem $U/QtSvg -DHAVE_QRENCODE -I$DIR"
+SOURCES="artworkcache.cpp qrencoder.cpp qrcodeitem.cpp wifiqrcode.cpp"
+OURS='(artworkcache|qrencoder|qrcodeitem|wifiqrcode)[.](cpp|h)'
 fail=0
 
 report() {
@@ -72,11 +73,11 @@ fi
 if have cppcheck; then
 	out=$(cppcheck --enable=all --check-level=exhaustive --inconclusive --std=c++17 --quiet \
 		--suppress=missingIncludeSystem --suppress=unusedFunction --suppress=checkersReport \
-		-DQ_OBJECT= -DQ_SIGNALS=public -DQ_EMIT= -DQ_INVOKABLE= $SOURCES 2>&1)
+		-DQ_OBJECT= -DQ_SIGNALS=public -DQ_EMIT= -DQ_INVOKABLE= '-DQ_ENUM(x)=' '-DQ_PROPERTY(x)=' $SOURCES 2>&1)
 	report cppcheck "$out"
 fi
 if have flawfinder; then
-	out=$(flawfinder --minlevel=1 --columns --quiet --dataonly $SOURCES jpegexif.h imagetools.h 2>&1)
+	out=$(flawfinder --minlevel=1 --columns --quiet --dataonly $SOURCES *.h 2>&1)
 	report flawfinder "$out"
 fi
 exit $fail
