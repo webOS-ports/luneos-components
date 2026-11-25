@@ -144,6 +144,21 @@ Item {
             compare(chosenSpy.count, 0);
         }
 
+        // Closed, a change of height (a rotation) slides the panel along
+        // with the bottom edge; the page under it still takes taps meanwhile.
+        function test_closed_sheet_takes_no_taps_while_the_window_turns() {
+            var spy = Qt.createQmlObject('import QtQuick; MouseArea { property int taps: 0; '
+                                         + 'width: 100; height: 100; onClicked: taps++ }', page);
+            page.height = 600;
+            verify(sheet.visible, "the panel slides: the sheet is shown meanwhile");
+            mouseClick(spy, 50, 50);
+            compare(spy.taps, 1);
+            page.height = 800;
+            wait(250);
+            verify(!sheet.visible);
+            spy.destroy();
+        }
+
         function test_back() {
             verify(!sheet.back());
             sheet.show("Song", choices());
