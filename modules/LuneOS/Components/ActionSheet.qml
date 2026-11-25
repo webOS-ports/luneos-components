@@ -107,9 +107,13 @@ Item {
         Behavior on opacity { NumberAnimation { duration: 180 } }
     }
 
-    // A tap outside closes it.
+    // A tap outside closes it. Only while it is open: closed, the panel still
+    // slides when the window's height changes (a rotation), and for those
+    // 180 ms the sheet is visible and would take every tap meant for the page.
     MouseArea {
+        objectName: "sheetOutside"
         anchors.fill: parent
+        enabled: sheet._shown
         onClicked: sheet.hide()
     }
 
