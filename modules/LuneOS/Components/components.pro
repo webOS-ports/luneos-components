@@ -22,6 +22,7 @@ QML_FILES = ActionSheet.qml \
             IconListRow.qml \
             ItemSelector.qml \
             KeyboardInset.qml \
+            MarqueeText.qml \
             ListDelegateSeparator.qml \
             Page.qml \
             PageStackWindow.qml \
