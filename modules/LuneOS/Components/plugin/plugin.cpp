@@ -21,6 +21,8 @@
 
 #include "artworkcache.h"
 #include "plugin.h"
+#include "qrcodeitem.h"
+#include "wifiqrcode.h"
 
 namespace {
 
@@ -57,7 +59,10 @@ Plugin::Plugin(QObject *parent) :
 
 void Plugin::registerTypes(const char *uri)
 {
-    Q_UNUSED(uri);
+    // A QR code drawn from text, and the text of a Wi-Fi one, read and written.
+    qmlRegisterType<QrCodeItem>(uri, 1, 0, "QrCode");
+    qmlRegisterSingletonType<WifiQrCode>(uri, 1, 0, "WifiQrCode",
+        [](QQmlEngine *, QJSEngine *) -> QObject * { return new WifiQrCode(); });
 }
 
 void Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
