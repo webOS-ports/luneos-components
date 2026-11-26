@@ -15,3 +15,4 @@ OfonoCallBarring 0.2 OfonoCallBarring.qml
 OfonoCellBroadcast 0.2 OfonoCellBroadcast.qml
 OfonoConnMan 0.2 OfonoConnMan.qml
 OfonoContextConnection 0.2 OfonoContextConnection.qml
+OfonoIpMultimediaSystem 0.2 OfonoIpMultimediaSystem.qml
