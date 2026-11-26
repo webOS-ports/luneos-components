@@ -74,6 +74,11 @@ var contexts = [
 // The next AddContext/RemoveContext fails with this message instead, the
 // way ofono answers with org.ofono.Error.* (a test sets it, one shot).
 var failNextContextCall = "";
+
+// The next write to an inactive context finds it active again, the way
+// connman can bring a context back up between a deactivation and the writes
+// that were waiting for it (a test sets it, one shot).
+var reactivateBeforeNextWrite = false;
 var _nextContextId = 3;
 
 // org.ofono.ConnectionManager.AddContext: a new, inactive context of the

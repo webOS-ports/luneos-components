@@ -7,6 +7,12 @@ import "ofonomock.js" as OfonoMock
 /// list on change, the same way assigning one on the real object issues a
 /// D-Bus property Set - so an edit made through one instance (an edit popup)
 /// is still there the next time a list re-reads the same contextPath.
+///
+/// Like ofono (src/gprs.c pri_set_property), every property but Active is
+/// refused while the context is active: the write is undone and reportError
+/// carries ofono's org.ofono.Error.InUse message. Each write is answered with
+/// setPropertyFinished, after reportError when it failed, on a later turn of
+/// the event loop as a D-Bus reply would be.
 Item {
     id: ctx
 
@@ -26,6 +32,9 @@ Item {
     property string modemPath: ""
 
     property bool _loading: false
+
+    signal reportError(string errorString)
+    signal setPropertyFinished()
 
     function _refresh() {
         var found = OfonoMock.contextByPath(contextPath);
@@ -52,8 +61,49 @@ Item {
         if (_loading)
             return;
         var found = OfonoMock.contextByPath(contextPath);
-        if (found)
-            found[field] = value;
+        if (!found)
+            return;
+        if (found[field] === value) {
+            _answer("");
+            return;
+        }
+        if (field !== "active" && !found.active && OfonoMock.reactivateBeforeNextWrite) {
+            OfonoMock.reactivateBeforeNextWrite = false;
+            found.active = true;
+            _loading = true;
+            active = true;
+            _loading = false;
+        }
+        if (field !== "active" && found.active) {
+            _loading = true;
+            ctx[field] = found[field];
+            _loading = false;
+            _answer("The resource is currently in use");
+            return;
+        }
+        found[field] = value;
+        _answer("");
+    }
+
+    // One answer per write, in order; Qt.callLater would fold several
+    // writes made in the same turn into one.
+    property var _answers: []
+    function _answer(errorString) {
+        _answers.push(errorString);
+        answerTimer.restart();
+    }
+    Timer {
+        id: answerTimer
+        interval: 0
+        onTriggered: {
+            var answers = ctx._answers;
+            ctx._answers = [];
+            for (var i = 0; i < answers.length; i++) {
+                if (answers[i] !== "")
+                    ctx.reportError(answers[i]);
+                ctx.setPropertyFinished();
+            }
+        }
     }
 
     onActiveChanged: _writeBack("active", active)
@@ -66,6 +116,11 @@ Item {
     onNameChanged: _writeBack("name", name)
     onMessageCenterChanged: _writeBack("messageCenter", messageCenter)
     onMessageProxyChanged: _writeBack("messageProxy", messageProxy)
+
+    // for tests: see ofonomock.js
+    function reactivateBeforeNextWrite() {
+        OfonoMock.reactivateBeforeNextWrite = true;
+    }
 
     function disconnect() {
         active = false;
