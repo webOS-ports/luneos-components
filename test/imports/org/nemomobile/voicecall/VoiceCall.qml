@@ -33,6 +33,8 @@ Item {
     property bool isForwarded: false
     property bool isReady: false
     property bool isRemoteHeld: false
+    // Carried over IMS (VoLTE); voicecall-manager reads it from oFono
+    property bool isIms: false
 
     signal error(string error);
 
